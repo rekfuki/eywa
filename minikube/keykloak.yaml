@@ -1,3 +1,15 @@
-✚ generating HelmRelease
-► applying HelmRelease
-✗ no matches for kind "HelmRelease" in version "helm.toolkit.fluxcd.io/v2beta1"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: keykloak
+  namespace: gotk-system
+spec:
+  chart:
+    spec:
+      chart: keykloak
+      sourceRef:
+        kind: HelmRepository
+        name: codecentric
+  interval: 10m0s
+
