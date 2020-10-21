@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+data:
+  KEYKLOAK_USER: "admin"
+  KEYKLOA_PASSWORD: "admin"
+  PROXY_ADDRESS_FORWARDING: "true"

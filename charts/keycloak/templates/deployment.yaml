@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: default
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: {{ Release.Name }}
+        image: quay.io/keycloak/keycloak:11.0.2
+        env:
+        - name: KEYCLOAK_USER
+          value: "admin"
+        - name: KEYCLOAK_PASSWORD
+          value: "admin"
+        - name: PROXY_ADDRESS_FORWARDING
+          value: {{ .Values.proxy_address_forwarding }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.http_port }}
+        - name: https
+          containerPort: {{ .Values.htts_port }}
+        readinessProbe:
+          httpGet:
+            path: /auth/realms/master
+            port: {{ .Values.http_port }}
