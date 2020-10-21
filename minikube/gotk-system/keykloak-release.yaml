@@ -7,10 +7,10 @@ spec:
   interval: 5m
   chart:
     spec:
-      chart: keykloak
-      version: '0.1.0'
+      chart: './charts/keykloak'
+      version: '0.0.1'
       sourceRef:
-        kind: HelmRepository
+        kind: GitRepository
         name: keykloak
         namespace: gotk-system
       interval: 1m
