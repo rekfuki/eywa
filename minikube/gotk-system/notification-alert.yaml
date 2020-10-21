@@ -9,7 +9,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1beta1
       name: discord
     eventSeverity: info
     eventSources:
-    - kind: HelmRepository
+    - kind: GitRepository
       name: '*'
     - kind: HelmChart
       name: '*'
