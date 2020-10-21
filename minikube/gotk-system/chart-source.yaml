@@ -1,11 +1,11 @@
 apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: HelmRepository
 metadata:
-  name: eywa
+  name: eywa-helm
   namespace: gotk-system
 spec:
   interval: 1m
-  url: https://github.com/Rekfuki/eywa/tree/main/charts
+  url: https://github.com/Rekfuki/eywa
   ref:
     branch: main
   ignore: |
