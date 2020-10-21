@@ -6,7 +6,8 @@ metadata:
   namespace: gotk-system
 spec:
   interval: 30s
+  secretRef:
+    name: gotk-system
+  url: ssh://git@github.com/Rekfuki/eywa
   ref:
     branch: main
-  url: https://github.com/Rekfuki/eywa/
-
