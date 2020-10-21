@@ -1,0 +1,3 @@
+✚ generating HelmRelease
+► applying HelmRelease
+✗ no matches for kind "HelmRelease" in version "helm.toolkit.fluxcd.io/v2beta1"
