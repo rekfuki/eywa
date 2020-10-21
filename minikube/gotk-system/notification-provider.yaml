@@ -1,0 +1,10 @@
+apiVersion: notification.toolkit.fluxcd.io/v1beta1
+kind: Provider
+metadata:
+  name: discord
+  namespace: gotk-system
+spec:
+  type: discord
+  channel: eywa
+  secretRef:
+    name: discord-webhook-url
