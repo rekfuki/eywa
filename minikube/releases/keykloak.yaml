@@ -6,7 +6,10 @@ metadata:
   namespace: default
 spec:
   chart:
-    respository: https://codecentric.github.io/helm-charts
-    name: keykloak
-    version: 9.4.0
-  interval: 10m0s
+    spec:
+      chart: keykloak
+      sourceRef:
+        kind: HelmRepository
+        name: codecentric
+        namespace: default
+      interval: 10m0s
