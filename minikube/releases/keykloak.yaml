@@ -8,4 +8,5 @@ spec:
   chart:
     respository: https://codecentric.github.io/helm-charts
     name: keykloak
+    version: 9.4.0
   interval: 10m0s
