@@ -5,10 +5,8 @@ metadata:
   name: keykloak
   namespace: gotk-system
 spec:
-  chart:
-    spec:
-      chart:
-        respository: https://codecentric.github.io/helm-charts
-        name: keykloak
+    chart:
+      respository: https://codecentric.github.io/helm-charts
+      name: keykloak
   interval: 10m0s
 
