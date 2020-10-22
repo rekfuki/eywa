@@ -7,9 +7,8 @@ metadata:
 spec:
   chart:
     spec:
-      chart: keykloak
-      sourceRef:
-        kind: HelmRepository
-        name: codecentric
+      chart:
+        respository: https://codecentric.github.io/helm-charts
+        name: keykloak
   interval: 10m0s
 
