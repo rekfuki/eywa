@@ -5,6 +5,7 @@ metadata:
   name: keykloak
   namespace: default
 spec:
+  interval: 5m
   chart:
     spec:
       chart: keykloak
