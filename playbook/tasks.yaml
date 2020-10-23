@@ -3,6 +3,18 @@
   become: no
   gather_facts: yes
 
+  vars_prompt:
+  - name: github_user
+      prompt: What is your github username?
+      private: no
+
+  - name: github_token
+      prompt: What is your github_token?
+
+  - name: github_repo
+      prompt: What is your github repository?
+      private: no
+
   tasks:
   - name: Get username
     command: whoami
