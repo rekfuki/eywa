@@ -16,7 +16,7 @@
       name:  provision
 
   - import_role:
-      name: abdennour.golang
+      name: gantsign.golang
     become: yes
     vars:
       golang_version: "1.15.3"
