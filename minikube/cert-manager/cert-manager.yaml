@@ -15,4 +15,5 @@ spec:
   interval: 1h0m0s
   releaseName: cert-manager
   targetNamespace: cert-manager
-
+  values:
+    installCRDs: true
