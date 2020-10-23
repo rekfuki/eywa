@@ -5,6 +5,9 @@ metadata:
   name: cert-manager
   namespace: cert-manager
 spec:
+  targetNamespace: cert-manager
+  releaseName: cert-manager
+  interval: 1h0m0s
   chart:
     spec:
       chart: cert-manager
@@ -13,5 +16,5 @@ spec:
         name: jetstack
         namespace: gotk-system
       version: 1.0.3
-  interval: 1h0m0s
-  targetNamespace: cert-manager
+  values:
+    installCRDs: true
