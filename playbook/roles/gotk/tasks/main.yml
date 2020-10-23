@@ -2,15 +2,15 @@
 # tasks file for gotk
 vars_prompt:
   - name: github_user
-  prompt: What is your github username?
-  private: no
+    prompt: What is your github username?
+    private: no
 
   - name: github_token
-  prompt: What is your github_token?
+    prompt: What is your github_token?
 
   - name: github_repo
-  prompt: What is your github repository?
-  private: no
+    prompt: What is your github repository?
+    private: no
 
 - name: Download and install GitOps Toolkit
   become: yes
