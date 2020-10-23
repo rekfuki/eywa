@@ -12,7 +12,7 @@ spec:
         kind: HelmRepository
         name: jetstack
       version: 1.0.3
-  interval: 1h0m0s
+  interval: 5m
   releaseName: cert-manager
   targetNamespace: cert-manager
   values:
