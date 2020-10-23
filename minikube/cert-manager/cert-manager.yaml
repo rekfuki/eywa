@@ -14,5 +14,3 @@ spec:
       version: 1.0.3
   interval: 1h0m0s
   targetNamespace: cert-manager
-  values:
-    installCRDs: true
