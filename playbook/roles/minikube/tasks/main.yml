@@ -4,6 +4,7 @@
   register: kubernetes_version
 
 - name: Download Kubectl
+  become: yes
   get_url:
     url: "https://storage.googleapis.com/kubernetes-release/release/{{ kubernetes_version.stdout }}/bin/linux/amd64/kubectl"
     dest: /usr/local/bin/
@@ -12,6 +13,7 @@
     group: root
 
 - name: Download Minikube
+  become: yes
   get_url:
     url: "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"
     dest: /usr/local/bin/minikube
@@ -28,6 +30,7 @@
   shell: "/usr/local/bin/minikube start --vm-driver=docker --kubernetes-version={{ kubernetes_version.stdout }}"
 
 - name: Download kubeseal
+  become: yes
   get_url:
     url: "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.12.6/kubeseal-linux-amd64"
     dest: /usr/local/bin/kubeseal
