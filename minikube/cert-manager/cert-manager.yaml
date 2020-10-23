@@ -13,7 +13,6 @@ spec:
         name: jetstack
       version: 1.0.3
   interval: 1h0m0s
-  releaseName: cert-manager
   targetNamespace: cert-manager
   values:
     installCRDs: true
