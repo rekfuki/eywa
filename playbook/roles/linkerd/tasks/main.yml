@@ -1,0 +1,8 @@
+- name: Install linkerd2 edge
+  shell: curl -sL https://run.linkerd.io/install-edge | sh
+
+- name: Add linkerd2 to path
+  linefile:
+    dest: ansible_env.HOME/.bashrc
+    line: export PATH=$PATH:/home/{{ username }}/.linkerd2/bin 
+    owner: {{ username }}
