@@ -8,7 +8,7 @@ apiVersion: bitnami.com/v1alpha1
 kind: SealedSecret
 metadata:
   name: linkerd-trust-anchor
-  namespace: gotk-system
+  namespace: linkerd
 spec:
   encryptedData:
     tls.crt: AgCzDAZN941oqnC45PKggZtKSuvu6EBq0bSpLEdSxXwiFiAU80jWqZ8kFaqKcw1lfE5I2LB0CnMYawzghyuHFMP1JlX5MuOvldR1xtPwTXjXleRsosmKZzr9W+gp/i0YgYeWwv9vJ/3fgDumi4jg1VmF9ljA2qG74X+dAtSok1D6iCdrWslMbAmGNRHRSTunl6FaDPPesmO3YiIi5HwT2vxmYuqMLIADuK7qBPk7JIq3d3/6qJrk+lW6Mk0WTgyAExxyTCnj2z97KOboIcB+p90rpT2xyU/4j+FOHIZ0jqna9dl6XH0VcRpk3jk0ClPTY/gEhKkcGOb+ElCwrr7kNPgs7+kayYpgib0qbkmrolRzfr3FBZMcAmY/p3bi4l8ibNz+Yt/urDp50zUPYbZ906zy/Os5kwjRg+5yBWZYRMQiyCl8Ujl9GJ0rxG7WlXss3N2sjv7cnC/JkeRZ6pHkbJcaDFm3CGoAzO58h+dLFTtzuhJP+SUcIH0yOQGMIUUXKjd734NrQJw683qoDUtppCE14ctD+J12zkkLT+0UvIKlEUiTsBkbEK7B67M+w3XhEQmg1YBo92JVV1yUlujgnXAvtmweQ7ww3HZRLQ/jZehGdbUqPnwWkL/tZgk0GlPHdHRPsDHZ1OZAKaNKU10D445zE2Rt2Q3t1KQ6BMC6dxmKx6WnqOaHL7oeV5AXqBI840p5Mrtym2d4mrJ+bY7Nvo5MzxbLIPBK5dqhBxO5eIcOi9NQuXISe1GW4wQvXrFje+E6iB1sJq4J3ii6ogp7YPVvrRVvZaXEsFhNIX9sgGIOJDdEvaDh/gD7852R3X2gTr/CfE3OohhgdN4gXi7q75uVhpESngv215AaOurydMrc5FtUPXEQMyzLIoXcd5dvPN3T6eDriKwZLGawLsm3jVt8c5vC/HxtcqwiSrSxmXMuKhxFf5jk8vjZeBJJB/chUEhX625cN9GEhSqcJuw9Geu/tWDNzdgLhbr8Lm/nmgLr3wXqExhk8jaaq8y6bnSAMnUzkBjyAYVEluD+/JUSOCTm32udZzLJbZ39vfYIOeiKSvrEkpTsIfdCkfksMvn5Mb0H5jLBamo4ro+kmH66VOaCU3BJzJGR/I7/4r980pnDDG8lYwINfp/RBafZ1/m34xBHVUkOk5+MGsmaTvZCL9YaMKi840OogkkyDoXrP6P66a20kDGeCwzY9xGt+ctnHKo+Hnhz7XGAIe8VX1+yTV56RpPAHGf7zOnHxbRJLEI3lJnQ/8afoyc11oSNtcUYcPN6TPHsuxZlNkVadjn4ueCSsIokBy7SAEN/aTkMfX3xJje3SDwnJuH2HoZqZsk1TThoVU/LWpHX5E1C7J4C2MRa3W+0kimpgGrgmgHl+cElqMXNoqv2BIrCeTnIpfnJIfS3Jsh2GD1XL+Tg9Ii0N0n9QU4GNB8Zse/tW6oqWYuUukDV7gVABmyL0HC5pgtREjJlU2QSs+uLXzW8CAEh58INhaaGDnUh555fE3OSaxzYgzebjA==
@@ -16,14 +16,14 @@ spec:
   template:
     metadata:
       name: linkerd-trust-anchor
-      namespace: gotk-system
+      namespace: linkerd
     type: kubernetes.io/tls
 ---
 apiVersion: cert-manager.io/v1alpha3
 kind: Issuer
 metadata:
   name: linkerd-trust-anchor
-  namespace: gotk-system
+  namespace: linkerd
 spec:
   ca:
     secretName: linkerd-trust-anchor
@@ -32,7 +32,7 @@ apiVersion: cert-manager.io/v1alpha3
 kind: Certificate
 metadata:
   name: linkerd-identity-issuer
-  namespace: gotk-system
+  namespace: linkerd
 spec:
   secretName: linkerd-identity-issuer
   duration: 24h
@@ -52,8 +52,8 @@ spec:
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: linkerd2
-  namespace: gotk-system
+  name: linkerd
+  namespace: linkerd
 spec:
   chart:
     spec:
@@ -62,7 +62,7 @@ spec:
         kind: HelmRepository
         name: linkerd-edge
   interval: 5m0s
-  releaseName: linkerd2
+  releaseName: linkerd
   targetNamespace: linkerd
   valuesFrom:
   - kind: Secret
