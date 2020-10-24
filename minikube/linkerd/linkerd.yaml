@@ -53,6 +53,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: linkerd-config
+  namespace: linkerd
 data:
   values.yaml: |-
     identity.issuer.scheme: kubernetes.io/tls
