@@ -64,11 +64,11 @@ spec:
         name: linkerd-edge
   releaseName: linkerd
   targetNamespace: linkerd
+  values:
+    identity.issuer.scheme: 'kubernetes.io/tls'
+    installNamespace: false
   valuesFrom:
   - kind: Secret
     name: linkerd-identity-issuer
     valuesKey: ca.crt
     targetPath: global.identityTrustAnchorsPEM
-  values:
-    identity.issuer.scheme: kubernetes.io/tls
-    installNamespace: false
