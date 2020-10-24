@@ -65,7 +65,7 @@ spec:
   releaseName: linkerd
   targetNamespace: linkerd
   values:
-    identity.issuer.scheme: 'kubernetes.io/tls'
+    identity.issuer.scheme: kubernetes.io/tls
     installNamespace: false
   valuesFrom:
   - kind: Secret
