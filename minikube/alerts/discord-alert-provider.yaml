@@ -6,6 +6,7 @@ metadata:
   namespace: gotk-system
 spec:
   username: GitOps Toolkit
+  channel: eywa
   secretRef:
     name: discord-webhook-url
   type: discord
