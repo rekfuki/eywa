@@ -55,13 +55,13 @@ metadata:
   name: linkerd
   namespace: linkerd
 spec:
+  interval: 5m0s
   chart:
     spec:
       chart: linkerd2
       sourceRef:
         kind: HelmRepository
         name: linkerd-edge
-  interval: 5m0s
   releaseName: linkerd
   targetNamespace: linkerd
   valuesFrom:
@@ -71,3 +71,4 @@ spec:
     targetPath: global.identityTrustAnchorsPEM
   values:
     identity.issuer.scheme: kubernetes.io/tls
+    installNamespace: false
