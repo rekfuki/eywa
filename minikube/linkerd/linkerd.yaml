@@ -65,7 +65,9 @@ spec:
   releaseName: linkerd
   targetNamespace: linkerd
   values:
-    identity.issuer.scheme: kubernetes.io/tls
+    identity:
+      issuer:
+        scheme: kubernetes.io/tls
   valuesFrom:
   - kind: Secret
     name: linkerd-identity-issuer
