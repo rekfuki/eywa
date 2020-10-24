@@ -18,6 +18,7 @@ spec:
     identity:
       issuer:
         scheme: kubernetes.io/tls
+    installNamespace: false
   valuesFrom:
   - kind: Secret
     name: linkerd-identity-issuer
