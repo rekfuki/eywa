@@ -13,6 +13,8 @@ spec:
     name: '*'
   - kind: HelmRelease
     name: '*'
+  - kind: Kustomization 
+    name: '*'
   providerRef:
     name: discord
 
