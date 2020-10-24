@@ -67,7 +67,7 @@ spec:
   valuesFrom:
   - kind: Secret
     name: linkerd-identity-issuer
-    valuesKey: tls.crt
+    valuesKey: ca.crt
     targetPath: global.identityTrustAnchorsPEM
   values:
     identity.issuer.scheme: kubernetes.io/tls
