@@ -66,8 +66,8 @@ spec:
   targetNamespace: linkerd
   valuesFrom:
   - kind: Secret
-  - name: linkerd-trust-anchor
-  - valueKey: tls.crt
-  - targetPath: global.identityTrustAnchorsPEM
+    name: linkerd-trust-anchor
+    valueKey: tls.crt
+    targetPath: global.identityTrustAnchorsPEM
   values:
     identity.issuer.scheme: kubernetes.io/tls
