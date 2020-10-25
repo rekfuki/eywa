@@ -49,3 +49,5 @@ spec:
         secretName: auth-certificate
       rules:
         - host: auth.eywa.rekfuki.dev
+          paths:
+            - /
