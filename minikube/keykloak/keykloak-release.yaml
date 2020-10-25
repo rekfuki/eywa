@@ -39,8 +39,10 @@ spec:
     ingress:
       enabled: true
       annotations:
+        kubernetes.io/ingress.class: "nginx"
         linkerd.io/inject: enabled 
         cert-manager.io/issuer: letsencrypt-eywa
+        meta.helm.sh/release-namespace: authzn
       tls:
         - hosts: ["auth.eywa.rekfuki.dev"]
           secretName: auth-certificate
