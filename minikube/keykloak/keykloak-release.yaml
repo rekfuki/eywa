@@ -1,25 +1,4 @@
 ---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: authzn
----
-apiVersion: bitnami.com/v1alpha1
-kind: SealedSecret
-metadata:
-  creationTimestamp: null
-  name: keycloak-setup
-  namespace: authzn
-spec:
-  encryptedData:
-    password: AgDBHgTVSGQpULIw3miDrY32aArEwVDeQIvqu68DEmT7CB3wRIiqpnqn6XaClOQuLyPZcW7q8BddRkS3dMpxquEFw/kflQlFo/1uRF/zAyqrFTq6CsYQkJk6Gm06yZI13VwdH4uaOHwOuuKPG5e/NT8dcabc6/8XFAVyD+uT5pLRcDIr1dKhkqS/IJlL0LEV44gdJ7MJwNODv2ZE6z7q0mf150ZhLTZWxlsiwBXzUyOZuFZDJZs3flPgr+oUtwUxNSGCcYggWGfaKiU086JZQbDcm6RfsXw1tExPj8T+QXYHOxx2NL8IUbhrT3JYb6zkLz2D7uMJHceMYEO/WWSXpn5mWJQJvxEmtShvubWsFSQc3+TJP9rlDZND2wixp+c3vJTJvEkVJ7dxaS5ap2wb/gLUJ47dUp5sxI0/4zGBCvfAIqW0DkjMbj9FLcaRpEWzkkufwumm0zmKXvkIPfMsYzxojJOnfTQHbukCwEHPU6v8trSlQlQ9zCh/7bp9yAf6EwmQKsR/abUd7ylUvtD8vEquT7ShnnHXunPv2Xy/vy5v89fg1Naz2btVVeDlL4/q9VF6RrAq3bgHprz4Ell3REtTTWxELCd3Pa0auctJF8qV/WuZAooJtwAolvtlzBDYI74bEFvwkWp+TRreogcodnC+lluM7Oqw+M5KFVqyuJAu0GeBhhzZcot9SJ4z8LakeEtS8dW+owjTMhzytDKrY3PwifoEoElyGuvXbA1DQ3hsY2wfEDk=
-    user: AgBzDwfywSo+W0jtkgSZHk2tZCv1HKSrnRQ582Emic6gnb/u/UgGBY3G/TI4t5T9ty0CNQ+4o41vfBJvRw1HGi/jD5wxvktPOxdWBFSpvgCVDMaFNNsdsT59F6i+8FJc/OXBnCjo9qEuo/MqBG2SUTUsVka2Ml6XzLPILMCzEB/G+hoAn/fDuqdydSUm2y57XtG0yAr53qCcKv1MhSc0R/TcI0g0NnyK+Pm67N8yn8jczaLSdLYzLZIoyt+QMzOjPZLgc/gaXr1yTkTw6IK5QSUUBxoDYD75ajjxjPcw8J+f2gRteQuq9EoKmJu5FXfnCiU5j2rpP4M2J4NzQJJ12NdEdNlvWfAiTSjnKQzSf2wf8+UQOmvvYrq6wT4O8NMcJ+oDmGGzCyEkjFrMNy12/dIEQ9d8d5NGATXj1XaAhuNmRh87aknIPhCBeqwwTZWg6UfEktnfGg3Lj6Q4kERWJt6V4REv2s8Px/XRxEDV4MHatlySBxBqqXyG+zFM/RF/No/3lgLc4g09O2I6/EIIho6fHHxCRUIrdLhnXTo/oWCtz8rQpxHv7ZcpRsqsXvWF4catkNaeVv5K4efydVw4t6Yevt/R1gAH8qLEggCUV6ZebCPrJiVEolGxars82oozcm0HNUbhHnHj6re7mW0tQVAb59R9ZQEBa0l7djvqWgZpvU6Esy616wGCUJ/k7LvuIf1Ktgv4KdpYMVk3HvE=
-  template:
-    metadata:
-      creationTimestamp: null
-      name: keycloak-setup
-      namespace: authzn
----
 apiVersion: helm.toolkit.fluxcd.io/v2beta1 
 kind: HelmRelease
 metadata:
