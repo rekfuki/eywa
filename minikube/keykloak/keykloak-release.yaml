@@ -9,7 +9,7 @@ kind: SealedSecret
 metadata:
   creationTimestamp: null
   name: keykloak-setup
-  namespace: keykloak
+  namespace: authzn
 spec:
   encryptedData:
     password: AgAT8VUgJeyOEZa9KMZbtXvutZutkopmw3GcRZCNxO7S5bRJRkcO3NdxnE/RheRV+5UCDYJ8ZAlduBhsaGaQUFQTccvilBB2NmEajcy5lyE8kfl5D8VWUXCo3onnk6+n6gduXTMCCJJBXTI+q+yLHA1HP4ee/N7ROSFivojGcjdKuxSh+zSzlpI0BXXupyv4/B9Wt1wzvwND1TbxI2+g7e0gcSI06H3ph+hp+IvqhIUKZO6H6k6Z+GOtcOlZvSFS1nEQ+BCCQcsc3lY5qwdGOdLxKBQ0iB/Grr7FVO/w4aANSiYzBonaIZPd2ttDrK0eUOA79LxlVPBa1ee3eBB14nMZLgkNF9cHF+NKCkwhZi23z5dnFDWPAhs5AKLZB/7jpk5AvRqCnz392WAwUyZ0VeDKR4CTy/RweL5plff3BqAZE78QnOG5cw0Pj69pbiQsa0mOrTwIPGkn+15nBVnNS6SZJ28SXgOFi+9x2+945Wip8BmbKMYQvebk6xq5pOlzdDTOcBgBrM146YlDbeksKBMpd65kRL0efJuI2OOZMDqBDt8g2GaBLH/5vYvPND1/TzvyPgpedIiseiFe0LpcILMb5mJ8Kop3U0mVw5UDilA3SkeS3MDpPITPRliNXl2AHW2qZLoqM2Qsry4KXlHbSUvjH2UCTNEgZIhlyS8krG90TtOYPosQgwxLkn2TlOcbOY/lZ6z1NDlp2rAb9OzGBhT+0X5HOVt/3tdo5DDsrUV/ubOjyqM=
@@ -18,7 +18,7 @@ spec:
     metadata:
       creationTimestamp: null
       name: keykloak-setup
-      namespace: keykloak
+      namespace: authzn
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
