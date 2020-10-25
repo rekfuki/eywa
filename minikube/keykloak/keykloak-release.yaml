@@ -47,3 +47,5 @@ spec:
       - hosts:
         - auth.eywa.rekfuki.dev
         secretName: auth-certificate
+      rules:
+        - host: auth.eywa.rekfuki.dev
