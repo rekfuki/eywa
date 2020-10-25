@@ -2,7 +2,7 @@
 apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: HelmRepository
 metadata:
-  name: stable
+  name: ingress-nginx
   namespace: gotk-system
 spec:
   interval: 1h0m0s
