@@ -23,10 +23,8 @@ spec:
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  annotations:
-    linkerd.io/inject: enabled 
   name: keykloak
-  namespace: gotk-system
+  namespace: authzn
 spec:
   interval: 5m0s
   chart:
@@ -37,3 +35,12 @@ spec:
         name: codecentric
   releaseName: keykloak
   targetNamespace: authzn
+  values:
+    ingress:
+      enabled: true
+      annotations:
+        linkerd.io/inject: enabled 
+        cert-manager.io/issuer: letsencrypt-eywa
+      tls:
+        - hosts: ["auth.eywa.rekfuki.dev"]
+          secretName: auth-certificate
