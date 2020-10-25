@@ -17,8 +17,3 @@ spec:
   targetNamespace: cert-manager
   values:
     installCRDs: true
-    prometheus:
-      enabled: true
-      servicemonitor:
-        enabled: true
-        namespace: linkerd
