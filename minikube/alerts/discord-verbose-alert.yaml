@@ -1,20 +1,20 @@
----
-apiVersion: notification.toolkit.fluxcd.io/v1beta1
-kind: Alert
-metadata:
-  name: discord-verbose
-  namespace: gotk-system
-spec:
-  eventSeverity: info
-  eventSources:
-  - kind: GitRepository
-    name: gotk-system
-  - kind: HelmChart
-    name: '*'
-  - kind: HelmRelease
-    name: '*'
-  - kind: Kustomization 
-    name: '*'
-  providerRef:
-    name: discord
+# ---
+# apiVersion: notification.toolkit.fluxcd.io/v1beta1
+# kind: Alert
+# metadata:
+#   name: discord-verbose
+#   namespace: gotk-system
+# spec:
+#   eventSeverity: info
+#   eventSources:
+#   - kind: GitRepository
+#     name: gotk-system
+#   - kind: HelmChart
+#     name: '*'
+#   - kind: HelmRelease
+#     name: '*'
+#   - kind: Kustomization 
+#     name: '*'
+#   providerRef:
+#     name: discord
 
