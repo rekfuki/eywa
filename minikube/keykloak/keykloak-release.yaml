@@ -8,7 +8,7 @@ apiVersion: bitnami.com/v1alpha1
 kind: SealedSecret
 metadata:
   creationTimestamp: null
-  name: keykloak-setup
+  name: keycloak-setup
   namespace: authzn
 spec:
   encryptedData:
@@ -17,23 +17,23 @@ spec:
   template:
     metadata:
       creationTimestamp: null
-      name: keykloak-setup
+      name: keycloak-setup
       namespace: authzn
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: keykloak
+  name: keycloak
   namespace: authzn
 spec:
   interval: 5m0s
   chart:
     spec:
-      chart: keykloak
+      chart: keycloak
       sourceRef:
         kind: HelmRepository
         name: codecentric
-  releaseName: keykloak
+  releaseName: keycloak
   targetNamespace: authzn
   values:
     ingress:
