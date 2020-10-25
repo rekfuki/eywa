@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: authzn
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: keykloak-setup
+  namespace: keykloak
+spec:
+  encryptedData:
+    password: AgAT8VUgJeyOEZa9KMZbtXvutZutkopmw3GcRZCNxO7S5bRJRkcO3NdxnE/RheRV+5UCDYJ8ZAlduBhsaGaQUFQTccvilBB2NmEajcy5lyE8kfl5D8VWUXCo3onnk6+n6gduXTMCCJJBXTI+q+yLHA1HP4ee/N7ROSFivojGcjdKuxSh+zSzlpI0BXXupyv4/B9Wt1wzvwND1TbxI2+g7e0gcSI06H3ph+hp+IvqhIUKZO6H6k6Z+GOtcOlZvSFS1nEQ+BCCQcsc3lY5qwdGOdLxKBQ0iB/Grr7FVO/w4aANSiYzBonaIZPd2ttDrK0eUOA79LxlVPBa1ee3eBB14nMZLgkNF9cHF+NKCkwhZi23z5dnFDWPAhs5AKLZB/7jpk5AvRqCnz392WAwUyZ0VeDKR4CTy/RweL5plff3BqAZE78QnOG5cw0Pj69pbiQsa0mOrTwIPGkn+15nBVnNS6SZJ28SXgOFi+9x2+945Wip8BmbKMYQvebk6xq5pOlzdDTOcBgBrM146YlDbeksKBMpd65kRL0efJuI2OOZMDqBDt8g2GaBLH/5vYvPND1/TzvyPgpedIiseiFe0LpcILMb5mJ8Kop3U0mVw5UDilA3SkeS3MDpPITPRliNXl2AHW2qZLoqM2Qsry4KXlHbSUvjH2UCTNEgZIhlyS8krG90TtOYPosQgwxLkn2TlOcbOY/lZ6z1NDlp2rAb9OzGBhT+0X5HOVt/3tdo5DDsrUV/ubOjyqM=
+    user: AgAyZ9CREQKZyidKlvJYcNdICO97bZ8JFJSROoAwP9yuFyO6kcqppaGiYPpug1Cjk7HObOTcym9gDvjAEhGdPTdV5gtxVR4GcX07L9u8R0VCJq/DZMVH7W5/nswNNPEtEjKU8tr7a4tCn45YU2xLbbVg3yGxN6Pl6LFIIco4ETe7rhXXxi05lclImeuUeNmLR3fzHKJXU8zxZEUL5VeMMIZibtgx2E/b1VVY76al5hBRS/wNMuStcUOtihTGBrQkbJZVzNuiTLeKrMEieb/kN8Bx2f5q04J3Z/SigUxRfow0W/3eTVykCviCXE1IFgrKu4mMEjfXkBd7LLNkHhcCxxK9BbqPa0dvkrL3c/6vCVSa7YmitnZYzXFVd5yis9GhLj5NH3zwiYkfDn0JzzDotbVQvgCiNsGy2AMUY+DZH0zl0EmyfmvBQqfk5Qc39UD0yjE16aONIhbgfi/agArpFdKopXeXZz+s5rQjE5/lrEFYEr4ZvDsb8tmLgPTJI5Ib9uEa40XrEHVgH91VawsEUdQfqTtqMLgXP0ekN2TzrWQ8k0/U+bCf5uz39fomwN2d10Skao012VJ6AqBfI7ONBvExsmcfvagZf8FEVXHzB80v5BdodrpQoGRA+3dSKNsDTIYJuUdllU7wwQnvmpaECTgYfRryPrSA3uv+0K3cRBDe7PqvKPYWB57ieXmhj5FYZ1GM8pvhMv63oou38e8=
+  template:
+    metadata:
+      creationTimestamp: null
+      name: keykloak-setup
+      namespace: keykloak
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  annotations:
+    linkerd.io/inject: enabled 
+  name: keykloak
+  namespace: gotk-system
+spec:
+  interval: 5m0s
+  chart:
+    spec:
+      chart: keykloak
+      sourceRef:
+        kind: HelmRepository
+        name: codecentric
+  releaseName: keykloak
+  targetNamespace: authzn
