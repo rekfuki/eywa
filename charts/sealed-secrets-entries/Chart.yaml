@@ -1,0 +1,4 @@
+apiVersion: v2
+name: sealed-secrets-entries
+description: A Helm chart for setting up sealed secrets
+version: 0.0.1
