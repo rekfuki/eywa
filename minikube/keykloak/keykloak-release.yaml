@@ -15,6 +15,9 @@ spec:
   releaseName: keycloak
   targetNamespace: authzn
   values:
+    keycloak:
+      persistence:
+        deployPostgres: true
     ingress:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-staging
