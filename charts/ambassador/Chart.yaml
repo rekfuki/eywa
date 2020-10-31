@@ -1,0 +1,4 @@
+apiVersion: v2
+name: ambassador
+description: A Helm chart for Kubernetes
+version: 0.0.1
