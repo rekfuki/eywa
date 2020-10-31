@@ -5,12 +5,12 @@
   shell: curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 
 - name: Check prerequisites
-  shell: gotk check --pre
+  shell: flux check --pre
 
-- name: Bootstrap gotk
+- name: Bootstrap flux
   shell: >
     GITHUB_TOKEN={{ github_token }}
-    gotk bootstrap github
+    flux bootstrap github
     --owner={{ github_user }}
     --repository={{ github_repo }}
     --branch=main
