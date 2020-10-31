@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Release.Name }}-configmap
-data:
-  nginx.conf: |- {{ range .Files.Lines "config/nginx.conf" }}
-    {{ . }}{{ end }}

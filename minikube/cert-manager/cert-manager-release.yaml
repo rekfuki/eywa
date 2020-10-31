@@ -16,64 +16,21 @@ spec:
   values:
     installCRDs: true
 ---
-apiVersion: cert-manager.io/v1alpha3
-kind: ClusterIssuer
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
 metadata:
- name: letsencrypt-staging
- namespace: cert-manager
+  name: cert-manager-dependents
+  namespace: gotk-system
 spec:
- acme:
-   server: https://acme-staging-v02.api.letsencrypt.org/directory
-   email: anavasaitis@gmail.com
-   privateKeySecretRef:
-     name: letsencrypt-staging
-   solvers:
-   - http01:
-       ingress:
-         class:  nginx
----
-apiVersion: cert-manager.io/v1alpha3
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-prod
-  namespace: cert-manager
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: anavasaitis@gmail.com
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          class: nginx
----
-apiVersion: cert-manager.io/v1alpha3
-kind: Issuer
-metadata:
-  name: linkerd-trust-anchor
-  namespace: linkerd
-spec:
-  ca:
-    secretName: linkerd-trust-anchor
----
-apiVersion: cert-manager.io/v1alpha3
-kind: Certificate
-metadata:
-  name: linkerd-identity-issuer
-  namespace: linkerd
-spec:
-  secretName: linkerd-identity-issuer
-  duration: 24h
-  renewBefore: 1h
-  issuerRef:
-    name: linkerd-trust-anchor
-    kind: Issuer
-  commonName: identity.linkerd.cluster.local
-  isCA: true
-  keyAlgorithm: ecdsa
-  usages:
-  - cert sign
-  - crl sign
-  - server auth
-  - client auth
+  dependsOn:
+    -
+      name: cert-manager
+  chart:
+    spec:
+      chart: ./charts/cert-manager-dependents
+      sourceRef:
+        kind: GitRepository
+        name: eywa-charts
+  interval: 5m0s
+  releaseName: cert-manager-dependents
+  targetNamespace: cert-manager
