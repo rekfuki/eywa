@@ -4,6 +4,9 @@ metadata:
   name: cert-manager
   namespace: flux-system
 spec:
+  dependsOn:
+    -
+      name: ambassador-dependents
   chart:
     spec:
       chart: cert-manager
