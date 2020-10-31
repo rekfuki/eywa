@@ -25,3 +25,12 @@ spec:
         linkerd.io/inject: enabled
         meta.helm.sh/release-namespace: authzn
       enabled: true
+      servicePort: 80
+      tls:
+      - hosts:
+        - auth.eywa.rekfuki.dev
+        secretName: auth-certificate
+      rules:
+        - host: auth.eywa.rekfuki.dev
+          paths:
+            - /
