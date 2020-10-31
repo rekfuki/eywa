@@ -1,0 +1,15 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: ambassador-dependents
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: ./charts/ambassador
+      sourceRef:
+        kind: GitRepository
+        name: eywa-charts
+  interval: 5m0s
+  releaseName: ambassador-dependents
+  targetNamespace: ambassador
