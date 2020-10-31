@@ -3,7 +3,7 @@
 # metadata:
 #   creationTimestamp: null
 #   name: discord-webhook-url
-#   namespace: gotk-system
+#   namespace: flux-system
 # spec:
 #   encryptedData:
 #     address: AgA+oLMbfJlP7QN6umSmLo+Qx3eBT4uzpfWMERL8s7PsKSiDd3Kk+IZlcdxNFha3dcat2djY8HoJCnXlt07YpL9gn6UPIQRI1uT6xwQwZWi8dO/1gpW0YfbVOPe2is9fcR1Cikcuo2mANuo5LCMXY7VUU8u4U7r9KXfeTfEGHZ6raFBYl3rG+FM6T1pxFC+o9lWZl520DN9jlUvwKoqKBphl3M+Hv31/KDhKf4THmEJC2gNX+CVULj4DM7Quq7D8B23RTZi6CKuhhQFLLIQvBLTo54SJyf84FJcYfQj1DJ88zJF2x9J75uY8Ykae4PH8XLdMRyMQprdenV/RIqUXBD02nHL6SHja5gUW7IVOjyPrDQQXdiXKShZynoVHnaL7dd77riC6g8ah4nnXL1nUn5Ya9IE1rj5do7mJIL3w7nHyFCBsgpVGgLfgS6nbGMihq0PZvjU6aQeB+gR5TPM38vUo7RrBTRSY2xigzkHtItScw6xQwS7KDMCPa0HDread1//pB+dzxvwR2FpkiWlSpxtFAM7BUoVz9L6TvqrOMQwRLgUSEMI4XlEQPZhOjFnMD0nWfUfIl/twHGgrhnxIEmZ9o86tI3WJ0b09ypzNTEtuUzmzkHSTjdah0eklyxlnUqviAjNZA6dt78uqOXZq+BlsiOkpeKY2fjox+GxWLOmHfdXyXj2+thfoaiVXjibim7aBodh6rRQdDs//pzbLx7Q/bfXXydeVM+WbHTLpQ8ErKjNeVrQ0o2w9eplOG/HTgWXCVKIkeEFOYBMnofxEUCv2WhHQo/IRo8TIJpwvmnm1BCrjuQAvEfr+pZu4eNrC4tnRBgc0zWXZuxT7EANXlStLUTvhs+GfmAhvIDM=
@@ -11,5 +11,5 @@
 #     metadata:
 #       creationTimestamp: null
 #       name: discord-webhook-url
-#       namespace: gotk-system
+#       namespace: flux-system
 

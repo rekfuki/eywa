@@ -3,12 +3,12 @@
 # kind: Alert
 # metadata:
 #   name: discord-verbose
-#   namespace: gotk-system
+#   namespace: flux-system
 # spec:
 #   eventSeverity: info
 #   eventSources:
 #   - kind: GitRepository
-#     name: gotk-system
+#     name: flux-system
 #   - kind: HelmChart
 #     name: '*'
 #   - kind: HelmRelease

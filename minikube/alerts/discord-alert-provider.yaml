@@ -3,7 +3,7 @@
 # kind: Provider
 # metadata:
 #   name: discord
-#   namespace: gotk-system
+#   namespace: flux-system
 # spec:
 #   username: GitOps Toolkit
 #   channel: eywa
