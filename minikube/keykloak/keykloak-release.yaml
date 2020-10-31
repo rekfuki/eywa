@@ -21,7 +21,7 @@ spec:
     ingress:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-staging
-        kubernetes.io/ingress.class: nginx
+        kubernetes.io/ingress.class: ambassador
         linkerd.io/inject: enabled
         meta.helm.sh/release-namespace: authzn
       enabled: true
