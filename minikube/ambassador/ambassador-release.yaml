@@ -1,21 +1,3 @@
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: ambassador
-  namespace: flux-system
-spec:
-  chart:
-    spec:
-      chart: ambassador
-      sourceRef:
-        kind: HelmRepository
-        name: datawire
-  interval: 5m0s
-  releaseName: datawire
-  targetNamespace: ambassador
-  values:
-    hostNetwork: true
-    dnsPolicy: ClusterFirstWithHostNet
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
@@ -23,9 +5,6 @@ metadata:
   name: ambassador-dependents
   namespace: flux-system
 spec:
-  dependsOn:
-    -
-      name: ambassador
   chart:
     spec:
       chart: ./charts/ambassador
