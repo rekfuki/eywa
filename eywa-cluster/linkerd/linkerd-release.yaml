@@ -10,7 +10,7 @@ spec:
     - name: sealed-secrets-dependents
       namespace: flux-system
     - name: cert-manager-dependents
-      namespace: cert-manager
+      namespace: flux-system
   chart:
     spec:
       chart: linkerd2
