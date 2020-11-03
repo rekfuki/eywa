@@ -5,7 +5,7 @@ metadata:
   name: ingress-nginx
   namespsace: flux-system
 spec:
-  interval: 5m0s
+  interval: 10m0s
   chart:
     spec:
       chart: ingress-nginx
