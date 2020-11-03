@@ -6,6 +6,10 @@ metadata:
   namespace: linkerd
 spec:
   interval: 5m0s
+  dependsOn:
+    -
+      sealed-secrets-dependents
+      cert-manager-dependents
   chart:
     spec:
       chart: linkerd2
