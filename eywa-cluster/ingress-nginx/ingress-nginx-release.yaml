@@ -13,3 +13,9 @@ spec:
         name: ingress-nginx
   interval: 10m0s
   targetNamespace: ingress-nginx
+  values:
+    controller:
+      config:
+        proxy-set-headers: l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
+      annotations:
+        linkerd.io/inject: enabled
