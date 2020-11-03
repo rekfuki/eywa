@@ -3,7 +3,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: linkerd
-  namespace: linkerd
+  namespace: flux-system
 spec:
   interval: 5m0s
   dependsOn:
