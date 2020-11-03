@@ -23,8 +23,8 @@ metadata:
   namespace: flux-system
 spec:
   dependsOn:
-    -
-      name: cert-manager
+    - name: cert-manager
+      namespace: cert-manager
   chart:
     spec:
       chart: ./charts/cert-manager-dependents
