@@ -1,3 +1,5 @@
 htpasswd
 ca.crt
 ca.key
+go-watchdog
+handler
