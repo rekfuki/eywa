@@ -6,7 +6,7 @@ ifeq ("$(wildcard $(WATCHDOG))","")
     $(error Directory $(WATCHDOG)/ does not exist)
 endif
 
-IMAGE = $(WATCHDOG)_watchdog
+IMAGE = $(WATCHDOG)-watchdog
 VERSION = $(shell python2 -c "from tag_versioner.version_reader import VersionReader; print VersionReader('$(IMAGE)-').get_docker_version()")
 BUILD_CONTEXT := $(WATCHDOG)
 DOCKER_REGISTRY = registry.eywa.rekfuki.dev
@@ -35,9 +35,5 @@ tag:
 .PHONY: push
 push:
 	@echo "Push docker image..."
-ifeq ($(TAGGED),True)
 	docker push $(DOCKER_REGISTRY)/$(IMAGE):latest
 	docker push $(DOCKER_REGISTRY)/$(IMAGE):$(VERSION)
-else
-	@echo "Tagged container not pushed because $(VERSION) is not clean - commit and tag please!"
-endif
