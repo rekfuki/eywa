@@ -1,0 +1,11 @@
+domain: eywa.rekfuki.dev
+layout: go.kubebuilder.io/v2
+projectName: k8s-operator
+repo: eywa
+resources:
+- group: faas
+  kind: Function
+  version: v1alpha1
+version: 3-alpha
+plugins:
+  go.sdk.operatorframework.io/v2-alpha: {}
