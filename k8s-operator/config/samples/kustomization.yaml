@@ -1,4 +1,0 @@
-## Append samples you want in your CSV to this file as resources ##
-resources:
-- faas_v1alpha1_function.yaml
-# +kubebuilder:scaffold:manifestskustomizesamples
