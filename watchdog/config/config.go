@@ -20,7 +20,6 @@ type WatchdogConfig struct {
 	OperationalMode  int
 	SuppressLock     bool
 	UpstreamURL      string
-	StaticPath       string
 
 	// BufferHTTPBody buffers the HTTP body in memory
 	// to prevent transfer type of chunked encoding
@@ -79,17 +78,11 @@ func New(env []string) WatchdogConfig {
 		contentType = val
 	}
 
-	staticPath := "/home/app/public"
-	if val, exists := envMap["static_path"]; exists {
-		staticPath = val
-	}
-
 	config := WatchdogConfig{
 		TCPPort:          getInt(envMap, "port", 8080),
 		HTTPReadTimeout:  getDuration(envMap, "read_timeout", time.Second*10),
 		HTTPWriteTimeout: getDuration(envMap, "write_timeout", time.Second*10),
 		FunctionProcess:  functionProcess,
-		StaticPath:       staticPath,
 		InjectCGIHeaders: true,
 		ExecTimeout:      getDuration(envMap, "exec_timeout", time.Second*10),
 		OperationalMode:  ModeStreaming,
