@@ -1,30 +1,57 @@
 package k8s
 
 import (
-	"context"
 	"fmt"
+	"math/rand"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+	"time"
 
-	"github.com/davecgh/go-spew/spew"
-	appsv1 "k8s.io/api/apps/v1"
-	apiv1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	log "github.com/sirupsen/logrus"
+	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	corelister "k8s.io/client-go/listers/core/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
+)
 
-	"eywa/gateway/types"
+const (
+	faasNamespace   = "faas"
+	faasIDLabel     = "function"
+	faasSecretMount = "/var/faas/secrets"
 )
 
 type Config struct {
+	InCluster bool
 }
 
 type Client struct {
-	clientset *kubernetes.Clientset
+	clientset      *kubernetes.Clientset
+	endpointLister corelister.EndpointsNamespaceLister
+}
+
+type functionLookup struct {
+	endpointLister corelister.EndpointsLister
+	listers        map[string]corelister.EndpointsNamespaceLister
+
+	lock sync.RWMutex
 }
 
 // Setup initialises a k8s client
 func Setup(conf *Config) (*Client, error) {
-	config, err := rest.InClusterConfig()
+	var config *rest.Config
+	var err error
+	if conf.InCluster {
+		config, err = rest.InClusterConfig()
+	} else {
+		home := homedir.HomeDir()
+		kubeconfig := filepath.Join(home, ".kube", "config")
+		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -35,60 +62,56 @@ func Setup(conf *Config) (*Client, error) {
 		return nil, err
 	}
 
-	return &Client{clientset}, nil
+	defaultResync := time.Second * 1
+
+	kubeInformerOpt := kubeinformers.WithNamespace(faasNamespace)
+	kubeInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(clientset, defaultResync, kubeInformerOpt)
+	go startFactory(kubeInformerFactory)
+
+	endpointsInformer := kubeInformerFactory.Core().V1().Endpoints()
+	lister := endpointsInformer.Lister()
+
+	return &Client{
+		clientset:      clientset,
+		endpointLister: lister.Endpoints(faasNamespace),
+	}, nil
 }
 
-type Deployment struct {
-}
-
-func (c *Client) CreateDeployment(fn *types.Function) (*Deployment, error) {
-	deploymentsClient := c.clientset.AppsV1().Deployments("faas")
-
-	deployment := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "demo-deployment",
-			Namespace: fn.Namespace,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"function": fn.Name,
-				},
-			},
-			Template: apiv1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: fn.Namespace,
-					Labels: map[string]string{
-						"function": fn.Name,
-					},
-				},
-				Spec: apiv1.PodSpec{
-					Containers: []apiv1.Container{
-						{
-							Name:  fn.Name,
-							Image: fn.Image,
-							Ports: []apiv1.ContainerPort{
-								{
-									Name:          "http",
-									Protocol:      apiv1.ProtocolTCP,
-									ContainerPort: 8080,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
+func (c *Client) Resolve(fnName string) (string, error) {
+	if strings.Contains(fnName, ".") {
+		fnName = strings.TrimSuffix(fnName, "."+faasNamespace)
 	}
 
-	fmt.Println("Creating deployment...")
-	result, err := deploymentsClient.Create(context.TODO(), deployment, metav1.CreateOptions{})
+	svc, err := c.endpointLister.Get(fnName)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("Error listing \"%s.%s\": %s", fnName, faasNamespace, err)
 	}
-	fmt.Printf("Created deployment %q.\n", result.GetObjectMeta().GetName())
 
-	spew.Dump(result)
+	if len(svc.Subsets) == 0 {
+		return "", fmt.Errorf("No subsets available for \"%s.%s\"", fnName, faasNamespace)
+	}
 
-	return &Deployment{}, nil
+	all := len(svc.Subsets[0].Addresses)
+	if len(svc.Subsets[0].Addresses) == 0 {
+		return "", fmt.Errorf("No addresses in subset for \"%s.%s\"", fnName, faasNamespace)
+	}
+
+	target := rand.Intn(all)
+
+	serviceIP := svc.Subsets[0].Addresses[target].IP
+
+	return fmt.Sprintf("http://%s:%d", serviceIP, 8080), nil
+}
+
+func startFactory(f kubeinformers.SharedInformerFactory) {
+	stop := make(chan struct{})
+	defer close(stop)
+
+	go f.Start(stop)
+
+	for {
+		<-stop
+		log.Errorf("K8s informer factory stopped...")
+		os.Exit(0)
+	}
 }

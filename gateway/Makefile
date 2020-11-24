@@ -1,4 +1,5 @@
 IMAGE = gateway
+DEBUG ?= false
 BUILD_CONTEXT := .
 DOCKER_REGISTRY = registry.eywa.rekfuki.dev
 VERSION = $(shell git describe --abbrev=0 --tags | grep $(IMAGE) | rev | cut -d '-' -f1 | rev)
@@ -10,7 +11,7 @@ endif
 .PHONY: run
 run:
 	@echo "Running gateway..."
-	KUBERNETES_SERVICE_HOST=192.168.1.44 KUBERNETES_SERVICE_PORT=80k9s GO111MODULE=on go run main.go
+	GO111MODULE=on go run main.go -in-cluster=false -debug=$(DEBUG)
 
 .PHONY: go-build
 go-build:

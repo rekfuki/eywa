@@ -4,7 +4,7 @@ import (
 	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 
-	"eywa/gateway/types"
+	"eywa/gateway/clients/k8s"
 )
 
 type Config struct {
@@ -21,14 +21,14 @@ func Setup(conf *Config) *Client {
 	}
 }
 
-func (c *Client) LookupFunction(name string) *types.Function {
+func (c *Client) LookupFunction(name string) *k8s.Function {
 	functionInterface, found := c.functions.Get(name)
 	if !found {
 		log.Debugf("Function %q not found", name)
 		return nil
 	}
 
-	if fn, ok := functionInterface.(*types.Function); ok {
+	if fn, ok := functionInterface.(*k8s.Function); ok {
 		return fn
 	} else {
 		log.Errorf("Cache returned not a Function type: %T", functionInterface)
