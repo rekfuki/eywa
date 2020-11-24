@@ -3,3 +3,5 @@ ca.crt
 ca.key
 go-watchdog
 handler
+gateway/gateway
+test-kube
