@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -26,12 +27,14 @@ const (
 )
 
 type Config struct {
-	InCluster bool
+	InCluster           bool
+	CacheExpiryDuration time.Duration
 }
 
 type Client struct {
 	clientset      *kubernetes.Clientset
 	endpointLister corelister.EndpointsNamespaceLister
+	cache          *cache.Cache
 }
 
 type functionLookup struct {
@@ -74,6 +77,7 @@ func Setup(conf *Config) (*Client, error) {
 	return &Client{
 		clientset:      clientset,
 		endpointLister: lister.Endpoints(faasNamespace),
+		cache:          cache.New(conf.CacheExpiryDuration, conf.CacheExpiryDuration),
 	}, nil
 }
 

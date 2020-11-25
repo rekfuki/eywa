@@ -54,6 +54,34 @@ func contextObjects(contextParams *ContextParams) echo.MiddlewareFunc {
 	}
 }
 
+func zeroScale() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+
+			k8s := c.Get("k8s").(*k8s.Client)
+
+			functionName := c.Param("name")
+
+			scaleResult, err := k8s.ScaleFromZero(functionName)
+			if err != nil {
+				log.Errorf("Error scaling function from zero: %s", err)
+				return c.JSON(http.StatusInternalServerError, "Internal Server Error")
+			}
+
+			if !scaleResult.Found {
+				log.Debugf("Function %q deployment not found")
+				return c.JSON(http.StatusNotFound, "Function not found")
+			}
+
+			if !scaleResult.Available {
+				log.Errorf("Function %q scale request timed-out after %fs", functionName, scaleResult.Duration)
+			}
+
+			return next(c)
+		}
+	}
+}
+
 // Run starts the api server.
 func Run(params *ContextParams) {
 	r := createRouter(params)
@@ -75,8 +103,8 @@ func createRouter(params *ContextParams) *echo.Echo {
 	systemAPI := CreateFunctionsSystemAPI()
 	e.GET("/eywa/api/gateway/doc", echo.WrapHandler(systemAPI.Handler(enableCors)))
 
-	e.Any("/eywa/api/function/:name/*path", controllers.Proxy)
-
+	// Proxy direct function calls
+	e.Match([]string{"POST", "PUT", "PATCH", "DELETE", "GET"}, "/eywa/api/function/:name/*path", controllers.Proxy, zeroScale())
 	api := e.Group("", sv.SwaggerValidatorEcho(systemAPI))
 	systemAPI.Walk(func(path string, endpoint *swagger.Endpoint) {
 		h := endpoint.Handler.(func(c echo.Context) error)

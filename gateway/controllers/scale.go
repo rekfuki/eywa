@@ -17,17 +17,17 @@ func ScaleFunction(c echo.Context) error {
 		return err
 	}
 
-	function, err := k8sClient.GetFunction(scaleRequest.Name)
+	functionStatus, err := k8sClient.GetFunctionStatus(scaleRequest.Name)
 	if err != nil {
 		log.Errorf("Failed to get function deployment: %s", err)
 		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
 	}
 
-	if function == nil {
+	if functionStatus == nil {
 		return c.JSON(http.StatusNotFound, "Function not found")
 	}
 
-	if err = k8sClient.ScaleFunction(function, scaleRequest.Replicas); err != nil {
+	if err = k8sClient.ScaleFunction(scaleRequest.Name, scaleRequest.Replicas); err != nil {
 		log.Errorf("Failed to delete funtion deployment: %s", err)
 		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
 	}

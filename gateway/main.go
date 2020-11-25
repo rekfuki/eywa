@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -22,7 +23,8 @@ func main() {
 	cache := cache.Setup(&cache.Config{})
 
 	k8s, err := k8s.Setup(&k8s.Config{
-		InCluster: *inCluster,
+		InCluster:           *inCluster,
+		CacheExpiryDuration: time.Second * 5,
 	})
 	if err != nil {
 		log.Fatalf("Failed to setup k8s client: %s", err)

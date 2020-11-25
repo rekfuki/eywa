@@ -11,7 +11,7 @@ import (
 )
 
 func functionsSystemAPI() []*swagger.Endpoint {
-	deployFunction := endpoint.New("POST", "/system/functions/deploy", "Deploy function",
+	deployFunction := endpoint.New("POST", "/system/functions", "Deploy function",
 		endpoint.Description("Deploy a new function to the cluster"),
 		endpoint.Handler(controllers.CreateFunction),
 		endpoint.Body(types.CreateFunctionRequest{}, "Deployt function request payload", true),
@@ -19,7 +19,7 @@ func functionsSystemAPI() []*swagger.Endpoint {
 		endpoint.Tags("Functions"),
 	)
 
-	deleteFunction := endpoint.New("POST", "/system/functions/delete", "Delete function deployment",
+	deleteFunction := endpoint.New("DELETE", "/system/functions", "Delete function deployment",
 		endpoint.Description("Delete function reployment"),
 		endpoint.Handler(controllers.DeleteFunction),
 		endpoint.Body(types.DeleteFunctionRequest{}, "Delete function request body", true),

@@ -19,7 +19,7 @@ func DeleteFunction(c echo.Context) error {
 		return err
 	}
 
-	function, err := k8sClient.GetFunction(deleteRequest.Name)
+	function, err := k8sClient.GetFunctionStatus(deleteRequest.Name)
 	if err != nil {
 		log.Errorf("Failed to get function deployment: %s", err)
 		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
@@ -29,7 +29,7 @@ func DeleteFunction(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, "Function not found")
 	}
 
-	if err = k8sClient.DeleteFunction(function); err != nil {
+	if err = k8sClient.DeleteFunction(deleteRequest.Name); err != nil {
 		log.Errorf("Failed to delete funtion deployment: %s", err)
 		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
 	}

@@ -3,7 +3,9 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
@@ -223,28 +225,26 @@ func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []
 	return nil
 }
 
-func (c *Client) DeleteFunction(fn *Function) error {
+func (c *Client) DeleteFunction(fnName string) error {
 	foregroundPolicy := metav1.DeletePropagationForeground
 	opts := &metav1.DeleteOptions{PropagationPolicy: &foregroundPolicy}
 
 	if err := c.clientset.AppsV1().
-		Deployments(fn.Namespace).
-		Delete(context.TODO(), fn.Name, *opts); err != nil {
+		Deployments(faasNamespace).
+		Delete(context.TODO(), fnName, *opts); err != nil {
 		return err
 	}
 
 	if err := c.clientset.CoreV1().
-		Services(fn.Namespace).
-		Delete(context.TODO(), fn.Name, *opts); err != nil {
+		Services(faasNamespace).
+		Delete(context.TODO(), fnName, *opts); err != nil {
 		return err
 
 	}
 	return nil
 }
 
-func (c *Client) GetFunction(fnName string) (*Function, error) {
-	log.Debugf("[k8s-GetFunction] namespace=%s fnName=%s", faasNamespace, fnName)
-
+func (c *Client) GetFunctionStatus(fnName string) (*FunctionStatus, error) {
 	opts := metav1.GetOptions{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -256,23 +256,186 @@ func (c *Client) GetFunction(fnName string) (*Function, error) {
 		return nil, err
 	}
 
+	if deployment == nil {
+		return nil, nil
+	}
+
 	if _, found := deployment.Labels[faasIDLabel]; !found {
 		return nil, nil
 	}
 
-	return &Function{deployment}, nil
+	var replicas int32
+	if deployment.Spec.Replicas != nil {
+		replicas = *deployment.Spec.Replicas
+	}
+
+	functionContainer := deployment.Spec.Template.Spec.Containers[0]
+
+	labels := deployment.Spec.Template.Labels
+	function := &FunctionStatus{
+		Name:              deployment.Name,
+		Replicas:          replicas,
+		Image:             functionContainer.Image,
+		AvailableReplicas: deployment.Status.AvailableReplicas,
+		Labels:            &labels,
+		Annotations:       &deployment.Spec.Template.Annotations,
+		Namespace:         deployment.Namespace,
+	}
+
+	for _, v := range functionContainer.Env {
+		if "fprocess" == v.Name {
+			function.EnvProcess = v.Value
+		}
+	}
+
+	return function, nil
 }
 
-func (c *Client) ScaleFunction(fn *Function, replicas int32) error {
-	oldReplicas := *fn.Spec.Replicas
+func (c *Client) ScaleFunction(fnName string, replicas int32) error {
+	opts := metav1.GetOptions{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Deployment",
+			APIVersion: "apps/v1",
+		},
+	}
 
-	log.Printf("Set replicas - %s %s, %d/%d\n", fn.Name, faasNamespace, replicas, oldReplicas)
+	deployment, err := c.clientset.AppsV1().Deployments(faasNamespace).Get(context.TODO(), fnName, opts)
+	if err != nil {
+		return err
+	}
 
-	fn.Spec.Replicas = &replicas
+	oldReplicas := *deployment.Spec.Replicas
 
-	_, err := c.clientset.AppsV1().Deployments(faasNamespace).Update(context.TODO(), fn.Deployment, metav1.UpdateOptions{})
+	log.Printf("Set replicas - %s %s, %d/%d\n", deployment.Name, faasNamespace, replicas, oldReplicas)
+
+	deployment.Spec.Replicas = &replicas
+
+	_, err = c.clientset.AppsV1().Deployments(faasNamespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (c *Client) ScaleFromZero(fnName string) (*FunctionZeroScaleResult, error) {
+	start := time.Now()
+
+	if val, found := c.cache.Get(fnName); found {
+		cached, ok := val.(*FunctionStatus)
+		if !ok {
+			return &FunctionZeroScaleResult{
+				Available: false,
+				Found:     false,
+			}, fmt.Errorf("Cache error: expected %T, received %T", &FunctionStatus{}, val)
+		}
+		if cached.AvailableReplicas > 0 {
+			return &FunctionZeroScaleResult{
+				Available: true,
+				Found:     true,
+			}, nil
+		}
+	}
+
+	functionStatus, err := c.GetFunctionStatus(fnName)
+	if err != nil {
+		return &FunctionZeroScaleResult{
+			Available: false,
+			Found:     false,
+			Duration:  time.Since(start),
+		}, err
+	}
+
+	c.cache.Set(fnName, functionStatus, cache.DefaultExpiration)
+
+	if functionStatus.AvailableReplicas == 0 {
+		minReplicas := int32(1)
+		if functionStatus.MinReplicas > 0 {
+			minReplicas = functionStatus.MinReplicas
+		}
+
+		// TODO: move to config
+		attempts := 20
+		interval := time.Millisecond * 50
+		err := backoff(func(attempt int) error {
+			functionStatus, err := c.GetFunctionStatus(fnName)
+			if err != nil {
+				return err
+			}
+
+			c.cache.Set(fnName, functionStatus, cache.DefaultExpiration)
+
+			if functionStatus.AvailableReplicas > 0 {
+				return nil
+			}
+
+			err = c.ScaleFunction(fnName, minReplicas)
+			if err != nil {
+				return fmt.Errorf("Failed to scale function %q, err: %s", fnName, err)
+			}
+			return nil
+		}, attempts, interval)
+
+		if err != nil {
+			return &FunctionZeroScaleResult{
+				Available: false,
+				Found:     true,
+				Duration:  time.Since(start),
+			}, err
+		}
+
+		// TODO: move to config
+		maxPollCount := 1000
+		for i := 0; i < maxPollCount; i++ {
+			functionStatus, err := c.GetFunctionStatus(fnName)
+			if err != nil {
+				return &FunctionZeroScaleResult{
+					Available: false,
+					Found:     true,
+					Duration:  time.Since(start),
+				}, err
+			}
+
+			c.cache.Set(fnName, functionStatus, cache.DefaultExpiration)
+			totalTime := time.Since(start)
+
+			if functionStatus.AvailableReplicas > 0 {
+				log.Printf("Function %q scaled successfully in %fs. Available replicas: %d",
+					fnName, totalTime.Seconds(), functionStatus.AvailableReplicas)
+
+				return &FunctionZeroScaleResult{
+					Available: true,
+					Found:     true,
+					Duration:  totalTime,
+				}, nil
+			}
+
+			time.Sleep(interval)
+		}
+	}
+
+	return &FunctionZeroScaleResult{
+		Available: true,
+		Found:     true,
+		Duration:  time.Since(start),
+	}, nil
+}
+
+type routine func(attempt int) error
+
+func backoff(r routine, attempts int, interval time.Duration) error {
+	var err error
+
+	for i := 0; i < attempts; i++ {
+		res := r(i)
+		if res != nil {
+			err = res
+
+			log.Printf("Attempt: %d, had error: %s\n", i, res)
+		} else {
+			err = nil
+			break
+		}
+		time.Sleep(interval)
+	}
+	return err
 }
