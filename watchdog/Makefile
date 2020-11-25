@@ -7,7 +7,8 @@ ifeq ("$(wildcard ./templates/$(WATCHDOG))","")
 endif
 
 IMAGE = $(WATCHDOG)-watchdog
-VERSION = $(shell git describe --abbrev=0 --tags | grep $(IMAGE) | rev | cut -d '-' -f1 | rev)
+#VERSION = $(shell git describe --abbrev=0 --tags | grep $(IMAGE) | rev | cut -d '-' -f1 | rev)
+VERSION = 0.0.1
 
 ifeq ("$(VERSION)","")
 	$(error Missing tag for $(IMAGE))
@@ -20,8 +21,6 @@ DOCKER_REGISTRY = registry.eywa.rekfuki.dev
 build-watchdog:
 	@echo "Build watchdog binary..."
 	GO111MODULE=on CGO_ENABLED=0 go build -o $(BUILD_CONTEXT)/$(IMAGE) -v main.go
-
-.PHONY: build-handler
 
 .PHONY: build
 build: build-watchdog 
