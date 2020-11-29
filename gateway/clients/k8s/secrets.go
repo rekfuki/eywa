@@ -7,6 +7,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Secret represents k8s secret
+type Secret struct {
+	Name string
+	Data map[string][]byte
+}
+
 func (c *Client) GetSecrets(secrets []string) ([]Secret, error) {
 	kube := c.clientset.CoreV1().Secrets(faasNamespace)
 	opts := metav1.GetOptions{}

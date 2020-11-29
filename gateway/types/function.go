@@ -2,14 +2,17 @@ package types
 
 // CreateFunctionRequest represents function deployment creation request
 type CreateFunctionRequest struct {
-	Image       string             `json:"image" binding:"required"`
-	Service     string             `json:"service" binding:"required"`
-	EnvVars     map[string]string  `json:"env_vars"`
-	Secrets     []string           `json:"secrets"`
-	Labels      *map[string]string `json:"labels"`
-	Annotations *map[string]string `json:"annotations"`
-	Limits      *FunctionResources `json:"limits"`
-	Requests    *FunctionResources `json:"requests"`
+	Image         string             `json:"image" binding:"required"`
+	Service       string             `json:"service" binding:"required"`
+	EnvVars       map[string]string  `json:"env_vars"`
+	Secrets       []string           `json:"secrets"`
+	MinReplicas   int                `json:"min_replicas" minimum:"1" maximum:"100" default:"1"`
+	MaxReplicas   int                `json:"max_replicas" minimum:"1" maximum:"100" default:"100"`
+	ScalingFactor int                `json:"scaling_factor" minimum:"0" maximum:"100" default:"20"`
+	Labels        map[string]string  `json:"labels"`
+	Annotations   map[string]string  `json:"annotations"`
+	Limits        *FunctionResources `json:"limits"`
+	Requests      *FunctionResources `json:"requests"`
 }
 
 // FunctionResources represents resources available to the function

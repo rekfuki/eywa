@@ -10,6 +10,7 @@ import (
 	"gopkg.in/resty.v1"
 
 	"eywa/gateway/clients/k8s"
+	"eywa/gateway/metrics"
 )
 
 func Proxy(c echo.Context) error {
@@ -29,12 +30,17 @@ func Proxy(c echo.Context) error {
 func proxyRequest(c echo.Context) error {
 	proxyClient := c.Get("proxy").(*resty.Client)
 	k8s := c.Get("k8s").(*k8s.Client)
+	metrics := c.Get("metrics").(*metrics.Client)
 
 	functionName := c.Param("name")
 	if functionName == "" {
 		return c.JSON(http.StatusBadRequest, "Missing function name")
 	}
 
+	metrics.Observe(c.Request().Method, c.Request().URL.String(),
+		functionName, http.StatusProcessing, "started", time.Second*0)
+
+	fullChainStart := time.Now()
 	functionAddr, err := k8s.Resolve(functionName)
 	if err != nil {
 		log.Errorf("k8s error: cannot find %s: %s\n", functionName, err)
@@ -50,15 +56,17 @@ func proxyRequest(c echo.Context) error {
 
 	copyHeaders(proxyRequest.Header, &c.Request().Header)
 
-	start := time.Now()
+	proxyStart := time.Now()
 	response, err := proxyRequest.Execute(c.Request().Method, url)
 	if err != nil {
 		log.Errorf("Error with proxy request to: %s, %s\n", proxyRequest.URL, err)
 		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
 	}
-	seconds := time.Since(start)
 
-	log.Infof("%s took %f seconds\n", functionName, seconds.Seconds())
+	log.Infof("%s took %f seconds\n", functionName, time.Since(proxyStart).Seconds())
+
+	metrics.Observe(c.Request().Method, c.Request().URL.String(),
+		functionName, http.StatusOK, "completed", time.Since(fullChainStart))
 
 	return copyResponse(c, response)
 }

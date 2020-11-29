@@ -1,11 +1,8 @@
 package k8s
 
 import (
-	"fmt"
-	"math/rand"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -13,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	appslister "k8s.io/client-go/listers/apps/v1"
 	corelister "k8s.io/client-go/listers/core/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
@@ -24,6 +22,15 @@ const (
 	faasNamespace   = "faas"
 	faasIDLabel     = "function"
 	faasSecretMount = "/var/faas/secrets"
+
+	faasMinReplicasIDLabel = "faas.replicas.min"
+	faasMaxReplicasIDLabel = "faas.replicas.max"
+	faasScaleFactorIDLabel = "faas.scale.factor"
+	faasZeroScaleIDLabel   = "faas.scale.zero"
+
+	defaultMinReplicas   = 1
+	defaultMaxReplicas   = 100
+	defaultScalingFactor = 20
 )
 
 type Config struct {
@@ -32,9 +39,10 @@ type Config struct {
 }
 
 type Client struct {
-	clientset      *kubernetes.Clientset
-	endpointLister corelister.EndpointsNamespaceLister
-	cache          *cache.Cache
+	clientset        *kubernetes.Clientset
+	endpointLister   corelister.EndpointsNamespaceLister
+	deploymentLister appslister.DeploymentNamespaceLister
+	cache            *cache.Cache
 }
 
 type functionLookup struct {
@@ -72,39 +80,17 @@ func Setup(conf *Config) (*Client, error) {
 	go startFactory(kubeInformerFactory)
 
 	endpointsInformer := kubeInformerFactory.Core().V1().Endpoints()
-	lister := endpointsInformer.Lister()
+	endpointsLister := endpointsInformer.Lister()
+
+	deploymentsInformer := kubeInformerFactory.Apps().V1().Deployments()
+	deploymentsLister := deploymentsInformer.Lister()
 
 	return &Client{
-		clientset:      clientset,
-		endpointLister: lister.Endpoints(faasNamespace),
-		cache:          cache.New(conf.CacheExpiryDuration, conf.CacheExpiryDuration),
+		clientset:        clientset,
+		endpointLister:   endpointsLister.Endpoints(faasNamespace),
+		deploymentLister: deploymentsLister.Deployments(faasNamespace),
+		cache:            cache.New(conf.CacheExpiryDuration, conf.CacheExpiryDuration),
 	}, nil
-}
-
-func (c *Client) Resolve(fnName string) (string, error) {
-	if strings.Contains(fnName, ".") {
-		fnName = strings.TrimSuffix(fnName, "."+faasNamespace)
-	}
-
-	svc, err := c.endpointLister.Get(fnName)
-	if err != nil {
-		return "", fmt.Errorf("Error listing \"%s.%s\": %s", fnName, faasNamespace, err)
-	}
-
-	if len(svc.Subsets) == 0 {
-		return "", fmt.Errorf("No subsets available for \"%s.%s\"", fnName, faasNamespace)
-	}
-
-	all := len(svc.Subsets[0].Addresses)
-	if len(svc.Subsets[0].Addresses) == 0 {
-		return "", fmt.Errorf("No addresses in subset for \"%s.%s\"", fnName, faasNamespace)
-	}
-
-	target := rand.Intn(all)
-
-	serviceIP := svc.Subsets[0].Addresses[target].IP
-
-	return fmt.Sprintf("http://%s:%d", serviceIP, 8080), nil
 }
 
 func startFactory(f kubeinformers.SharedInformerFactory) {

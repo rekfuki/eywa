@@ -5,3 +5,4 @@ go-watchdog
 handler
 gateway/gateway
 test-kube
+test-helm

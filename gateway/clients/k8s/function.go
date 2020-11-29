@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -12,12 +13,37 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"eywa/gateway/types"
 )
 
-var replicaCount = int32(1)
+// Function represents FaaS function
+type Function struct {
+	*appsv1.Deployment
+}
+
+type FunctionStatus struct {
+	Name              string
+	Namespace         string
+	Image             string
+	EnvProcess        string
+	Replicas          int32
+	MaxReplicas       int32
+	MinReplicas       int32
+	ScalingFactor     int32
+	AvailableReplicas int32
+	Annotations       *map[string]string
+	Labels            *map[string]string
+}
+
+type FunctionZeroScaleResult struct {
+	Found     bool
+	Available bool
+	Duration  time.Duration
+}
 
 func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []Secret) error {
 	envVars := []corev1.EnvVar{}
@@ -28,16 +54,29 @@ func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []
 		})
 	}
 
-	labels := map[string]string{
-		faasIDLabel: request.Service,
+	labels := map[string]string{}
+	for k, v := range request.Labels {
+		labels[k] = v
 	}
 
-	if request.Labels != nil {
-		for k, v := range *request.Labels {
-			labels[k] = v
-		}
+	if request.MinReplicas == 0 {
+		request.MinReplicas = defaultMinReplicas
 	}
 
+	if request.MaxReplicas == 0 {
+		request.MaxReplicas = defaultMaxReplicas
+	}
+
+	if request.ScalingFactor == 0 {
+		request.ScalingFactor = defaultScalingFactor
+	}
+
+	labels[faasIDLabel] = request.Service
+	labels[faasMinReplicasIDLabel] = strconv.Itoa(request.MinReplicas)
+	labels[faasMaxReplicasIDLabel] = strconv.Itoa(request.MaxReplicas)
+	labels[faasScaleFactorIDLabel] = strconv.Itoa(request.ScalingFactor)
+
+	replicaCount := int32(request.MinReplicas)
 	resources := &apiv1.ResourceRequirements{
 		Limits:   apiv1.ResourceList{},
 		Requests: apiv1.ResourceList{},
@@ -80,8 +119,8 @@ func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []
 	imagePullPolicy := apiv1.PullIfNotPresent
 
 	annotations := map[string]string{}
-	if request.Annotations != nil {
-		annotations = *request.Annotations
+	if len(request.Annotations) > 0 {
+		annotations = request.Annotations
 	}
 
 	deployment := &appsv1.Deployment{
@@ -244,6 +283,30 @@ func (c *Client) DeleteFunction(fnName string) error {
 	return nil
 }
 
+// ListFunctions returns all current function deployments
+func (c *Client) ListFunctions() ([]FunctionStatus, error) {
+	requirement, err := labels.NewRequirement(faasIDLabel, selection.Exists, []string{})
+	if err != nil {
+		return nil, err
+	}
+	selector := labels.NewSelector().Add(*requirement)
+	deployments, err := c.deploymentLister.List(selector)
+	if err != nil {
+		return nil, err
+	}
+
+	fs := []FunctionStatus{}
+	for _, d := range deployments {
+		f, err := deploymentToFunction(d)
+		if err != nil {
+			return nil, err
+		}
+		fs = append(fs, *f)
+	}
+
+	return fs, nil
+}
+
 func (c *Client) GetFunctionStatus(fnName string) (*FunctionStatus, error) {
 	opts := metav1.GetOptions{
 		TypeMeta: metav1.TypeMeta{
@@ -264,27 +327,54 @@ func (c *Client) GetFunctionStatus(fnName string) (*FunctionStatus, error) {
 		return nil, nil
 	}
 
+	return deploymentToFunction(deployment)
+}
+
+func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error) {
 	var replicas int32
 	if deployment.Spec.Replicas != nil {
 		replicas = *deployment.Spec.Replicas
 	}
 
-	functionContainer := deployment.Spec.Template.Spec.Containers[0]
-
-	labels := deployment.Spec.Template.Labels
 	function := &FunctionStatus{
 		Name:              deployment.Name,
 		Replicas:          replicas,
-		Image:             functionContainer.Image,
+		Image:             deployment.Spec.Template.Spec.Containers[0].Image,
 		AvailableReplicas: deployment.Status.AvailableReplicas,
-		Labels:            &labels,
+		Labels:            &deployment.Spec.Template.Labels,
 		Annotations:       &deployment.Spec.Template.Annotations,
 		Namespace:         deployment.Namespace,
 	}
 
-	for _, v := range functionContainer.Env {
+	for _, v := range deployment.Spec.Template.Spec.Containers[0].Env {
 		if "fprocess" == v.Name {
 			function.EnvProcess = v.Value
+		}
+	}
+
+	for k, v := range deployment.Spec.Template.Labels {
+		if k == faasMinReplicasIDLabel {
+			rc64, err := strconv.ParseInt(v, 10, 32)
+			if err != nil {
+				return nil, err
+			}
+			function.MinReplicas = int32(rc64)
+		}
+
+		if k == faasMaxReplicasIDLabel {
+			rc64, err := strconv.ParseInt(v, 10, 32)
+			if err != nil {
+				return nil, err
+			}
+			function.MaxReplicas = int32(rc64)
+		}
+
+		if k == faasScaleFactorIDLabel {
+			rc64, err := strconv.ParseInt(v, 10, 32)
+			if err != nil {
+				return nil, err
+			}
+			function.ScalingFactor = int32(rc64)
 		}
 	}
 
@@ -356,6 +446,7 @@ func (c *Client) ScaleFromZero(fnName string) (*FunctionZeroScaleResult, error) 
 		// TODO: move to config
 		attempts := 20
 		interval := time.Millisecond * 50
+
 		err := backoff(func(attempt int) error {
 			functionStatus, err := c.GetFunctionStatus(fnName)
 			if err != nil {
@@ -385,6 +476,7 @@ func (c *Client) ScaleFromZero(fnName string) (*FunctionZeroScaleResult, error) 
 
 		// TODO: move to config
 		maxPollCount := 1000
+
 		for i := 0; i < maxPollCount; i++ {
 			functionStatus, err := c.GetFunctionStatus(fnName)
 			if err != nil {

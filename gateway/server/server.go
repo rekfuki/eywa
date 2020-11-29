@@ -15,15 +15,15 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"eywa/gateway/cache"
 	"eywa/gateway/clients/k8s"
 	"eywa/gateway/controllers"
+	"eywa/gateway/metrics"
 )
 
 // ContextParams holds the objects required to initialise the server.
 type ContextParams struct {
-	Cache *cache.Client
-	K8s   *k8s.Client
+	K8s     *k8s.Client
+	Metrics *metrics.Client
 }
 
 func contextObjects(contextParams *ContextParams) echo.MiddlewareFunc {
@@ -47,8 +47,8 @@ func contextObjects(contextParams *ContextParams) echo.MiddlewareFunc {
 			})
 
 			c.Set("proxy", rc)
-			c.Set("cache", contextParams.Cache)
 			c.Set("k8s", contextParams.K8s)
+			c.Set("metrics", contextParams.Metrics)
 			return next(c)
 		}
 	}
@@ -99,12 +99,19 @@ func createRouter(params *ContextParams) *echo.Echo {
 	e.Use(middleware.Recover())
 	e.Use(contextObjects(params))
 
+	// Expose metrics for prometheus prometheus
+	e.GET("/metrics", echo.WrapHandler(params.Metrics.PrometheusHandler()))
+
+	// TODO: move this
+	e.POST("/eywa/api/system/alert", controllers.InvocationAlert)
+
+	// Proxy direct function calls
+	e.Match([]string{"POST", "PUT", "PATCH", "DELETE", "GET"}, "/eywa/api/function/:name/*path", controllers.Proxy, zeroScale())
+
 	enableCors := true
 	systemAPI := CreateFunctionsSystemAPI()
 	e.GET("/eywa/api/gateway/doc", echo.WrapHandler(systemAPI.Handler(enableCors)))
 
-	// Proxy direct function calls
-	e.Match([]string{"POST", "PUT", "PATCH", "DELETE", "GET"}, "/eywa/api/function/:name/*path", controllers.Proxy, zeroScale())
 	api := e.Group("", sv.SwaggerValidatorEcho(systemAPI))
 	systemAPI.Walk(func(path string, endpoint *swagger.Endpoint) {
 		h := endpoint.Handler.(func(c echo.Context) error)

@@ -6,8 +6,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"eywa/gateway/cache"
 	"eywa/gateway/clients/k8s"
+	"eywa/gateway/metrics"
 	"eywa/gateway/server"
 )
 
@@ -20,8 +20,6 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	cache := cache.Setup(&cache.Config{})
-
 	k8s, err := k8s.Setup(&k8s.Config{
 		InCluster:           *inCluster,
 		CacheExpiryDuration: time.Second * 5,
@@ -30,9 +28,12 @@ func main() {
 		log.Fatalf("Failed to setup k8s client: %s", err)
 	}
 
+	metrics := metrics.Setup(k8s, time.Second*5)
+	go metrics.FunctionWatcher()
+
 	params := &server.ContextParams{
-		Cache: cache,
-		K8s:   k8s,
+		K8s:     k8s,
+		Metrics: metrics,
 	}
 
 	server.Run(params)
