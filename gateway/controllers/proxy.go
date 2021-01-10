@@ -13,6 +13,7 @@ import (
 	"eywa/gateway/metrics"
 )
 
+// Proxy proxies requests from outside to the corret internal pod
 func Proxy(c echo.Context) error {
 	switch c.Request().Method {
 	case http.MethodPost,

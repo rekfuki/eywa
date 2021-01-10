@@ -16,14 +16,17 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"eywa/gateway/clients/k8s"
+	"eywa/gateway/clients/registry"
 	"eywa/gateway/controllers"
 	"eywa/gateway/metrics"
+	"eywa/go-libs/auth"
 )
 
 // ContextParams holds the objects required to initialise the server.
 type ContextParams struct {
-	K8s     *k8s.Client
-	Metrics *metrics.Client
+	K8s      *k8s.Client
+	Metrics  *metrics.Client
+	Registry *registry.Client
 }
 
 func contextObjects(contextParams *ContextParams) echo.MiddlewareFunc {
@@ -49,6 +52,20 @@ func contextObjects(contextParams *ContextParams) echo.MiddlewareFunc {
 			c.Set("proxy", rc)
 			c.Set("k8s", contextParams.K8s)
 			c.Set("metrics", contextParams.Metrics)
+			c.Set("registry", contextParams.Registry)
+			return next(c)
+		}
+	}
+}
+
+func checkAuth() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			auth := auth.FromHeaders(c.Request().Header)
+			if !auth.Check() {
+				return c.JSON(http.StatusForbidden, "Forbidden")
+			}
+			c.Set("auth", auth)
 			return next(c)
 		}
 	}
@@ -99,20 +116,19 @@ func createRouter(params *ContextParams) *echo.Echo {
 	e.Use(middleware.Recover())
 	e.Use(contextObjects(params))
 
-	// Expose metrics for prometheus prometheus
+	// Expose metrics for prometheus
 	e.GET("/metrics", echo.WrapHandler(params.Metrics.PrometheusHandler()))
 
-	// TODO: move this
 	e.POST("/eywa/api/system/alert", controllers.InvocationAlert)
 
 	// Proxy direct function calls
-	e.Match([]string{"POST", "PUT", "PATCH", "DELETE", "GET"}, "/eywa/api/function/:name/*path", controllers.Proxy, zeroScale())
+	e.Match([]string{"POST", "PUT", "PATCH", "DELETE", "GET"}, "/eywa/api/functions/:name/*path", controllers.Proxy, zeroScale())
 
 	enableCors := true
-	systemAPI := CreateFunctionsSystemAPI()
+	systemAPI := createFunctionsSystemAPI()
 	e.GET("/eywa/api/gateway/doc", echo.WrapHandler(systemAPI.Handler(enableCors)))
 
-	api := e.Group("", sv.SwaggerValidatorEcho(systemAPI))
+	api := e.Group("", checkAuth(), sv.SwaggerValidatorEcho(systemAPI))
 	systemAPI.Walk(func(path string, endpoint *swagger.Endpoint) {
 		h := endpoint.Handler.(func(c echo.Context) error)
 		path = swag.ColonPath(path)
@@ -122,14 +138,15 @@ func createRouter(params *ContextParams) *echo.Echo {
 	return e
 }
 
-func CreateFunctionsSystemAPI() *swagger.API {
+func createFunctionsSystemAPI() *swagger.API {
 	return swag.New(
 		swag.Title("Gateway"),
-		swag.Description(`Gateway System Functions API`),
+		swag.Description(`Gateway API`),
 		swag.Version("2.0"),
 		swag.BasePath("/eywa/api"),
 		swag.Endpoints(aggregateEndpoints(
-			functionsSystemAPI(),
+			functionsAPI(),
+			systemAPI(),
 		)...,
 		),
 	)

@@ -11,41 +11,16 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"eywa/gateway/types"
 )
 
-// Function represents FaaS function
-type Function struct {
-	*appsv1.Deployment
-}
-
-type FunctionStatus struct {
-	Name              string
-	Namespace         string
-	Image             string
-	EnvProcess        string
-	Replicas          int32
-	MaxReplicas       int32
-	MinReplicas       int32
-	ScalingFactor     int32
-	AvailableReplicas int32
-	Annotations       *map[string]string
-	Labels            *map[string]string
-}
-
-type FunctionZeroScaleResult struct {
-	Found     bool
-	Available bool
-	Duration  time.Duration
-}
-
-func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []Secret) error {
+// DeployFunction deploys function to the k8s cluster
+func (c *Client) DeployFunction(request *DeployFunctionRequest, secrets []Secret) (*FunctionStatus, error) {
 	envVars := []corev1.EnvVar{}
 	for k, v := range request.EnvVars {
 		envVars = append(envVars, corev1.EnvVar{
@@ -54,7 +29,10 @@ func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []
 		})
 	}
 
-	labels := map[string]string{}
+	labels := map[string]string{
+		faasIDLabel: request.Service,
+	}
+
 	for k, v := range request.Labels {
 		labels[k] = v
 	}
@@ -86,7 +64,7 @@ func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []
 	if request.Limits != nil && len(request.Limits.Memory) > 0 {
 		qty, err := resource.ParseQuantity(request.Limits.Memory)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		resources.Limits[apiv1.ResourceMemory] = qty
 	}
@@ -94,7 +72,7 @@ func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []
 	if request.Requests != nil && len(request.Requests.Memory) > 0 {
 		qty, err := resource.ParseQuantity(request.Requests.Memory)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		resources.Requests[apiv1.ResourceMemory] = qty
 	}
@@ -103,7 +81,7 @@ func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []
 	if request.Limits != nil && len(request.Limits.CPU) > 0 {
 		qty, err := resource.ParseQuantity(request.Limits.CPU)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		resources.Limits[apiv1.ResourceCPU] = qty
 	}
@@ -111,7 +89,7 @@ func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []
 	if request.Requests != nil && len(request.Requests.CPU) > 0 {
 		qty, err := resource.ParseQuantity(request.Requests.CPU)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		resources.Requests[apiv1.ResourceCPU] = qty
 	}
@@ -127,9 +105,7 @@ func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        request.Service,
 			Annotations: annotations,
-			Labels: map[string]string{
-				faasIDLabel: request.Service,
-			},
+			Labels:      labels,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
@@ -220,11 +196,11 @@ func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []
 		}
 	}
 
-	_, err := c.clientset.AppsV1().
+	deployment, err := c.clientset.AppsV1().
 		Deployments(faasNamespace).
 		Create(context.TODO(), deployment, metav1.CreateOptions{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	service := &corev1.Service{
@@ -258,12 +234,13 @@ func (c *Client) CreateFunction(request *types.CreateFunctionRequest, secrets []
 		Services(faasNamespace).
 		Create(context.TODO(), service, metav1.CreateOptions{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return deploymentToFunction(deployment)
 }
 
+// DeleteFunction deletes the function deployment and service
 func (c *Client) DeleteFunction(fnName string) error {
 	foregroundPolicy := metav1.DeletePropagationForeground
 	opts := &metav1.DeleteOptions{PropagationPolicy: &foregroundPolicy}
@@ -283,13 +260,38 @@ func (c *Client) DeleteFunction(fnName string) error {
 	return nil
 }
 
-// ListFunctions returns all current function deployments
+// ListFunctions returns all functions with faas id label
 func (c *Client) ListFunctions() ([]FunctionStatus, error) {
 	requirement, err := labels.NewRequirement(faasIDLabel, selection.Exists, []string{})
 	if err != nil {
 		return nil, err
 	}
-	selector := labels.NewSelector().Add(*requirement)
+	return c.listFunctions(*requirement)
+}
+
+// ListFunctionsFiltered returns functions filtered by provided labels
+func (c *Client) ListFunctionsFiltered(l map[string]string) ([]FunctionStatus, error) {
+	requirement, err := labels.NewRequirement(faasIDLabel, selection.Exists, []string{})
+	if err != nil {
+		return nil, err
+	}
+
+	requirements := []labels.Requirement{*requirement}
+
+	for k, v := range l {
+		requirement, err := labels.NewRequirement(k, selection.Equals, []string{v})
+		if err != nil {
+			return nil, err
+		}
+		requirements = append(requirements, *requirement)
+	}
+
+	return c.listFunctions(requirements...)
+}
+
+// ListFunctions returns all current function deployments
+func (c *Client) listFunctions(r ...labels.Requirement) ([]FunctionStatus, error) {
+	selector := labels.NewSelector().Add(r...)
 	deployments, err := c.deploymentLister.List(selector)
 	if err != nil {
 		return nil, err
@@ -307,6 +309,7 @@ func (c *Client) ListFunctions() ([]FunctionStatus, error) {
 	return fs, nil
 }
 
+// GetFunctionStatus returns status of the function from k8s
 func (c *Client) GetFunctionStatus(fnName string) (*FunctionStatus, error) {
 	opts := metav1.GetOptions{
 		TypeMeta: metav1.TypeMeta{
@@ -316,11 +319,10 @@ func (c *Client) GetFunctionStatus(fnName string) (*FunctionStatus, error) {
 	}
 	deployment, err := c.clientset.AppsV1().Deployments(faasNamespace).Get(context.TODO(), fnName, opts)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil, nil
+		}
 		return nil, err
-	}
-
-	if deployment == nil {
-		return nil, nil
 	}
 
 	if _, found := deployment.Labels[faasIDLabel]; !found {
@@ -341,14 +343,29 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 		Replicas:          replicas,
 		Image:             deployment.Spec.Template.Spec.Containers[0].Image,
 		AvailableReplicas: deployment.Status.AvailableReplicas,
-		Labels:            &deployment.Spec.Template.Labels,
-		Annotations:       &deployment.Spec.Template.Annotations,
+		Labels:            deployment.Spec.Template.Labels,
+		Annotations:       deployment.Spec.Template.Annotations,
 		Namespace:         deployment.Namespace,
+		Env:               map[string]string{},
 	}
 
-	for _, v := range deployment.Spec.Template.Spec.Containers[0].Env {
-		if "fprocess" == v.Name {
-			function.EnvProcess = v.Value
+	for _, c := range deployment.Spec.Template.Spec.Containers {
+		for _, v := range c.Env {
+			function.Env[v.Name] = v.Value
+		}
+
+		for _, vm := range c.VolumeMounts {
+			function.MountedSecrets = append(function.MountedSecrets, vm.Name)
+		}
+
+		function.Limits = &FunctionResources{
+			CPU:    c.Resources.Limits.Cpu().String(),
+			Memory: c.Resources.Limits.Memory().String(),
+		}
+
+		function.Requests = &FunctionResources{
+			CPU:    c.Resources.Requests.Cpu().String(),
+			Memory: c.Resources.Requests.Memory().String(),
 		}
 	}
 
@@ -381,6 +398,7 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 	return function, nil
 }
 
+// ScaleFunction scales the function to specified replicas
 func (c *Client) ScaleFunction(fnName string, replicas int32) error {
 	opts := metav1.GetOptions{
 		TypeMeta: metav1.TypeMeta{
@@ -407,6 +425,7 @@ func (c *Client) ScaleFunction(fnName string, replicas int32) error {
 	return nil
 }
 
+// ScaleFromZero scales the function from zero replicas to desired
 func (c *Client) ScaleFromZero(fnName string) (*FunctionZeroScaleResult, error) {
 	start := time.Now()
 

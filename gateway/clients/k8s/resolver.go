@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// Resolve resolves from function name to internal address
 func (c *Client) Resolve(fnName string) (string, error) {
 	if strings.Contains(fnName, ".") {
 		fnName = strings.TrimSuffix(fnName, "."+faasNamespace)

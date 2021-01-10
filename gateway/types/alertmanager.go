@@ -1,5 +1,6 @@
 package types
 
+// AlertmanagerAlert represents alert coming from alertmanager
 type AlertmanagerAlert struct {
 	Status   string  `json:"status"`
 	Receiver string  `json:"receiver"`

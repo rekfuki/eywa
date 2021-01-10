@@ -80,7 +80,7 @@ func Setup(k8sClient *k8s.Client, watchInterval time.Duration) *Client {
 	return client
 }
 
-// Notify records metrics in Prometheus
+// Observe records metrics in Prometheus
 func (c *Client) Observe(method string, URL string, fnName string, statusCode int, event string, duration time.Duration) {
 	switch event {
 	case "completed":
@@ -101,6 +101,7 @@ func (c *Client) Observe(method string, URL string, fnName string, statusCode in
 	}
 }
 
+// FunctionWatcher watches currently deployed functions and stores them for metrics
 func (c *Client) FunctionWatcher() {
 	for {
 		functions, err := c.k8sClient.ListFunctions()

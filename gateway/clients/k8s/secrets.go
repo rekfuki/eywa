@@ -13,6 +13,7 @@ type Secret struct {
 	Data map[string][]byte
 }
 
+// GetSecrets returns specified secrets if they exist
 func (c *Client) GetSecrets(secrets []string) ([]Secret, error) {
 	kube := c.clientset.CoreV1().Secrets(faasNamespace)
 	opts := metav1.GetOptions{}
