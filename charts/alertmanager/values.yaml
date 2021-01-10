@@ -1,0 +1,6 @@
+groupWait: 5s
+groupInterval: 10s
+repeatInterval: 30s
+service: gateway
+serviceEndpoint: http://gateway.faas:8080/eywa/api/system/alert
+receiver: scale-up
