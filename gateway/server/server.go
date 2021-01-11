@@ -122,7 +122,7 @@ func createRouter(params *ContextParams) *echo.Echo {
 	e.POST("/eywa/api/system/alert", controllers.InvocationAlert)
 
 	// Proxy direct function calls
-	e.Match([]string{"POST", "PUT", "PATCH", "DELETE", "GET"}, "/eywa/api/functions/:name/*path", controllers.Proxy, zeroScale())
+	e.Match([]string{"POST", "PUT", "PATCH", "DELETE", "GET"}, "/eywa/api/functions/invoke/:name/*path", controllers.Proxy, zeroScale())
 
 	enableCors := true
 	systemAPI := createFunctionsSystemAPI()

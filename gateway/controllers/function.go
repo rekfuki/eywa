@@ -17,27 +17,59 @@ import (
 	"eywa/go-libs/auth"
 )
 
-// GetServices returns list of services
-func GetServices(c echo.Context) error {
-	// TODO: When deployment is being deleted, it should show it as being terminated
-	// Instead of non-existing because otherwise k8s will yell at us saying the deployment still exists
-	return nil
+// GetFunctions returns list of functions scoped to the user
+func GetFunctions(c echo.Context) error {
+	auth := c.Get("auth").(*auth.Auth)
+	k8sClient := c.Get("k8s").(*k8s.Client)
+
+	fss, err := k8sClient.GetFunctionsStatusScoped(auth.UserID)
+	if err != nil {
+		log.Errorf("Failed to get functions from k8s: ", err)
+		return err
+	}
+
+	sfss := []types.FunctionStatusResponse{}
+	for _, fs := range fss {
+		sfss = append(sfss, santiseFunctionStatus(&fs))
+	}
+
+	return c.JSON(http.StatusOK, types.MultiFunctionStatusResponse{
+		Objects: sfss,
+		Total:   len(sfss),
+	})
 }
 
-// GetService returns a specific service
-func GetService(c echo.Context) error {
-	// TODO: When deployment is being deleted, it should show it as being terminated
-	// Instead of non-existing because otherwise k8s will yell at us saying the deployment still exists
-	return nil
+// GetFunction returns a specific service
+func GetFunction(c echo.Context) error {
+	auth := c.Get("auth").(*auth.Auth)
+	k8sClient := c.Get("k8s").(*k8s.Client)
+	functionID := c.Param("function_id")
+
+	fs, err := k8sClient.GetFunctionStatusScoped(functionID, auth.UserID)
+	if err != nil {
+		log.Errorf("Failed to get functions from k8s: ", err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, santiseFunctionStatus(fs))
 }
 
-// DeployFunction deploys a new function
+// DeployFunction deploys a new function onto k8s
 func DeployFunction(c echo.Context) error {
+	return uprateFunction(c, false)
+}
+
+// UpdateFunction updates function deployment
+func UpdateFunction(c echo.Context) error {
+	return uprateFunction(c, true)
+}
+
+func uprateFunction(c echo.Context, update bool) error {
 	auth := c.Get("auth").(*auth.Auth)
 	k8sClient := c.Get("k8s").(*k8s.Client)
 	rc := c.Get("registry").(*registry.Client)
 
-	var dr types.DeployFunctionRequest
+	var dr types.FunctionRequest
 	if err := c.Bind(&dr); err != nil {
 		return err
 	}
@@ -51,6 +83,25 @@ func DeployFunction(c echo.Context) error {
 		})
 	}
 
+	serviceName := buildK8sName(dr.Name, auth.UserID)
+	fs, err := k8sClient.GetFunctionStatusScoped(serviceName, auth.UserID)
+	if err != nil {
+		log.Errorf("Failed to retrieve function status: %s", err)
+		return err
+	}
+
+	if fs != nil {
+		if !update {
+			return c.JSON(http.StatusBadRequest, "Function with specified name already exists")
+		} else if update && fs.DeletedAt != nil {
+			// If the function is in the process of termination
+			// do not let an update happen
+			return c.JSON(http.StatusBadRequest, "Function Not Found")
+		}
+	} else if fs == nil && update {
+		return c.JSON(http.StatusBadRequest, "Function Not Found")
+	}
+
 	image, err := rc.GetImage(dr.ImageID, auth.UserID)
 	if err != nil {
 		log.Errorf("Failed to get image from registry: %s", err)
@@ -61,33 +112,24 @@ func DeployFunction(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, "Image Not Found")
 	}
 
-	serviceName := fmt.Sprintf("%s-%s", dr.Name, image.ID)
-	fn, err := k8sClient.GetFunctionStatus(serviceName)
-	if err != nil {
-		log.Errorf("Failed to retrieve function status: %s", err)
-		return err
-	}
-
-	if fn != nil {
-		return c.JSON(http.StatusBadRequest, "Function with specified name already exists")
-	}
-
 	dr.EnvVars["write_debug"] = "false"
 	if dr.WriteDebug {
 		dr.EnvVars["write_debug"] = "true"
 	}
 
-	if dr.ReadTimeout != time.Duration(0) {
-		dr.EnvVars["read_timeout"] = dr.ReadTimeout.String()
+	// Correct values should be validated by swagger
+	rt, _ := time.ParseDuration(dr.ReadTimeout)
+	if rt != time.Duration(0) {
+		dr.EnvVars["read_timeout"] = dr.ReadTimeout
 	}
 
-	if dr.WriteTimeout != time.Duration(0) {
-		dr.EnvVars["write_timeout"] = dr.WriteTimeout.String()
+	wt, _ := time.ParseDuration(dr.WriteTimeout)
+	if wt != time.Duration(0) {
+		dr.EnvVars["write_timeout"] = dr.WriteTimeout
 	}
 
 	dr.EnvVars["max_inflight"] = fmt.Sprint(dr.MaxInflight)
 
-	unixStr := fmt.Sprint(time.Now().Unix())
 	fr := &k8s.DeployFunctionRequest{
 		Image:         image.TaggedRegistry,
 		Service:       serviceName,
@@ -99,10 +141,8 @@ func DeployFunction(c echo.Context) error {
 		Labels: map[string]string{
 			"user_id":           auth.UserID,
 			"image_id":          image.ID,
-			"function_id":       uuid.NewV4().String(),
+			"function_id":       serviceName,
 			"user_defined_name": dr.Name,
-			"created_at":        unixStr,
-			"updated_at":        unixStr,
 		},
 		Limits: &k8s.FunctionResources{
 			CPU:    dr.Resources.MaxCPU,
@@ -114,9 +154,16 @@ func DeployFunction(c echo.Context) error {
 		},
 	}
 
-	fs, err := k8sClient.DeployFunction(fr, []k8s.Secret{})
+	var action string
+	if update {
+		action = "update"
+		fs, err = k8sClient.UpdateFunction(fs.Name, fr, []k8s.Secret{})
+	} else {
+		action = "create"
+		fs, err = k8sClient.DeployFunction(fr, []k8s.Secret{})
+	}
 	if err != nil {
-		log.Errorf("Failed to deploy function: %s", err)
+		log.Errorf("Failed to %s function: %s", action, err)
 		return err
 	}
 
@@ -125,11 +172,38 @@ func DeployFunction(c echo.Context) error {
 
 // DeleteFunction deletes a function
 func DeleteFunction(c echo.Context) error {
-	return nil
+	auth := c.Get("auth").(*auth.Auth)
+	k8sClient := c.Get("k8s").(*k8s.Client)
+	functionID := c.Param("function_id")
+
+	fs, err := k8sClient.GetFunctionStatusScoped(functionID, auth.UserID)
+	if err != nil {
+		log.Errorf("Failed to to get function from k8s: %s", err)
+		return err
+	}
+
+	if fs == nil {
+		return c.JSON(http.StatusNotFound, "Function Not Found")
+	} else if fs.DeletedAt != nil {
+		return c.JSON(http.StatusBadRequest, "Function is terminating")
+	}
+
+	if err := k8sClient.DeleteFunction(fs.Name); err != nil {
+		log.Errorf("Failed to delete function from k8s: %s", err)
+		return err
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
+
+func buildK8sName(name, userID string) string {
+	userUUID := uuid.FromStringOrNil(userID)
+	functionID := uuid.NewV5(userUUID, name).String()
+	return uuid.NewV5(userUUID, functionID).String()
 }
 
 // Validate further validates the payload after initial swagger validation
-func validateDeployRequest(dr *types.DeployFunctionRequest, l *k8s.ResourceLimits) map[string][]string {
+func validateDeployRequest(dr *types.FunctionRequest, l *k8s.ResourceLimits) map[string][]string {
 	errors := map[string][]string{}
 	if dr.MaxReplicas < dr.MinReplicas {
 		errors["max_replicas"] = append(errors["max_replicas"], "value must be at least equal to min_replicas")
@@ -179,21 +253,22 @@ func cmpLimitStr(a, b string) bool {
 	return valA > valB
 }
 
-func santiseFunctionStatus(fs *k8s.FunctionStatus) (r *types.FunctionStatusResponse) {
-	r = &types.FunctionStatusResponse{
-		FullName:          fs.Name,
-		EnvVars:           fs.Env,
-		MountedSecrets:    fs.MountedSecrets,
-		AvailableReplicas: fs.AvailableReplicas,
-		MinReplicas:       fs.MinReplicas,
-		MaxReplicas:       fs.MaxReplicas,
-		ScalingFactor:     fs.ScalingFactor,
+func santiseFunctionStatus(fs *k8s.FunctionStatus) (r types.FunctionStatusResponse) {
+	r = types.FunctionStatusResponse{
+		EnvVars:       fs.Env,
+		Secrets:       fs.MountedSecrets,
+		MinReplicas:   fs.MinReplicas,
+		MaxReplicas:   fs.MaxReplicas,
+		ScalingFactor: fs.ScalingFactor,
 		Resources: types.FunctionResources{
 			MaxCPU:    fs.Limits.CPU,
 			MaxMemory: fs.Limits.Memory,
 			MinCPU:    fs.Requests.CPU,
 			MinMemory: fs.Requests.Memory,
 		},
+		AvailableReplicas: fs.AvailableReplicas,
+		CreatedAt:         fs.CreatedAt,
+		DeletedAt:         fs.DeletedAt,
 	}
 
 	for k, v := range fs.Labels {
@@ -203,20 +278,7 @@ func santiseFunctionStatus(fs *k8s.FunctionStatus) (r *types.FunctionStatusRespo
 		case "image_id":
 			r.ImageID = v
 		case "user_defined_name":
-			r.ShortName = v
-		case "created_at", "updated_at":
-			t, err := strconv.ParseInt(v, 10, 64)
-			if err != nil {
-				log.Errorf("Function %q has invalid %q set %q: %s", r.FullName, k, v, err)
-				continue
-			}
-
-			ut := time.Unix(t, 0)
-			if k == "created_at" {
-				r.CreatedAt = ut
-			} else {
-				r.UpdatedAt = ut
-			}
+			r.Name = v
 		}
 	}
 
@@ -225,7 +287,7 @@ func santiseFunctionStatus(fs *k8s.FunctionStatus) (r *types.FunctionStatusRespo
 		case "max_inflight":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				log.Errorf("Function %q has invalid max_inflight set %q: %s", r.FullName, v, err)
+				log.Errorf("Function %q has invalid max_inflight set %q: %s", fs.Name, v, err)
 				continue
 			}
 			r.MaxInflight = i
@@ -235,18 +297,10 @@ func santiseFunctionStatus(fs *k8s.FunctionStatus) (r *types.FunctionStatusRespo
 			} else {
 				r.WriteDebug = false
 			}
-		case "read_timeout", "write_timeout":
-			d, err := time.ParseDuration(v)
-			if err != nil {
-				log.Errorf("Function %q has invalid %q set %q: %s", r.FullName, k, v, err)
-				continue
-			}
-
-			if k == "read_timeout" {
-				r.ReadTimeout = d
-			} else {
-				r.WriteTimeout = d
-			}
+		case "read_timeout":
+			r.ReadTimeout = v
+		case "write_timeout":
+			r.WriteTimeout = v
 		}
 	}
 

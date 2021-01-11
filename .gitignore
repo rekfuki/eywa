@@ -4,5 +4,7 @@ ca.key
 go-watchdog
 handler
 gateway/gateway
+registry/registry
 test-kube
 test-helm
+test-registry

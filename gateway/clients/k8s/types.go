@@ -17,6 +17,19 @@ type DeployFunctionRequest struct {
 	Requests      *FunctionResources `json:"requests"`
 }
 
+// UpdateFunctionRequest represents function deployment update request
+type UpdateFunctionRequest struct {
+	EnvVars       map[string]string  `json:"env_vars"`
+	Secrets       []string           `json:"secrets"`
+	MinReplicas   int                `json:"min_replicas" minimum:"1" maximum:"100" default:"1"`
+	MaxReplicas   int                `json:"max_replicas" minimum:"1" maximum:"100" default:"100"`
+	ScalingFactor int                `json:"scaling_factor" minimum:"0" maximum:"100" default:"20"`
+	Labels        map[string]string  `json:"labels"`
+	Annotations   map[string]string  `json:"annotations"`
+	Limits        *FunctionResources `json:"limits"`
+	Requests      *FunctionResources `json:"requests"`
+}
+
 // FunctionStatus represents the deployed function status in k8s
 type FunctionStatus struct {
 	Name              string             `json:"name"`
@@ -24,15 +37,17 @@ type FunctionStatus struct {
 	Image             string             `json:"image"`
 	Env               map[string]string  `json:"env"`
 	MountedSecrets    []string           `json:"mounted_secrets"`
-	Replicas          int32              `json:"replicas"`
-	MaxReplicas       int32              `json:"max_replicas"`
-	MinReplicas       int32              `json:"min_replicas"`
-	ScalingFactor     int32              `json:"scaling_factor"`
-	AvailableReplicas int32              `json:"available_replicas"`
+	Replicas          int                `json:"replicas"`
+	MaxReplicas       int                `json:"max_replicas"`
+	MinReplicas       int                `json:"min_replicas"`
+	ScalingFactor     int                `json:"scaling_factor"`
+	AvailableReplicas int                `json:"available_replicas"`
 	Annotations       map[string]string  `json:"annotations"`
 	Labels            map[string]string  `json:"labels"`
 	Limits            *FunctionResources `json:"limits"`
 	Requests          *FunctionResources `json:"requests"`
+	CreatedAt         time.Time          `json:"created_at"`
+	DeletedAt         *time.Time         `json:"deleted_at,omitempty"`
 }
 
 // FunctionResources represents resources available to the function

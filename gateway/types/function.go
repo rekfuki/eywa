@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-// DeployFunctionRequest represents a request payload for function deployment
-type DeployFunctionRequest struct {
+// FunctionRequest represents a request payload for function deployment and update
+type FunctionRequest struct {
 	ImageID       string            `json:"image_id" format:"uuid" binding:"required"`
 	Name          string            `json:"name" min_length:"5" pattern:"^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$" binding:"required"`
 	EnvVars       map[string]string `json:"env_vars" min_length:"1"`
@@ -15,30 +15,35 @@ type DeployFunctionRequest struct {
 	ScalingFactor int               `json:"scaling_factor" minimum:"0" maximum:"100"`
 	MaxInflight   int               `json:"max_concurrency" minimum:"0"`
 	WriteDebug    bool              `json:"write_debug"`
-	ReadTimeout   time.Duration     `json:"read_timeout" pattern:"^[1-9]{1}\\d{0,}s$"`
-	WriteTimeout  time.Duration     `json:"write_timeout" pattern:"^[1-9]{1}\\d{0,}s$"`
+	ReadTimeout   string            `json:"read_timeout" pattern:"^[1-9]{1}\\d{0,}s$"`
+	WriteTimeout  string            `json:"write_timeout" pattern:"^[1-9]{1}\\d{0,}s$"`
 	Resources     FunctionResources `json:"resources" binding:"required"`
+}
+
+// MultiFunctionStatusResponse represents the response of multiple status returns
+type MultiFunctionStatusResponse struct {
+	Objects []FunctionStatusResponse `json:"objects"`
+	Total   int                      `json:"total"`
 }
 
 // FunctionStatusResponse represents a function status response that has been sanitized
 type FunctionStatusResponse struct {
 	ID                string            `json:"id"`
 	ImageID           string            `json:"image_id"`
-	ShortName         string            `json:"short_name"`
-	FullName          string            `json:"full_name"`
-	EnvVars           map[string]string `json:"env_vars"`
-	MountedSecrets    []string          `json:"mounted_secrets"`
-	AvailableReplicas int32             `json:"available_replicas"`
-	MinReplicas       int32             `json:"min_replicas"`
-	MaxReplicas       int32             `json:"max_replicas"`
-	ScalingFactor     int32             `json:"scaling_factor" minimum:"0" maximum:"100"`
+	Name              string            `json:"short_name"`
+	EnvVars           map[string]string `json:"env_vars" min_length:"1"`
+	Secrets           []string          `json:"secrets"`
+	AvailableReplicas int               `json:"available_replicas"`
+	MinReplicas       int               `json:"min_replicas" minimum:"0" maximum:"100" binding:"required"`
+	MaxReplicas       int               `json:"max_replicas" minimum:"1" maximum:"100" binding:"required"`
+	ScalingFactor     int               `json:"scaling_factor" minimum:"0" maximum:"100"`
 	MaxInflight       int               `json:"max_concurrency" minimum:"0"`
 	WriteDebug        bool              `json:"write_debug"`
-	ReadTimeout       time.Duration     `json:"read_timeout"`
-	WriteTimeout      time.Duration     `json:"write_timeout"`
-	Resources         FunctionResources `json:"resources"`
+	ReadTimeout       string            `json:"read_timeout" pattern:"^[1-9]{1}\\d{0,}s$"`
+	WriteTimeout      string            `json:"write_timeout" pattern:"^[1-9]{1}\\d{0,}s$"`
+	Resources         FunctionResources `json:"resources" binding:"required"`
 	CreatedAt         time.Time         `json:"created_at"`
-	UpdatedAt         time.Time         `json:"updated_at"`
+	DeletedAt         *time.Time        `json:"deleted_at,omitempty"`
 }
 
 // FunctionResources represents request and limit resources of k8s

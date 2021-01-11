@@ -11,7 +11,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -21,6 +20,116 @@ import (
 
 // DeployFunction deploys function to the k8s cluster
 func (c *Client) DeployFunction(request *DeployFunctionRequest, secrets []Secret) (*FunctionStatus, error) {
+	deployment, err := buildDeployment(request, secrets)
+	if err != nil {
+		return nil, err
+	}
+
+	deployment, err = c.clientset.AppsV1().
+		Deployments(faasNamespace).
+		Create(context.TODO(), deployment, metav1.CreateOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	service := buildService(request)
+	_, err = c.clientset.CoreV1().
+		Services(faasNamespace).
+		Create(context.TODO(), service, metav1.CreateOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return deploymentToFunction(deployment)
+}
+
+// UpdateFunction updates function deployment
+func (c *Client) UpdateFunction(oldName string, request *DeployFunctionRequest, secrets []Secret) (*FunctionStatus, error) {
+	context := context.TODO()
+	baseDeployment, err := buildDeployment(request, secrets)
+	if err != nil {
+		return nil, err
+	}
+
+	deployment, err := c.clientset.AppsV1().Deployments(faasNamespace).Get(context, oldName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	deployment.ObjectMeta.Name = baseDeployment.ObjectMeta.Name
+	deployment.ObjectMeta.Annotations = baseDeployment.ObjectMeta.Annotations
+	deployment.ObjectMeta.Labels = baseDeployment.Labels
+	deployment.Spec = baseDeployment.Spec
+
+	deployment, err = c.clientset.AppsV1().
+		Deployments(faasNamespace).
+		Update(context, deployment, metav1.UpdateOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	service, err := c.clientset.CoreV1().Services(faasNamespace).Get(context, oldName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	annotations := map[string]string{}
+	if len(request.Annotations) > 0 {
+		annotations = request.Annotations
+	}
+
+	service.ObjectMeta.Name = request.Service
+	service.ObjectMeta.Annotations = annotations
+	service.Spec.Selector = map[string]string{
+		faasIDLabel: request.Service,
+	}
+
+	_, err = c.clientset.CoreV1().
+		Services(faasNamespace).
+		Update(context, service, metav1.UpdateOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return deploymentToFunction(deployment)
+}
+
+func buildService(request *DeployFunctionRequest) *corev1.Service {
+	annotations := map[string]string{}
+	if len(request.Annotations) > 0 {
+		annotations = request.Annotations
+	}
+
+	return &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        request.Service,
+			Annotations: annotations,
+		},
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeClusterIP,
+			Selector: map[string]string{
+				faasIDLabel: request.Service,
+			},
+			Ports: []corev1.ServicePort{
+				{
+					Name:     "http",
+					Protocol: corev1.ProtocolTCP,
+					Port:     8080,
+					TargetPort: intstr.IntOrString{
+						Type:   intstr.Int,
+						IntVal: 8080,
+					},
+				},
+			},
+		},
+	}
+}
+
+func buildDeployment(request *DeployFunctionRequest, secrets []Secret) (*appsv1.Deployment, error) {
 	envVars := []corev1.EnvVar{}
 	for k, v := range request.EnvVars {
 		envVars = append(envVars, corev1.EnvVar{
@@ -196,48 +305,7 @@ func (c *Client) DeployFunction(request *DeployFunctionRequest, secrets []Secret
 		}
 	}
 
-	deployment, err := c.clientset.AppsV1().
-		Deployments(faasNamespace).
-		Create(context.TODO(), deployment, metav1.CreateOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	service := &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        request.Service,
-			Annotations: annotations,
-		},
-		Spec: corev1.ServiceSpec{
-			Type: corev1.ServiceTypeClusterIP,
-			Selector: map[string]string{
-				faasIDLabel: request.Service,
-			},
-			Ports: []corev1.ServicePort{
-				{
-					Name:     "http",
-					Protocol: corev1.ProtocolTCP,
-					Port:     8080,
-					TargetPort: intstr.IntOrString{
-						Type:   intstr.Int,
-						IntVal: 8080,
-					},
-				},
-			},
-		},
-	}
-	_, err = c.clientset.CoreV1().
-		Services(faasNamespace).
-		Create(context.TODO(), service, metav1.CreateOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	return deploymentToFunction(deployment)
+	return deployment, nil
 }
 
 // DeleteFunction deletes the function deployment and service
@@ -260,17 +328,62 @@ func (c *Client) DeleteFunction(fnName string) error {
 	return nil
 }
 
-// ListFunctions returns all functions with faas id label
-func (c *Client) ListFunctions() ([]FunctionStatus, error) {
-	requirement, err := labels.NewRequirement(faasIDLabel, selection.Exists, []string{})
+// GetFunctionStatus returns status of the function from k8s
+func (c *Client) GetFunctionStatus(fnName string) (*FunctionStatus, error) {
+	return c.getFunctionStatus(map[string]string{"function_id": fnName})
+}
+
+// GetFunctionStatusScoped returns function filtered by userID
+func (c *Client) GetFunctionStatusScoped(fnName, userID string) (*FunctionStatus, error) {
+	return c.getFunctionStatus(map[string]string{"function_id": fnName, "user_id": userID})
+}
+
+func (c *Client) getFunctionStatus(l map[string]string) (*FunctionStatus, error) {
+	deployments, err := c.listFunctions(l)
 	if err != nil {
 		return nil, err
 	}
-	return c.listFunctions(*requirement)
+
+	if len(deployments.Items) == 0 {
+		return nil, nil
+	}
+
+	if len(deployments.Items) != 1 {
+		log.Warnf("K8s returned more than one result when only one was expected: %#v", l)
+	}
+
+	return deploymentToFunction(&deployments.Items[0])
 }
 
-// ListFunctionsFiltered returns functions filtered by provided labels
-func (c *Client) ListFunctionsFiltered(l map[string]string) ([]FunctionStatus, error) {
+// GetFunctionsStatus returns all functions with faas id label
+func (c *Client) GetFunctionsStatus() ([]FunctionStatus, error) {
+	return c.getFunctionsStatus(map[string]string{})
+}
+
+// GetFunctionsStatusScoped returns functions filtered by userID
+func (c *Client) GetFunctionsStatusScoped(userID string) ([]FunctionStatus, error) {
+	return c.getFunctionsStatus(map[string]string{"user_id": userID})
+}
+
+func (c *Client) getFunctionsStatus(l map[string]string) ([]FunctionStatus, error) {
+	functions, err := c.listFunctions(l)
+	if err != nil {
+		return nil, err
+	}
+
+	fs := []FunctionStatus{}
+	for _, d := range functions.Items {
+		f, err := deploymentToFunction(&d)
+		if err != nil {
+			return nil, err
+		}
+		fs = append(fs, *f)
+	}
+
+	return fs, nil
+}
+
+func (c *Client) listFunctions(l map[string]string) (*appsv1.DeploymentList, error) {
 	requirement, err := labels.NewRequirement(faasIDLabel, selection.Exists, []string{})
 	if err != nil {
 		return nil, err
@@ -286,67 +399,37 @@ func (c *Client) ListFunctionsFiltered(l map[string]string) ([]FunctionStatus, e
 		requirements = append(requirements, *requirement)
 	}
 
-	return c.listFunctions(requirements...)
-}
-
-// ListFunctions returns all current function deployments
-func (c *Client) listFunctions(r ...labels.Requirement) ([]FunctionStatus, error) {
-	selector := labels.NewSelector().Add(r...)
-	deployments, err := c.deploymentLister.List(selector)
-	if err != nil {
-		return nil, err
-	}
-
-	fs := []FunctionStatus{}
-	for _, d := range deployments {
-		f, err := deploymentToFunction(d)
-		if err != nil {
-			return nil, err
-		}
-		fs = append(fs, *f)
-	}
-
-	return fs, nil
-}
-
-// GetFunctionStatus returns status of the function from k8s
-func (c *Client) GetFunctionStatus(fnName string) (*FunctionStatus, error) {
-	opts := metav1.GetOptions{
+	opts := metav1.ListOptions{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
 			APIVersion: "apps/v1",
 		},
-	}
-	deployment, err := c.clientset.AppsV1().Deployments(faasNamespace).Get(context.TODO(), fnName, opts)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, err
+		LabelSelector: labels.NewSelector().Add(requirements...).String(),
 	}
 
-	if _, found := deployment.Labels[faasIDLabel]; !found {
-		return nil, nil
-	}
-
-	return deploymentToFunction(deployment)
+	return c.clientset.AppsV1().Deployments(faasNamespace).List(context.TODO(), opts)
 }
 
 func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error) {
-	var replicas int32
+	var replicas int
 	if deployment.Spec.Replicas != nil {
-		replicas = *deployment.Spec.Replicas
+		replicas = int(*deployment.Spec.Replicas)
 	}
 
 	function := &FunctionStatus{
 		Name:              deployment.Name,
 		Replicas:          replicas,
 		Image:             deployment.Spec.Template.Spec.Containers[0].Image,
-		AvailableReplicas: deployment.Status.AvailableReplicas,
+		AvailableReplicas: int(deployment.Status.AvailableReplicas),
 		Labels:            deployment.Spec.Template.Labels,
 		Annotations:       deployment.Spec.Template.Annotations,
 		Namespace:         deployment.Namespace,
+		CreatedAt:         deployment.ObjectMeta.CreationTimestamp.Time,
 		Env:               map[string]string{},
+	}
+
+	if deployment.ObjectMeta.DeletionTimestamp != nil {
+		function.DeletedAt = &deployment.ObjectMeta.DeletionTimestamp.Time
 	}
 
 	for _, c := range deployment.Spec.Template.Spec.Containers {
@@ -375,7 +458,7 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 			if err != nil {
 				return nil, err
 			}
-			function.MinReplicas = int32(rc64)
+			function.MinReplicas = int(rc64)
 		}
 
 		if k == faasMaxReplicasIDLabel {
@@ -383,7 +466,7 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 			if err != nil {
 				return nil, err
 			}
-			function.MaxReplicas = int32(rc64)
+			function.MaxReplicas = int(rc64)
 		}
 
 		if k == faasScaleFactorIDLabel {
@@ -391,7 +474,7 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 			if err != nil {
 				return nil, err
 			}
-			function.ScalingFactor = int32(rc64)
+			function.ScalingFactor = int(rc64)
 		}
 	}
 
@@ -399,7 +482,7 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 }
 
 // ScaleFunction scales the function to specified replicas
-func (c *Client) ScaleFunction(fnName string, replicas int32) error {
+func (c *Client) ScaleFunction(fnName string, replicas int) error {
 	opts := metav1.GetOptions{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -416,7 +499,8 @@ func (c *Client) ScaleFunction(fnName string, replicas int32) error {
 
 	log.Printf("Set replicas - %s %s, %d/%d\n", deployment.Name, faasNamespace, replicas, oldReplicas)
 
-	deployment.Spec.Replicas = &replicas
+	i32Replicas := int32(replicas)
+	deployment.Spec.Replicas = &i32Replicas
 
 	_, err = c.clientset.AppsV1().Deployments(faasNamespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 	if err != nil {
@@ -457,7 +541,7 @@ func (c *Client) ScaleFromZero(fnName string) (*FunctionZeroScaleResult, error) 
 	c.cache.Set(fnName, functionStatus, cache.DefaultExpiration)
 
 	if functionStatus.AvailableReplicas == 0 {
-		minReplicas := int32(1)
+		minReplicas := 1
 		if functionStatus.MinReplicas > 0 {
 			minReplicas = functionStatus.MinReplicas
 		}

@@ -15,7 +15,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
-	appslister "k8s.io/client-go/listers/apps/v1"
 	corelister "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -53,11 +52,10 @@ type Config struct {
 
 // Client represents the k8s client
 type Client struct {
-	clientset        *kubernetes.Clientset
-	endpointLister   corelister.EndpointsNamespaceLister
-	deploymentLister appslister.DeploymentNamespaceLister
-	limitRange       *v1.LimitRange
-	cache            *cache.Cache
+	clientset      *kubernetes.Clientset
+	endpointLister corelister.EndpointsNamespaceLister
+	limitRange     *v1.LimitRange
+	cache          *cache.Cache
 }
 
 type functionLookup struct {
@@ -101,15 +99,11 @@ func Setup(conf *Config) (*Client, error) {
 	endpointsInformer := kubeInformerFactory.Core().V1().Endpoints()
 	endpointsLister := endpointsInformer.Lister()
 
-	deploymentsInformer := kubeInformerFactory.Apps().V1().Deployments()
-	deploymentsLister := deploymentsInformer.Lister()
-
 	return &Client{
-		clientset:        clientset,
-		endpointLister:   endpointsLister.Endpoints(faasNamespace),
-		deploymentLister: deploymentsLister.Deployments(faasNamespace),
-		limitRange:       limitRange,
-		cache:            cache.New(conf.CacheExpiryDuration, conf.CacheExpiryDuration),
+		clientset:      clientset,
+		endpointLister: endpointsLister.Endpoints(faasNamespace),
+		limitRange:     limitRange,
+		cache:          cache.New(conf.CacheExpiryDuration, conf.CacheExpiryDuration),
 	}, nil
 }
 

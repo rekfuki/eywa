@@ -2,6 +2,8 @@ module eywa
 
 go 1.15
 
+replace github.com/miketonks/swag-validator => /repos/swag-validator
+
 require (
 	cloud.google.com/go v0.54.0 // indirect
 	github.com/Azure/go-autorest/autorest v0.11.1 // indirect
@@ -9,13 +11,15 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fvbock/endless v0.0.0-20170109170031-447134032cb6
 	github.com/google/go-cmp v0.5.3 // indirect
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.1.17
 	github.com/miketonks/swag v0.0.0-20201101082928-809ef19ffaec
 	github.com/miketonks/swag-validator v0.0.0-20200618082841-744f7d5ba06b
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.8.0
+	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.7.0
-	github.com/stretchr/testify v1.6.1 // indirect
+	go.mongodb.org/mongo-driver v1.4.4
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b // indirect
 	golang.org/x/sys v0.0.0-20201112073958-5cba982894dd // indirect
 	golang.org/x/text v0.3.4 // indirect

@@ -40,8 +40,8 @@ func InvocationAlert(c echo.Context) error {
 			return c.JSON(http.StatusNotFound, fmt.Sprintf("Function %q not found", alert.Labels.FunctionName))
 		}
 
-		var newReplicas int32
-		step := int32(math.Ceil(float64(fs.MaxReplicas) / 100 * float64(fs.ScalingFactor)))
+		var newReplicas int
+		step := int(math.Ceil(float64(fs.MaxReplicas) / 100 * float64(fs.ScalingFactor)))
 		if body.Status == "firing" && step > 0 {
 			newReplicas = fs.Replicas + step
 			if newReplicas > fs.MaxReplicas {

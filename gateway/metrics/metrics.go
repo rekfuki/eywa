@@ -104,7 +104,7 @@ func (c *Client) Observe(method string, URL string, fnName string, statusCode in
 // FunctionWatcher watches currently deployed functions and stores them for metrics
 func (c *Client) FunctionWatcher() {
 	for {
-		functions, err := c.k8sClient.ListFunctions()
+		functions, err := c.k8sClient.GetFunctionsStatus()
 		if err != nil {
 			log.Errorf("Failed to list current functions: %s", err)
 			continue
