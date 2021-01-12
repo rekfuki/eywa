@@ -51,7 +51,9 @@ func (c *Client) UpdateFunction(oldName string, request *DeployFunctionRequest, 
 		return nil, err
 	}
 
-	deployment, err := c.clientset.AppsV1().Deployments(faasNamespace).Get(context, oldName, metav1.GetOptions{})
+	deployment, err := c.clientset.AppsV1().
+		Deployments(faasNamespace).
+		Get(context, oldName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +70,9 @@ func (c *Client) UpdateFunction(oldName string, request *DeployFunctionRequest, 
 		return nil, err
 	}
 
-	service, err := c.clientset.CoreV1().Services(faasNamespace).Get(context, oldName, metav1.GetOptions{})
+	service, err := c.clientset.CoreV1().
+		Services(faasNamespace).
+		Get(context, oldName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -453,28 +457,28 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 	}
 
 	for k, v := range deployment.Spec.Template.Labels {
-		if k == faasMinReplicasIDLabel {
-			rc64, err := strconv.ParseInt(v, 10, 32)
+		switch k {
+		case faasMinReplicasIDLabel, faasMaxReplicasIDLabel, faasScaleFactorIDLabel:
+			i64, err := strconv.ParseInt(v, 10, 32)
 			if err != nil {
 				return nil, err
 			}
-			function.MinReplicas = int(rc64)
-		}
 
-		if k == faasMaxReplicasIDLabel {
-			rc64, err := strconv.ParseInt(v, 10, 32)
-			if err != nil {
-				return nil, err
-			}
-			function.MaxReplicas = int(rc64)
-		}
+			i := int(i64)
 
-		if k == faasScaleFactorIDLabel {
-			rc64, err := strconv.ParseInt(v, 10, 32)
+			if k == faasMinReplicasIDLabel {
+				function.MinReplicas = i
+			} else if k == faasMaxReplicasIDLabel {
+				function.MaxReplicas = i
+			} else {
+				function.ScalingFactor = i
+			}
+		case updatedAtLabel:
+			t, err := time.Parse(time.RFC3339, v)
 			if err != nil {
 				return nil, err
 			}
-			function.ScalingFactor = int(rc64)
+			function.UpdatedAt = t
 		}
 	}
 
@@ -490,7 +494,9 @@ func (c *Client) ScaleFunction(fnName string, replicas int) error {
 		},
 	}
 
-	deployment, err := c.clientset.AppsV1().Deployments(faasNamespace).Get(context.TODO(), fnName, opts)
+	deployment, err := c.clientset.AppsV1().
+		Deployments(faasNamespace).
+		Get(context.TODO(), fnName, opts)
 	if err != nil {
 		return err
 	}
@@ -502,7 +508,9 @@ func (c *Client) ScaleFunction(fnName string, replicas int) error {
 	i32Replicas := int32(replicas)
 	deployment.Spec.Replicas = &i32Replicas
 
-	_, err = c.clientset.AppsV1().Deployments(faasNamespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+	_, err = c.clientset.AppsV1().
+		Deployments(faasNamespace).
+		Update(context.TODO(), deployment, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}

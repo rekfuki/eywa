@@ -38,6 +38,8 @@ const (
 	defaultScalingFactor = 20
 
 	limitRangeName = "resources-min-max"
+
+	updatedAtLabel = "updated_at"
 )
 
 // Config represents the configuration of k8s client

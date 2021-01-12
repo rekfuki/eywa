@@ -30,7 +30,7 @@ func GetFunctions(c echo.Context) error {
 
 	sfss := []types.FunctionStatusResponse{}
 	for _, fs := range fss {
-		sfss = append(sfss, santiseFunctionStatus(&fs))
+		sfss = append(sfss, makeFunctionStatusResponse(&fs))
 	}
 
 	return c.JSON(http.StatusOK, types.MultiFunctionStatusResponse{
@@ -51,7 +51,7 @@ func GetFunction(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, santiseFunctionStatus(fs))
+	return c.JSON(http.StatusOK, makeFunctionStatusResponse(fs))
 }
 
 // DeployFunction deploys a new function onto k8s
@@ -96,7 +96,7 @@ func uprateFunction(c echo.Context, update bool) error {
 		} else if update && fs.DeletedAt != nil {
 			// If the function is in the process of termination
 			// do not let an update happen
-			return c.JSON(http.StatusBadRequest, "Function Not Found")
+			return c.JSON(http.StatusBadRequest, "Function is terminating")
 		}
 	} else if fs == nil && update {
 		return c.JSON(http.StatusBadRequest, "Function Not Found")
@@ -139,10 +139,10 @@ func uprateFunction(c echo.Context, update bool) error {
 		MaxReplicas:   dr.MaxReplicas,
 		ScalingFactor: dr.ScalingFactor,
 		Labels: map[string]string{
-			"user_id":           auth.UserID,
-			"image_id":          image.ID,
-			"function_id":       serviceName,
-			"user_defined_name": dr.Name,
+			types.UserIDLabel:          auth.UserID,
+			types.ImageIDLabel:         image.ID,
+			types.FunctionIDLabel:      serviceName,
+			types.UserDefinedNameLabel: dr.Name,
 		},
 		Limits: &k8s.FunctionResources{
 			CPU:    dr.Resources.MaxCPU,
@@ -167,7 +167,7 @@ func uprateFunction(c echo.Context, update bool) error {
 		return err
 	}
 
-	return c.JSON(http.StatusCreated, santiseFunctionStatus(fs))
+	return c.JSON(http.StatusCreated, makeFunctionStatusResponse(fs))
 }
 
 // DeleteFunction deletes a function
@@ -253,31 +253,32 @@ func cmpLimitStr(a, b string) bool {
 	return valA > valB
 }
 
-func santiseFunctionStatus(fs *k8s.FunctionStatus) (r types.FunctionStatusResponse) {
+func makeFunctionStatusResponse(fs *k8s.FunctionStatus) (r types.FunctionStatusResponse) {
 	r = types.FunctionStatusResponse{
-		EnvVars:       fs.Env,
-		Secrets:       fs.MountedSecrets,
-		MinReplicas:   fs.MinReplicas,
-		MaxReplicas:   fs.MaxReplicas,
-		ScalingFactor: fs.ScalingFactor,
+		EnvVars:           fs.Env,
+		Secrets:           fs.MountedSecrets,
+		AvailableReplicas: fs.AvailableReplicas,
+		MinReplicas:       fs.MinReplicas,
+		MaxReplicas:       fs.MaxReplicas,
+		ScalingFactor:     fs.ScalingFactor,
+		CreatedAt:         fs.CreatedAt,
+		UpdatedAt:         fs.UpdatedAt,
+		DeletedAt:         fs.DeletedAt,
 		Resources: types.FunctionResources{
 			MaxCPU:    fs.Limits.CPU,
 			MaxMemory: fs.Limits.Memory,
 			MinCPU:    fs.Requests.CPU,
 			MinMemory: fs.Requests.Memory,
 		},
-		AvailableReplicas: fs.AvailableReplicas,
-		CreatedAt:         fs.CreatedAt,
-		DeletedAt:         fs.DeletedAt,
 	}
 
 	for k, v := range fs.Labels {
 		switch k {
-		case "function_id":
+		case types.FunctionIDLabel:
 			r.ID = v
-		case "image_id":
+		case types.ImageIDLabel:
 			r.ImageID = v
-		case "user_defined_name":
+		case types.UserDefinedNameLabel:
 			r.Name = v
 		}
 	}

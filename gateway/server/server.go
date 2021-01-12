@@ -146,6 +146,7 @@ func createFunctionsSystemAPI() *swagger.API {
 		swag.BasePath("/eywa/api"),
 		swag.Endpoints(aggregateEndpoints(
 			functionsAPI(),
+			secretsAPI(),
 			systemAPI(),
 		)...,
 		),

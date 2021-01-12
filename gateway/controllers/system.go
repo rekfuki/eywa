@@ -88,30 +88,3 @@ func SystemScaleFunction(c echo.Context) error {
 
 	return c.JSON(http.StatusNoContent, nil)
 }
-
-// // GetFunctionsFiltered returns functions filtered by label
-// func GetFunctionsFiltered(c echo.Context) error {
-// 	k8sClient := c.Get("k8s").(*k8s.Client)
-
-// 	getRequest := &types.GetFunctionsFilteredRequest{}
-// 	if err := c.Bind(getRequest); err != nil {
-// 		return err
-// 	}
-
-// 	functionStatuses, err := k8sClient.ListFunctionsFiltered(getRequest.Labels)
-// 	if err != nil {
-// 		log.Errorf("Failed to get functions: %s", err)
-// 		return err
-// 	}
-
-// 	return c.JSON(http.StatusOK, types.GetFunctionsFilteredResponse{
-// 		Objects: functionStatuses,
-// 		Total:   len(functionStatuses),
-// 	})
-// }
-
-// // GetResourceLimits returns the limit range set for function namespace
-// func GetResourceLimits(c echo.Context) error {
-// 	k8sClient := c.Get("k8s").(*k8s.Client)
-// 	return c.JSON(http.StatusOK, k8sClient.GetLimits())
-// }

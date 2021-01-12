@@ -43,6 +43,7 @@ type FunctionStatusResponse struct {
 	WriteTimeout      string            `json:"write_timeout" pattern:"^[1-9]{1}\\d{0,}s$"`
 	Resources         FunctionResources `json:"resources" binding:"required"`
 	CreatedAt         time.Time         `json:"created_at"`
+	UpdatedAt         time.Time         `json:"updated_at"`
 	DeletedAt         *time.Time        `json:"deleted_at,omitempty"`
 }
 
