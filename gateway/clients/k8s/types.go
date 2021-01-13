@@ -72,6 +72,7 @@ type SecretRequest struct {
 // Secret represents k8s secret
 type Secret struct {
 	Name        string
+	MountName   string
 	Data        map[string][]byte
 	Labels      map[string]string
 	Annotations map[string]string

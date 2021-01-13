@@ -118,16 +118,19 @@ func uprateFunction(c echo.Context, update bool) error {
 		return err
 	}
 
-	notFoundSecrets := []string{}
-	for _, uSecret := range dr.Secrets {
-		found := false
-		for _, k8sSecret := range secrets {
-			if val, exists := k8sSecret.Labels[types.UserDefinedNameLabel]; exists {
-				found = val == uSecret
-			}
+	mappedSecrets := map[string]*k8s.Secret{}
+	for i, secret := range secrets {
+		if val, exists := secret.Labels[types.UserDefinedNameLabel]; exists {
+			mappedSecrets[val] = &secrets[i]
 		}
-		if !found {
-			notFoundSecrets = append(notFoundSecrets, uSecret)
+	}
+
+	notFoundSecrets := []string{}
+	for _, secret := range dr.Secrets {
+		if val, exists := mappedSecrets[secret]; exists {
+			val.MountName = secret
+		} else {
+			notFoundSecrets = append(notFoundSecrets, secret)
 		}
 	}
 

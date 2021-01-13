@@ -278,11 +278,14 @@ func buildDeployment(request *DeployFunctionRequest) (*appsv1.Deployment, error)
 		}
 
 		projection := &apiv1.SecretProjection{Items: projectedPaths}
-		projection.Name = secret.Name
-		secretProjection := apiv1.VolumeProjection{
-			Secret: projection,
-		}
+		secretProjection := apiv1.VolumeProjection{Secret: projection}
 		secretVolumeProjections = append(secretVolumeProjections, secretProjection)
+
+		if secret.MountName != "" {
+			projection.Name = secret.MountName
+		} else {
+			projection.Name = secret.Name
+		}
 	}
 
 	if len(secretVolumeProjections) > 0 {
