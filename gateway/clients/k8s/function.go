@@ -19,8 +19,8 @@ import (
 )
 
 // DeployFunction deploys function to the k8s cluster
-func (c *Client) DeployFunction(request *DeployFunctionRequest, secrets []Secret) (*FunctionStatus, error) {
-	deployment, err := buildDeployment(request, secrets)
+func (c *Client) DeployFunction(request *DeployFunctionRequest) (*FunctionStatus, error) {
+	deployment, err := buildDeployment(request)
 	if err != nil {
 		return nil, err
 	}
@@ -44,9 +44,9 @@ func (c *Client) DeployFunction(request *DeployFunctionRequest, secrets []Secret
 }
 
 // UpdateFunction updates function deployment
-func (c *Client) UpdateFunction(oldName string, request *DeployFunctionRequest, secrets []Secret) (*FunctionStatus, error) {
+func (c *Client) UpdateFunction(oldName string, request *DeployFunctionRequest) (*FunctionStatus, error) {
 	context := context.TODO()
-	baseDeployment, err := buildDeployment(request, secrets)
+	baseDeployment, err := buildDeployment(request)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func buildService(request *DeployFunctionRequest) *corev1.Service {
 	}
 }
 
-func buildDeployment(request *DeployFunctionRequest, secrets []Secret) (*appsv1.Deployment, error) {
+func buildDeployment(request *DeployFunctionRequest) (*appsv1.Deployment, error) {
 	envVars := []corev1.EnvVar{}
 	for k, v := range request.EnvVars {
 		envVars = append(envVars, corev1.EnvVar{
@@ -271,7 +271,7 @@ func buildDeployment(request *DeployFunctionRequest, secrets []Secret) (*appsv1.
 	}
 
 	secretVolumeProjections := []apiv1.VolumeProjection{}
-	for _, secret := range secrets {
+	for _, secret := range request.Secrets {
 		projectedPaths := []apiv1.KeyToPath{}
 		for secretKey := range secret.Data {
 			projectedPaths = append(projectedPaths, apiv1.KeyToPath{Key: secretKey, Path: secretKey})
@@ -333,17 +333,17 @@ func (c *Client) DeleteFunction(fnName string) error {
 }
 
 // GetFunctionStatus returns status of the function from k8s
-func (c *Client) GetFunctionStatus(fnName string) (*FunctionStatus, error) {
-	return c.getFunctionStatus(map[string]string{"function_id": fnName})
+func (c *Client) GetFunctionStatus(filter Selector) (*FunctionStatus, error) {
+	return c.getFunctionStatus(filter)
 }
 
-// GetFunctionStatusScoped returns function filtered by userID
-func (c *Client) GetFunctionStatusScoped(fnName, userID string) (*FunctionStatus, error) {
-	return c.getFunctionStatus(map[string]string{"function_id": fnName, "user_id": userID})
+// GetFunctionStatusFiltered returns function filtered by selector
+func (c *Client) GetFunctionStatusFiltered(filter Selector) (*FunctionStatus, error) {
+	return c.getFunctionStatus(filter)
 }
 
-func (c *Client) getFunctionStatus(l map[string]string) (*FunctionStatus, error) {
-	deployments, err := c.listFunctions(l)
+func (c *Client) getFunctionStatus(filter Selector) (*FunctionStatus, error) {
+	deployments, err := c.listDeployments(filter)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +353,7 @@ func (c *Client) getFunctionStatus(l map[string]string) (*FunctionStatus, error)
 	}
 
 	if len(deployments.Items) != 1 {
-		log.Warnf("K8s returned more than one result when only one was expected: %#v", l)
+		log.Warnf("K8s returned more than one result when only one was expected: %#v", filter)
 	}
 
 	return deploymentToFunction(&deployments.Items[0])
@@ -361,16 +361,16 @@ func (c *Client) getFunctionStatus(l map[string]string) (*FunctionStatus, error)
 
 // GetFunctionsStatus returns all functions with faas id label
 func (c *Client) GetFunctionsStatus() ([]FunctionStatus, error) {
-	return c.getFunctionsStatus(map[string]string{})
+	return c.getFunctionsStatus(LabelSelector().Exists(faasIDLabel))
 }
 
-// GetFunctionsStatusScoped returns functions filtered by userID
-func (c *Client) GetFunctionsStatusScoped(userID string) ([]FunctionStatus, error) {
-	return c.getFunctionsStatus(map[string]string{"user_id": userID})
+// GetFunctionsStatusFiltered returns functions filtered by userID
+func (c *Client) GetFunctionsStatusFiltered(filter Selector) ([]FunctionStatus, error) {
+	return c.getFunctionsStatus(filter)
 }
 
-func (c *Client) getFunctionsStatus(l map[string]string) ([]FunctionStatus, error) {
-	functions, err := c.listFunctions(l)
+func (c *Client) getFunctionsStatus(filter Selector) ([]FunctionStatus, error) {
+	functions, err := c.listDeployments(filter)
 	if err != nil {
 		return nil, err
 	}
@@ -387,28 +387,19 @@ func (c *Client) getFunctionsStatus(l map[string]string) ([]FunctionStatus, erro
 	return fs, nil
 }
 
-func (c *Client) listFunctions(l map[string]string) (*appsv1.DeploymentList, error) {
+func (c *Client) listDeployments(filter Selector) (*appsv1.DeploymentList, error) {
 	requirement, err := labels.NewRequirement(faasIDLabel, selection.Exists, []string{})
 	if err != nil {
 		return nil, err
 	}
-
-	requirements := []labels.Requirement{*requirement}
-
-	for k, v := range l {
-		requirement, err := labels.NewRequirement(k, selection.Equals, []string{v})
-		if err != nil {
-			return nil, err
-		}
-		requirements = append(requirements, *requirement)
-	}
+	filter.Add(*requirement)
 
 	opts := metav1.ListOptions{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
 			APIVersion: "apps/v1",
 		},
-		LabelSelector: labels.NewSelector().Add(requirements...).String(),
+		LabelSelector: filter.String(),
 	}
 
 	return c.clientset.AppsV1().Deployments(faasNamespace).List(context.TODO(), opts)
@@ -486,21 +477,21 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 }
 
 // ScaleFunction scales the function to specified replicas
-func (c *Client) ScaleFunction(fnName string, replicas int) error {
-	opts := metav1.GetOptions{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Deployment",
-			APIVersion: "apps/v1",
-		},
-	}
-
-	deployment, err := c.clientset.AppsV1().
-		Deployments(faasNamespace).
-		Get(context.TODO(), fnName, opts)
+func (c *Client) ScaleFunction(filter Selector, replicas int) error {
+	deployments, err := c.listDeployments(filter)
 	if err != nil {
 		return err
 	}
 
+	if len(deployments.Items) == 0 {
+		return fmt.Errorf("Failed to scale. Function %q not found: %s", filter.String(), err)
+	}
+
+	if len(deployments.Items) > 1 {
+		log.Warnf("Filter %q matched more than one function, when only one was expected", filter.String())
+	}
+
+	deployment := &deployments.Items[0]
 	oldReplicas := *deployment.Spec.Replicas
 
 	log.Printf("Set replicas - %s %s, %d/%d\n", deployment.Name, faasNamespace, replicas, oldReplicas)
@@ -518,10 +509,10 @@ func (c *Client) ScaleFunction(fnName string, replicas int) error {
 }
 
 // ScaleFromZero scales the function from zero replicas to desired
-func (c *Client) ScaleFromZero(fnName string) (*FunctionZeroScaleResult, error) {
+func (c *Client) ScaleFromZero(filter Selector) (*FunctionZeroScaleResult, error) {
 	start := time.Now()
 
-	if val, found := c.cache.Get(fnName); found {
+	if val, found := c.cache.Get(filter.String()); found {
 		cached, ok := val.(*FunctionStatus)
 		if !ok {
 			return &FunctionZeroScaleResult{
@@ -537,7 +528,7 @@ func (c *Client) ScaleFromZero(fnName string) (*FunctionZeroScaleResult, error) 
 		}
 	}
 
-	functionStatus, err := c.GetFunctionStatus(fnName)
+	functionStatus, err := c.GetFunctionStatus(filter)
 	if err != nil {
 		return &FunctionZeroScaleResult{
 			Available: false,
@@ -546,7 +537,7 @@ func (c *Client) ScaleFromZero(fnName string) (*FunctionZeroScaleResult, error) 
 		}, err
 	}
 
-	c.cache.Set(fnName, functionStatus, cache.DefaultExpiration)
+	c.cache.Set(filter.String(), functionStatus, cache.DefaultExpiration)
 
 	if functionStatus.AvailableReplicas == 0 {
 		minReplicas := 1
@@ -559,20 +550,20 @@ func (c *Client) ScaleFromZero(fnName string) (*FunctionZeroScaleResult, error) 
 		interval := time.Millisecond * 50
 
 		err := backoff(func(attempt int) error {
-			functionStatus, err := c.GetFunctionStatus(fnName)
+			functionStatus, err := c.GetFunctionStatus(filter)
 			if err != nil {
 				return err
 			}
 
-			c.cache.Set(fnName, functionStatus, cache.DefaultExpiration)
+			c.cache.Set(filter.String(), functionStatus, cache.DefaultExpiration)
 
 			if functionStatus.AvailableReplicas > 0 {
 				return nil
 			}
 
-			err = c.ScaleFunction(fnName, minReplicas)
+			err = c.ScaleFunction(filter, minReplicas)
 			if err != nil {
-				return fmt.Errorf("Failed to scale function %q, err: %s", fnName, err)
+				return fmt.Errorf("Failed to scale function %q, err: %s", filter.String(), err)
 			}
 			return nil
 		}, attempts, interval)
@@ -589,7 +580,7 @@ func (c *Client) ScaleFromZero(fnName string) (*FunctionZeroScaleResult, error) 
 		maxPollCount := 1000
 
 		for i := 0; i < maxPollCount; i++ {
-			functionStatus, err := c.GetFunctionStatus(fnName)
+			functionStatus, err := c.GetFunctionStatus(filter)
 			if err != nil {
 				return &FunctionZeroScaleResult{
 					Available: false,
@@ -598,12 +589,12 @@ func (c *Client) ScaleFromZero(fnName string) (*FunctionZeroScaleResult, error) 
 				}, err
 			}
 
-			c.cache.Set(fnName, functionStatus, cache.DefaultExpiration)
+			c.cache.Set(filter.String(), functionStatus, cache.DefaultExpiration)
 			totalTime := time.Since(start)
 
 			if functionStatus.AvailableReplicas > 0 {
 				log.Printf("Function %q scaled successfully in %fs. Available replicas: %d",
-					fnName, totalTime.Seconds(), functionStatus.AvailableReplicas)
+					filter.String(), totalTime.Seconds(), functionStatus.AvailableReplicas)
 
 				return &FunctionZeroScaleResult{
 					Available: true,

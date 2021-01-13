@@ -33,13 +33,13 @@ const (
 	faasMaxReplicasIDLabel = "faas.replicas.max"
 	faasScaleFactorIDLabel = "faas.scale.factor"
 
+	updatedAtLabel = "updated_at"
+
 	defaultMinReplicas   = 0
 	defaultMaxReplicas   = 100
 	defaultScalingFactor = 20
 
 	limitRangeName = "resources-min-max"
-
-	updatedAtLabel = "updated_at"
 )
 
 // Config represents the configuration of k8s client

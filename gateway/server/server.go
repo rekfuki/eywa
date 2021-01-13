@@ -19,6 +19,7 @@ import (
 	"eywa/gateway/clients/registry"
 	"eywa/gateway/controllers"
 	"eywa/gateway/metrics"
+	"eywa/gateway/types"
 	"eywa/go-libs/auth"
 )
 
@@ -74,12 +75,15 @@ func checkAuth() echo.MiddlewareFunc {
 func zeroScale() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			auth := c.Get("auth").(*auth.Auth)
+			k8sClient := c.Get("k8s").(*k8s.Client)
+			functionID := c.Param("function_id")
 
-			k8s := c.Get("k8s").(*k8s.Client)
+			filter := k8s.LabelSelector().
+				Equals(types.FunctionIDLabel, functionID).
+				Equals(types.UserIDLabel, auth.UserID)
 
-			functionName := c.Param("name")
-
-			scaleResult, err := k8s.ScaleFromZero(functionName)
+			scaleResult, err := k8sClient.ScaleFromZero(filter)
 			if err != nil {
 				log.Errorf("Error scaling function from zero: %s", err)
 				return c.JSON(http.StatusInternalServerError, "Internal Server Error")
@@ -91,7 +95,7 @@ func zeroScale() echo.MiddlewareFunc {
 			}
 
 			if !scaleResult.Available {
-				log.Errorf("Function %q scale request timed-out after %fs", functionName, scaleResult.Duration)
+				log.Errorf("Function %q scale request timed-out after %fs", functionID, scaleResult.Duration)
 			}
 
 			return next(c)
@@ -147,7 +151,7 @@ func createFunctionsSystemAPI() *swagger.API {
 		swag.Endpoints(aggregateEndpoints(
 			functionsAPI(),
 			secretsAPI(),
-			systemAPI(),
+			// systemAPI(),
 		)...,
 		),
 	)

@@ -6,30 +6,32 @@ import (
 )
 
 // Selector represents requirement used to filter k8s labels
-type Selector []labels.Requirement
+type Selector struct {
+	labels.Selector
+}
 
 // LabelSelector returns empty requirements to be used to filter labels
 func LabelSelector() Selector {
-	return Selector{}
+	return Selector{labels.NewSelector()}
 }
 
 // In ...
-func (rs Selector) In(field string, values []string) Selector {
+func (s Selector) In(field string, values []string) Selector {
 	r, _ := labels.NewRequirement(field, selection.In, values)
-	rs = append(rs, *r)
-	return rs
+	s.Selector = s.Add(*r)
+	return s
 }
 
 // Equals ...
-func (rs Selector) Equals(field string, value string) Selector {
+func (s Selector) Equals(field string, value string) Selector {
 	r, _ := labels.NewRequirement(field, selection.Equals, []string{value})
-	rs = append(rs, *r)
-	return rs
+	s.Selector = s.Add(*r)
+	return s
 }
 
 // Exists ...
-func (rs Selector) Exists(field string) Selector {
+func (s Selector) Exists(field string) Selector {
 	r, _ := labels.NewRequirement(field, selection.Exists, []string{})
-	rs = append(rs, *r)
-	return rs
+	s.Selector = s.Add(*r)
+	return s
 }

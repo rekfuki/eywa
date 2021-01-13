@@ -22,7 +22,8 @@ func GetFunctions(c echo.Context) error {
 	auth := c.Get("auth").(*auth.Auth)
 	k8sClient := c.Get("k8s").(*k8s.Client)
 
-	fss, err := k8sClient.GetFunctionsStatusScoped(auth.UserID)
+	filter := k8s.LabelSelector().Equals(types.UserIDLabel, auth.UserID)
+	fss, err := k8sClient.GetFunctionsStatusFiltered(filter)
 	if err != nil {
 		log.Errorf("Failed to get functions from k8s: ", err)
 		return err
@@ -45,7 +46,10 @@ func GetFunction(c echo.Context) error {
 	k8sClient := c.Get("k8s").(*k8s.Client)
 	functionID := c.Param("function_id")
 
-	fs, err := k8sClient.GetFunctionStatusScoped(functionID, auth.UserID)
+	filter := k8s.LabelSelector().
+		Equals(types.FunctionIDLabel, functionID).
+		Equals(types.UserIDLabel, auth.UserID)
+	fs, err := k8sClient.GetFunctionStatusFiltered(filter)
 	if err != nil {
 		log.Errorf("Failed to get functions from k8s: ", err)
 		return err
@@ -84,7 +88,10 @@ func uprateFunction(c echo.Context, update bool) error {
 	}
 
 	serviceName := buildK8sName(dr.Name, auth.UserID)
-	fs, err := k8sClient.GetFunctionStatusScoped(serviceName, auth.UserID)
+	filter := k8s.LabelSelector().
+		Equals(types.FunctionIDLabel, serviceName).
+		Equals(types.UserIDLabel, auth.UserID)
+	fs, err := k8sClient.GetFunctionStatusFiltered(filter)
 	if err != nil {
 		log.Errorf("Failed to retrieve function status: %s", err)
 		return err
@@ -100,6 +107,33 @@ func uprateFunction(c echo.Context, update bool) error {
 		}
 	} else if fs == nil && update {
 		return c.JSON(http.StatusBadRequest, "Function Not Found")
+	}
+
+	filter = k8s.LabelSelector().
+		In(types.UserDefinedNameLabel, dr.Secrets).
+		Equals(types.UserIDLabel, auth.UserID)
+	secrets, err := k8sClient.GetSecretsFiltered(filter)
+	if err != nil {
+		log.Errorf("Failed to get secrets from k8s: %s", err)
+		return err
+	}
+
+	notFoundSecrets := []string{}
+	for _, uSecret := range dr.Secrets {
+		found := false
+		for _, k8sSecret := range secrets {
+			if val, exists := k8sSecret.Labels[types.UserDefinedNameLabel]; exists {
+				found = val == uSecret
+			}
+		}
+		if !found {
+			notFoundSecrets = append(notFoundSecrets, uSecret)
+		}
+	}
+
+	if len(notFoundSecrets) > 0 {
+		message := fmt.Sprintf("Following secrets not found: %#v", notFoundSecrets)
+		return c.JSON(http.StatusNotFound, message)
 	}
 
 	image, err := rc.GetImage(dr.ImageID, auth.UserID)
@@ -134,7 +168,7 @@ func uprateFunction(c echo.Context, update bool) error {
 		Image:         image.TaggedRegistry,
 		Service:       serviceName,
 		EnvVars:       dr.EnvVars,
-		Secrets:       dr.Secrets,
+		Secrets:       secrets,
 		MinReplicas:   dr.MinReplicas,
 		MaxReplicas:   dr.MaxReplicas,
 		ScalingFactor: dr.ScalingFactor,
@@ -157,10 +191,10 @@ func uprateFunction(c echo.Context, update bool) error {
 	var action string
 	if update {
 		action = "update"
-		fs, err = k8sClient.UpdateFunction(fs.Name, fr, []k8s.Secret{})
+		fs, err = k8sClient.UpdateFunction(fs.Name, fr)
 	} else {
 		action = "create"
-		fs, err = k8sClient.DeployFunction(fr, []k8s.Secret{})
+		fs, err = k8sClient.DeployFunction(fr)
 	}
 	if err != nil {
 		log.Errorf("Failed to %s function: %s", action, err)
@@ -176,7 +210,10 @@ func DeleteFunction(c echo.Context) error {
 	k8sClient := c.Get("k8s").(*k8s.Client)
 	functionID := c.Param("function_id")
 
-	fs, err := k8sClient.GetFunctionStatusScoped(functionID, auth.UserID)
+	filter := k8s.LabelSelector().
+		Equals(types.FunctionIDLabel, functionID).
+		Equals(types.UserIDLabel, auth.UserID)
+	fs, err := k8sClient.GetFunctionStatusFiltered(filter)
 	if err != nil {
 		log.Errorf("Failed to to get function from k8s: %s", err)
 		return err

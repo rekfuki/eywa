@@ -14,42 +14,18 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
-// GetSecrets returns specified secrets if they exist
-func (c *Client) GetSecrets(secrets []string) ([]Secret, error) {
-	kube := c.clientset.CoreV1().Secrets(faasNamespace)
-	opts := metav1.GetOptions{}
-
-	s := []Secret{}
-	for _, sn := range secrets {
-		secret, err := kube.Get(context.TODO(), sn, opts)
-		if err != nil {
-			return nil, err
-		}
-
-		if secret == nil {
-			return s, fmt.Errorf("Secret %q not found in k8s", sn)
-		}
-		s = append(s, Secret{
-			Name: secret.Name,
-			Data: secret.Data,
-		})
-	}
-
-	return s, nil
-}
-
 // GetSecretsFiltered returns specified secrets filtered by labels
 func (c *Client) GetSecretsFiltered(filter Selector) ([]Secret, error) {
-	return c.getSecrets(filter...)
+	return c.getSecrets(filter)
 }
 
 // GetSecretFiltered returns a secret that is filtered by labels
 func (c *Client) GetSecretFiltered(filter Selector) (*Secret, error) {
-	return c.getSecret(filter...)
+	return c.getSecret(filter)
 }
 
-func (c *Client) getSecret(r ...labels.Requirement) (*Secret, error) {
-	secrets, err := c.listSecrets(r...)
+func (c *Client) getSecret(s labels.Selector) (*Secret, error) {
+	secrets, err := c.listSecrets(s)
 	if err != nil {
 		return nil, err
 	}
@@ -59,14 +35,14 @@ func (c *Client) getSecret(r ...labels.Requirement) (*Secret, error) {
 	}
 
 	if len(secrets.Items) != 1 {
-		log.Warnf("K8s returned more than one result when only one was expected: %#v", r)
+		log.Warnf("K8s returned more than one result when only one was expected: %#v", s)
 	}
 
 	return convertSecret(&secrets.Items[0])
 }
 
-func (c *Client) getSecrets(r ...labels.Requirement) ([]Secret, error) {
-	secrets, err := c.listSecrets(r...)
+func (c *Client) getSecrets(s labels.Selector) ([]Secret, error) {
+	secrets, err := c.listSecrets(s)
 	if err != nil {
 		return nil, err
 	}
@@ -83,12 +59,12 @@ func (c *Client) getSecrets(r ...labels.Requirement) ([]Secret, error) {
 	return convertedSecrets, err
 }
 
-func (c *Client) listSecrets(r ...labels.Requirement) (*corev1.SecretList, error) {
+func (c *Client) listSecrets(s labels.Selector) (*corev1.SecretList, error) {
 	opts := metav1.ListOptions{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Secret",
 		},
-		LabelSelector: labels.NewSelector().Add(r...).String(),
+		LabelSelector: s.String(),
 	}
 
 	return c.clientset.CoreV1().Secrets(faasNamespace).List(context.TODO(), opts)

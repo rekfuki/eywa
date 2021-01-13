@@ -27,10 +27,11 @@ func InvocationAlert(c echo.Context) error {
 			"severity":      alert.Labels.Severity,
 			"alert_name":    alert.Labels.AlertName,
 			"function_name": alert.Labels.FunctionName,
-			"Description":   alert.Annotations.Description,
+			"description":   alert.Annotations.Description,
 		}).Info("Received alert")
 
-		fs, err := k8sClient.GetFunctionStatus(alert.Labels.FunctionName)
+		filter := k8s.LabelSelector().Equals(types.FunctionIDLabel, alert.Labels.FunctionName)
+		fs, err := k8sClient.GetFunctionStatus(filter)
 		if err != nil {
 			log.Errorf("Failed to get function status: %s", err)
 			return c.JSON(http.StatusInternalServerError, "Internal Server Error")
@@ -51,7 +52,7 @@ func InvocationAlert(c echo.Context) error {
 			newReplicas = fs.MinReplicas
 		}
 
-		err = k8sClient.ScaleFunction(fs.Name, newReplicas)
+		err = k8sClient.ScaleFunction(filter, newReplicas)
 		if err != nil {
 			log.Errorf("Failed to scale down: %s", err)
 			return c.JSON(http.StatusInternalServerError, "Internal Server Error")
