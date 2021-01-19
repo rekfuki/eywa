@@ -7,7 +7,7 @@ metadata:
 spec:
   chart:
     spec:
-      chart: nsq
+      chart: ./charts/nsq
       sourceRef:
         kind: GitRepository
         name: eywa-charts
