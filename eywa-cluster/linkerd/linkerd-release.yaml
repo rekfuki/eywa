@@ -24,6 +24,24 @@ spec:
       issuer:
         scheme: kubernetes.io/tls
     installNamespace: false
+    prometheus:
+      scrapeConfigs:
+        - job_name: "gateway"
+          scrape_interval: 5s
+          dns_sd_configs:
+            - names: ['gateway.faas-system']
+              port: 8080
+              type: A
+              refresh_interval: 1s
+      alertManagers:
+        - scheme: http
+          static_configs:
+            - targets:
+              - "alertmanager.faas-system"
+      ruleConfigMapMounts:
+        - name: alerting-rules
+          subPath: alerting_rules.yml
+          configMap: linkerd-prometheus-rules
   valuesFrom:
   - kind: Secret
     name: linkerd-identity-issuer
