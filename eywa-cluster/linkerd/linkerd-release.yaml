@@ -16,7 +16,7 @@ spec:
       chart: linkerd2
       sourceRef:
         kind: HelmRepository
-        name: linkerd-edge
+        name: linkerd
   releaseName: linkerd
   targetNamespace: linkerd
   values:
