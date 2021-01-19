@@ -1,4 +1,4 @@
 apiVersion: v2
-name: cert-manager
-description: A Helm chart for Kubernetes
-version: 0.0.1
+name: cert-manager-dependents
+description: Cert manager dependents
+version: 0.1.0
