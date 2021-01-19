@@ -1,0 +1,37 @@
+{{- define "deployment" -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .namespace }}
+  name: {{ .data.name }}
+spec:
+  replicas: {{ .data.replicas }}
+  selector:
+    matchLabels:
+      {{ include "labels" .data.labels | indent 8 }}
+  template:
+    metadata:
+      namespace: {{ .namespace }}
+      labels:
+      {{ include "labels" .data.labels | indent 8 }}
+    spec:
+      containers:
+      - name: {{ .data.name }}
+        image: {{ .data.container.image }}
+        imagePullPolicy: {{ .data.container.imagePullPolicy }}
+        resources:
+          requests:
+            cpu: {{ .data.container.requestsCPU }}
+            memory: {{ .data.container.requestsMemory }}
+        ports:
+        {{ include "ports" .data.container.ports | indent 10 }}
+        livenessProbe:
+        {{ include "probe" .data.container.livenessProbe | indent 10 }}
+        readinessProbe:
+        {{ include "probe" .data.container.livenessProbe | indent 10 }}
+        command:
+        {{- range .data.container.command }}
+          - {{ . }}
+        {{- end }}
+      terminationGracePeriodSeconds: {{ .data.terminationGracePeriodSeconds }}
+{{- end}}

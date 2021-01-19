@@ -1,0 +1,2 @@
+{{ $data := dict "data" .Values.nsqd.service "namespace" .Values.namespaceName }}
+{{- include "service" $data }}

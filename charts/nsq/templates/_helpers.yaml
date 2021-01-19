@@ -1,0 +1,23 @@
+
+{{- define "labels"}}
+{{- range $key, $val := .}}
+{{ $key }}: {{ $val }}
+{{- end -}}
+{{- end }}
+
+
+{{- define "ports" -}}
+{{- range $k, $v := . }}
+{{ "-" }}
+{{- range $kk, $vv := $v }}
+  {{ $kk }}: {{ $vv }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- define "probe"}}
+httpGet:
+  path: {{ .httpGet.path }}
+  port: {{ .httpGet.port }}
+initialDelaySeconds: {{ .initialDelaySeconds }}
+{{- end }}

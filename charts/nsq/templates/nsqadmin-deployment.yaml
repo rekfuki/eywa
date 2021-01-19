@@ -1,0 +1,2 @@
+{{ $data := dict "data" .Values.nsqadmin.deployment "namespace" .Values.namespaceName }}
+{{- include "deployment" $data }}

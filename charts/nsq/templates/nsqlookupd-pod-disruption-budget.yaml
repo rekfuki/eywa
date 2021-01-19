@@ -1,0 +1,2 @@
+{{$data := dict "data" .Values.nsqlookupd.podDisruptionBudget "namespace" .Values.namespaceName}}
+{{- include "podDisruptionBudget" $data }}
