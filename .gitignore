@@ -9,3 +9,4 @@ idler/idler
 test-kube
 test-helm
 test-registry
+*-unsealed.yaml
