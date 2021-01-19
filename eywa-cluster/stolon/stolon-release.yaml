@@ -20,6 +20,9 @@ spec:
   targetNamespace: stolon
   values:
     clusterName: eywa
+    clusterSpec:
+      initMode: new
+    pgParameters: {}
     image:
       tag: master-pg12
     superuserSecret:
