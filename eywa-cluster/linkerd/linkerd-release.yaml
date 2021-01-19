@@ -6,7 +6,7 @@ metadata:
 spec:
   chart:
     spec:
-      chart: ./charts/linkerd-prometheus
+      chart: ./charts/linkerd-prometheus-rules
       sourceRef:
         kind: GitRepository
         name: eywa-charts
