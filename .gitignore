@@ -5,6 +5,7 @@ go-watchdog
 handler
 gateway/gateway
 registry/registry
+idler/idler
 test-kube
 test-helm
 test-registry

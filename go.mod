@@ -8,7 +8,6 @@ require (
 	cloud.google.com/go v0.54.0 // indirect
 	github.com/Azure/go-autorest/autorest v0.11.1 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.9.5 // indirect
-	github.com/davecgh/go-spew v1.1.1
 	github.com/fvbock/endless v0.0.0-20170109170031-447134032cb6
 	github.com/google/go-cmp v0.5.3 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
