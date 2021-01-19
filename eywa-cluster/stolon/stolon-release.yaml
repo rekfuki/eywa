@@ -20,6 +20,8 @@ spec:
   targetNamespace: stolon
   values:
     clusterName: eywa
+    image:
+      tag: master-pg12
     superuserSecret:
       name: stolon-superuser
     replicationSecret:
