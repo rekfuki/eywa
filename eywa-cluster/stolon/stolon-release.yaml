@@ -19,16 +19,7 @@ spec:
   releaseName: stolon
   targetNamespace: stolon
   values:
-    clusterName: eywa
-    clusterSpec:
-      initMode: new
-    pgParameters: {}
-    image:
-      tag: master-pg12
     superuserSecret:
       name: stolon-superuser
     replicationSecret:
       name: stolon-replication
-    job:
-      autoCreateCluster: true
-      autoCreateClusterSpec: true
