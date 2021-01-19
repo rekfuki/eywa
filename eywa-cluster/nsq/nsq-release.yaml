@@ -14,3 +14,5 @@ spec:
   interval: 5m0s
   releaseName: nsq
   targetNamespace: nsq
+  values:
+    installNamespace: false
