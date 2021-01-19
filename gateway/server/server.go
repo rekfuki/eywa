@@ -126,13 +126,23 @@ func createRouter(params *ContextParams) *echo.Echo {
 	e.POST("/eywa/api/system/alert", controllers.InvocationAlert)
 
 	// Proxy direct function calls
-	e.Match([]string{"POST", "PUT", "PATCH", "DELETE", "GET"}, "/eywa/api/functions/invoke/:name/*path", controllers.Proxy, zeroScale())
+	e.Match([]string{"POST", "PUT", "PATCH", "DELETE", "GET"}, "/eywa/api/functions/invoke/:function_id/*path", controllers.Proxy, checkAuth(), zeroScale())
 
 	enableCors := true
-	systemAPI := createFunctionsSystemAPI()
-	e.GET("/eywa/api/gateway/doc", echo.WrapHandler(systemAPI.Handler(enableCors)))
+	gatewayAPI := createGatewayAPI()
+	e.GET("/eywa/api/gateway/doc", echo.WrapHandler(gatewayAPI.Handler(enableCors)))
 
-	api := e.Group("", checkAuth(), sv.SwaggerValidatorEcho(systemAPI))
+	api := e.Group("", checkAuth(), sv.SwaggerValidatorEcho(gatewayAPI))
+	gatewayAPI.Walk(func(path string, endpoint *swagger.Endpoint) {
+		h := endpoint.Handler.(func(c echo.Context) error)
+		path = swag.ColonPath(path)
+		api.Add(endpoint.Method, path, h)
+	})
+
+	systemAPI := createSystemAPI()
+	e.GET("/eywa/api/system/gateway/doc", echo.WrapHandler(systemAPI.Handler(enableCors)))
+
+	api = e.Group("", checkAuth(), sv.SwaggerValidatorEcho(systemAPI))
 	systemAPI.Walk(func(path string, endpoint *swagger.Endpoint) {
 		h := endpoint.Handler.(func(c echo.Context) error)
 		path = swag.ColonPath(path)
@@ -142,7 +152,7 @@ func createRouter(params *ContextParams) *echo.Echo {
 	return e
 }
 
-func createFunctionsSystemAPI() *swagger.API {
+func createGatewayAPI() *swagger.API {
 	return swag.New(
 		swag.Title("Gateway"),
 		swag.Description(`Gateway API`),
@@ -151,7 +161,19 @@ func createFunctionsSystemAPI() *swagger.API {
 		swag.Endpoints(aggregateEndpoints(
 			functionsAPI(),
 			secretsAPI(),
-			// systemAPI(),
+		)...,
+		),
+	)
+}
+
+func createSystemAPI() *swagger.API {
+	return swag.New(
+		swag.Title("Gateway System"),
+		swag.Description(`Gateway System API`),
+		swag.Version("2.0"),
+		swag.BasePath("/eywa/api"),
+		swag.Endpoints(aggregateEndpoints(
+			systemAPI(),
 		)...,
 		),
 	)

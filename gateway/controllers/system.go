@@ -1,91 +1,74 @@
 package controllers
 
-// import (
-// 	"net/http"
+import (
+	"net/http"
+	"strconv"
 
-// 	"github.com/labstack/echo/v4"
-// 	log "github.com/sirupsen/logrus"
+	"github.com/labstack/echo/v4"
+	log "github.com/sirupsen/logrus"
 
-// 	"eywa/gateway/clients/k8s"
-// 	"eywa/gateway/types"
-// )
+	"eywa/gateway/clients/k8s"
+	"eywa/gateway/types"
+	"eywa/go-libs/auth"
+)
 
-// // SystemDeployFunction deploys a new function deployment to k8s
-// func SystemDeployFunction(c echo.Context) error {
-// 	k8sClient := c.Get("k8s").(*k8s.Client)
+// SystemGetFunctions returns list of functions
+func SystemGetFunctions(c echo.Context) error {
+	auth := c.Get("auth").(*auth.Auth)
+	k8sClient := c.Get("k8s").(*k8s.Client)
 
-// 	createRequest := &k8s.DeployFunctionRequest{}
-// 	if err := c.Bind(createRequest); err != nil {
-// 		return err
-// 	}
+	if !auth.IsOperator() {
+		return c.JSON(http.StatusForbidden, "Forbidden")
+	}
+	fss, err := k8sClient.GetFunctionsStatus()
+	if err != nil {
+		log.Errorf("Failed to get functions from k8s: ", err)
+		return err
+	}
 
-// 	secrets, err := k8sClient.GetSecrets(createRequest.Secrets)
-// 	if err != nil {
-// 		log.Errorf("Failed to get secrets: %s", err)
-// 		// TODO: diff between 500 and 404
-// 		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
-// 	}
+	sfss := []types.FunctionStatusResponse{}
+	for _, fs := range fss {
+		sfss = append(sfss, makeFunctionStatusResponse(&fs))
+	}
 
-// 	fs, err := k8sClient.DeployFunction(createRequest, secrets)
-// 	if err != nil {
-// 		log.Errorf("Failed to deploy function: %s", err)
-// 		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
-// 	}
+	return c.JSON(http.StatusOK, types.MultiFunctionStatusResponse{
+		Objects: sfss,
+		Total:   len(sfss),
+	})
+}
 
-// 	return c.JSON(http.StatusCreated, fs)
-// }
+// SystemScaleFunction scales the function
+func SystemScaleFunction(c echo.Context) error {
+	auth := c.Get("auth").(*auth.Auth)
+	k8sClient := c.Get("k8s").(*k8s.Client)
+	functionID := c.Param("function_id")
+	replicasStr := c.Param("replicas")
 
-// // SystemDeleteFunction handles function delete requests
-// func SystemDeleteFunction(c echo.Context) error {
-// 	k8sClient := c.Get("k8s").(*k8s.Client)
+	if !auth.IsOperator() {
+		return c.JSON(http.StatusForbidden, "Forbidden")
+	}
 
-// 	deleteRequest := &types.SystemDeleteFunctionRequest{}
-// 	if err := c.Bind(deleteRequest); err != nil {
-// 		return err
-// 	}
+	replicas, err := strconv.ParseInt(replicasStr, 10, 64)
+	if err != nil {
+		log.Errorf("Failed to parse replica count %s: %s", replicasStr, err)
+		return err
+	}
 
-// 	filter := k8s.LabelSelector()
-// 	function, err := k8sClient.GetFunctionStatus(deleteRequest.Name)
-// 	if err != nil {
-// 		log.Errorf("Failed to get function deployment: %s", err)
-// 		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
-// 	}
+	filter := k8s.LabelSelector().Equals(types.FunctionIDLabel, functionID)
+	functionStatus, err := k8sClient.GetFunctionStatus(filter)
+	if err != nil {
+		log.Errorf("Failed to get function deployment: %s", err)
+		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
+	}
 
-// 	if function == nil {
-// 		return c.JSON(http.StatusNotFound, "Function not found")
-// 	}
+	if functionStatus == nil {
+		return c.JSON(http.StatusNotFound, "Function not found")
+	}
 
-// 	if err = k8sClient.DeleteFunction(deleteRequest.Name); err != nil {
-// 		log.Errorf("Failed to delete funtion deployment: %s", err)
-// 		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
-// 	}
+	if err = k8sClient.ScaleFunction(filter, int(replicas)); err != nil {
+		log.Errorf("Failed to scale funtion deployment: %s", err)
+		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
+	}
 
-// 	return c.JSON(http.StatusNoContent, nil)
-// }
-
-// // SystemScaleFunction scales the function
-// func SystemScaleFunction(c echo.Context) error {
-// 	k8sClient := c.Get("k8s").(*k8s.Client)
-
-// 	scaleRequest := &types.SystemScaleFunctionRequest{}
-// 	if err := c.Bind(scaleRequest); err != nil {
-// 		return err
-// 	}
-
-// 	functionStatus, err := k8sClient.GetFunctionStatus(scaleRequest.Name)
-// 	if err != nil {
-// 		log.Errorf("Failed to get function deployment: %s", err)
-// 		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
-// 	}
-
-// 	if functionStatus == nil {
-// 		return c.JSON(http.StatusNotFound, "Function not found")
-// 	}
-
-// 	if err = k8sClient.ScaleFunction(scaleRequest.Name, scaleRequest.Replicas); err != nil {
-// 		log.Errorf("Failed to delete funtion deployment: %s", err)
-// 		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
-// 	}
-
-// 	return c.JSON(http.StatusNoContent, nil)
-// }
+	return c.NoContent(http.StatusNoContent)
+}

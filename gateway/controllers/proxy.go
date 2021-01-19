@@ -33,9 +33,9 @@ func proxyRequest(c echo.Context) error {
 	k8s := c.Get("k8s").(*k8s.Client)
 	metrics := c.Get("metrics").(*metrics.Client)
 
-	functionName := c.Param("name")
+	functionName := c.Param("function_id")
 	if functionName == "" {
-		return c.JSON(http.StatusBadRequest, "Missing function name")
+		return c.JSON(http.StatusBadRequest, "Missing function id")
 	}
 
 	metrics.Observe(c.Request().Method, c.Request().URL.String(),

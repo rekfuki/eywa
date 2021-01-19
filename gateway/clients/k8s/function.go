@@ -509,7 +509,7 @@ func (c *Client) ScaleFromZero(filter Selector) (*FunctionZeroScaleResult, error
 	}
 
 	functionStatus, err := c.GetFunctionStatus(filter)
-	if err != nil {
+	if functionStatus == nil || err != nil {
 		return &FunctionZeroScaleResult{
 			Available: false,
 			Found:     false,
