@@ -1,4 +1,4 @@
 apiVersion: v2
 name: cert-manager-dependents
 description: Cert manager dependents
-version: 0.1.0
+version: 0.1.1
