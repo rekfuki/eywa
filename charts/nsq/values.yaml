@@ -1,4 +1,5 @@
 namespaceName: nsq
+installNamespace: false
 
 nsqd:
   podDisruptionBudget:

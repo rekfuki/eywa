@@ -1,4 +1,6 @@
+{{- if .Values.installNamespace }}
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ .Values.namespaceName }}
+{{- end }}
