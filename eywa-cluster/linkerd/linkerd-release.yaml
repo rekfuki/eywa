@@ -23,7 +23,7 @@ spec:
   interval: 5m0s
   dependsOn:
     - name: linkerd-prometheus-rules
-      namespace: linkerd
+      namespace: flux-system
     - name: sealed-secrets-dependents
       namespace: flux-system
     - name: cert-manager-dependents
