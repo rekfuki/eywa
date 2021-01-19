@@ -19,7 +19,11 @@ spec:
   releaseName: stolon
   targetNamespace: stolon
   values:
+    clusterName: eywa
     superuserSecret:
       name: stolon-superuser
     replicationSecret:
       name: stolon-replication
+    job:
+      autoCreateCluster: true
+      autoCreateClusterSpec: true
