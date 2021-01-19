@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-rules
+  name: {{ .Release.Name }}
   namespace: {{ .Values.namespace }}
 data:
   alerting_rules.yml: |-
