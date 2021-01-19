@@ -12,4 +12,5 @@ spec:
         kind: GitRepository
         name: eywa-charts
   interval: 5m0s
+  releaseName: nsq
   targetNamespace: nsq
