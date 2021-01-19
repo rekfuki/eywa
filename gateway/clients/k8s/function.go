@@ -46,11 +46,6 @@ func (c *Client) DeployFunction(request *DeployFunctionRequest) (*FunctionStatus
 // UpdateFunction updates function deployment
 func (c *Client) UpdateFunction(oldName string, request *DeployFunctionRequest) (*FunctionStatus, error) {
 	context := context.TODO()
-	baseDeployment, err := buildDeployment(request)
-	if err != nil {
-		return nil, err
-	}
-
 	deployment, err := c.clientset.AppsV1().
 		Deployments(faasNamespace).
 		Get(context, oldName, metav1.GetOptions{})
@@ -58,39 +53,20 @@ func (c *Client) UpdateFunction(oldName string, request *DeployFunctionRequest) 
 		return nil, err
 	}
 
-	deployment.ObjectMeta.Name = baseDeployment.ObjectMeta.Name
-	deployment.ObjectMeta.Annotations = baseDeployment.ObjectMeta.Annotations
-	deployment.ObjectMeta.Labels = baseDeployment.Labels
-	deployment.Spec = baseDeployment.Spec
+	baseDeployment, err := buildDeployment(request)
+	if err != nil {
+		return nil, err
+	}
+
+	deployment.ObjectMeta.Labels = baseDeployment.ObjectMeta.Labels
+	deployment.Spec.Replicas = baseDeployment.Spec.Replicas
+	deployment.Spec.Template.ObjectMeta.Labels = baseDeployment.Spec.Template.ObjectMeta.Labels
+	// This might cause side effects.
+	deployment.Spec.Template.Spec.Containers = baseDeployment.Spec.Template.Spec.Containers
 
 	deployment, err = c.clientset.AppsV1().
 		Deployments(faasNamespace).
 		Update(context, deployment, metav1.UpdateOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	service, err := c.clientset.CoreV1().
-		Services(faasNamespace).
-		Get(context, oldName, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	annotations := map[string]string{}
-	if len(request.Annotations) > 0 {
-		annotations = request.Annotations
-	}
-
-	service.ObjectMeta.Name = request.Service
-	service.ObjectMeta.Annotations = annotations
-	service.Spec.Selector = map[string]string{
-		faasIDLabel: request.Service,
-	}
-
-	_, err = c.clientset.CoreV1().
-		Services(faasNamespace).
-		Update(context, service, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -278,14 +254,9 @@ func buildDeployment(request *DeployFunctionRequest) (*appsv1.Deployment, error)
 		}
 
 		projection := &apiv1.SecretProjection{Items: projectedPaths}
+		projection.Name = secret.Name
 		secretProjection := apiv1.VolumeProjection{Secret: projection}
 		secretVolumeProjections = append(secretVolumeProjections, secretProjection)
-
-		if secret.MountName != "" {
-			projection.Name = secret.MountName
-		} else {
-			projection.Name = secret.Name
-		}
 	}
 
 	if len(secretVolumeProjections) > 0 {
@@ -430,13 +401,19 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 		function.DeletedAt = &deployment.ObjectMeta.DeletionTimestamp.Time
 	}
 
+	for _, v := range deployment.Spec.Template.Spec.Volumes {
+		if v.Projected != nil {
+			for _, s := range v.Projected.Sources {
+				if s.Secret != nil {
+					function.MountedSecrets = append(function.MountedSecrets, s.Secret.Name)
+				}
+			}
+		}
+	}
+
 	for _, c := range deployment.Spec.Template.Spec.Containers {
 		for _, v := range c.Env {
 			function.Env[v.Name] = v.Value
-		}
-
-		for _, vm := range c.VolumeMounts {
-			function.MountedSecrets = append(function.MountedSecrets, vm.Name)
 		}
 
 		function.Limits = &FunctionResources{

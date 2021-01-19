@@ -29,7 +29,7 @@ func functionsAPI() []*swagger.Endpoint {
 	deployFunction := endpoint.New("POST", "/functions", "Create a function",
 		endpoint.Description("Create a function from an image"),
 		endpoint.Handler(controllers.DeployFunction),
-		endpoint.Body(types.FunctionRequest{}, "Function deployment payload", true),
+		endpoint.Body(types.DeployFunctionRequest{}, "Function deployment payload", true),
 		endpoint.Response(http.StatusCreated, types.FunctionStatusResponse{}, "Success"),
 		endpoint.Tags("Functions"),
 	)
@@ -38,7 +38,7 @@ func functionsAPI() []*swagger.Endpoint {
 		endpoint.Description("Update a deployed function from k8s"),
 		endpoint.Handler(controllers.UpdateFunction),
 		endpoint.Path("function_id", "string", "uuid", "UUID of a function"),
-		endpoint.Body(types.FunctionRequest{}, "Function update payload", true),
+		endpoint.Body(types.UpdateFunctionRequest{}, "Function update payload", true),
 		endpoint.Response(http.StatusOK, types.FunctionStatusResponse{}, "Success"),
 		endpoint.Tags("Functions"),
 	)

@@ -74,10 +74,11 @@ func CreateSecret(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Secret size is greater than 1MB")
 	}
 
-	secretName := buildK8sName(csr.Name, auth.UserID)
+	secretID := buildK8sName(csr.Name, auth.UserID)
+	secretName := secretID[:9] + csr.Name
 	selector := k8s.LabelSelector().
 		Equals(types.UserIDLabel, auth.UserID).
-		Equals(types.SecretIDLabel, secretName)
+		Equals(types.SecretIDLabel, secretID)
 	secret, err := k8sClient.GetSecretFiltered(selector)
 	if err != nil {
 		log.Errorf("Failed to get secret from k8s: %s", err)
@@ -93,8 +94,8 @@ func CreateSecret(c echo.Context) error {
 		Data: csr.Data,
 		Labels: map[string]string{
 			types.UserIDLabel:          auth.UserID,
-			types.SecretIDLabel:        secretName,
-			types.UserDefinedNameLabel: csr.Name,
+			types.SecretIDLabel:        secretID,
+			types.UserDefinedNameLabel: secretName,
 		},
 	}
 
@@ -181,13 +182,13 @@ func DeleteSecret(c echo.Context) error {
 
 func makeSecretResponse(s *k8s.Secret) types.SecretResponse {
 	secret := types.SecretResponse{
-		ID:        s.Name,
+		Name:      s.Name,
 		CreatedAt: s.CreatedAt,
 		UpdatedAt: s.UpdatedAt,
 	}
 
-	if val, exists := s.Labels[types.UserDefinedNameLabel]; exists {
-		secret.Name = val
+	if val, exists := s.Labels[types.SecretIDLabel]; exists {
+		secret.ID = val
 	}
 
 	return secret
