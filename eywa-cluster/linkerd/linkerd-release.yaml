@@ -9,7 +9,7 @@ spec:
       chart: ./charts/linkerd-prometheus
       sourceRef:
         kind: gitRepository
-        name: linkerd-prometheus
+        name: eywa-charts
   interval: 5m0s
   releaseName: linkerd-prometheus
   targetNamespace: linkerd
