@@ -68,7 +68,7 @@ nsqd:
           - -lookupd-tcp-address
           - nsqlookupd-2.nsqlookupd.nsq.svc.cluster.local:4160
           - -broadcast-address
-          - $(HOSTNAME).nsqd
+          - $(HOSTNAME).nsq
         env:
         - name: HOSTNAME
           fieldPath: metadata.name
