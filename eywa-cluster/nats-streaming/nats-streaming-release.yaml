@@ -1,0 +1,34 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: nats
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: nats
+      sourceRef:
+        kind: HelmRepository
+        name: nats
+  interval: 5m0s
+  releaseName: nats
+  targetNamespace: nats
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: nats-streaming
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: nats
+      namespace: flux-system
+  chart:
+    spec:
+      chart: stan
+      sourceRef:
+        kind: HelmRepository
+        name: nats
+  interval: 5m0s
+  releaseName: stan
+  targetNamespace: nats
