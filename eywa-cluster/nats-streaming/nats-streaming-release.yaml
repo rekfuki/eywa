@@ -32,3 +32,6 @@ spec:
   interval: 5m0s
   releaseName: stan
   targetNamespace: nats
+  values:
+    nats:
+      url: nats://nats:4222
