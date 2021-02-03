@@ -3,6 +3,7 @@ ca.crt
 ca.key
 go-watchdog
 watchdog/of-watchdog
+watchdog/templates/go/function/handler.go
 handler
 gateway/api/gateway-api
 gateway/consumer/gateway-consumer
