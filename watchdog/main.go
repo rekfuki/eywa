@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,6 +13,8 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"eywa/watchdog/config"
 	"eywa/watchdog/executor"
@@ -46,43 +47,43 @@ func main() {
 
 	atomic.StoreInt32(&acceptingConnections, 0)
 
-	watchdogConfig := config.New(os.Environ())
+	wc := config.New(os.Environ())
 
-	if len(watchdogConfig.FunctionProcess) == 0 && watchdogConfig.OperationalMode != config.ModeStatic {
+	if len(wc.FunctionProcess) == 0 && wc.OperationalMode != config.ModeStatic {
 		fmt.Fprintf(os.Stderr, "Provide a \"function_process\" or \"fprocess\" environmental variable for your function.\n")
 		os.Exit(1)
 	}
 
-	requestHandler := buildRequestHandler(watchdogConfig)
+	requestHandler := buildRequestHandler(wc)
 
-	log.Printf("OperationalMode: %s\n", config.WatchdogMode(watchdogConfig.OperationalMode))
+	log.Printf("OperationalMode: %s\n", config.WatchdogMode(wc.OperationalMode))
 
 	httpMetrics := metrics.NewHttp()
 	http.HandleFunc("/", metrics.InstrumentHandler(requestHandler, httpMetrics))
 	http.HandleFunc("/_/health", makeHealthHandler())
 
 	metricsServer := metrics.MetricsServer{}
-	metricsServer.Register(watchdogConfig.MetricsPort)
+	metricsServer.Register(wc.MetricsPort)
 
 	cancel := make(chan bool)
 
 	go metricsServer.Serve(cancel)
 
-	shutdownTimeout := watchdogConfig.HTTPWriteTimeout
+	shutdownTimeout := wc.HTTPWriteTimeout
 	s := &http.Server{
-		Addr:           fmt.Sprintf(":%d", watchdogConfig.TCPPort),
-		ReadTimeout:    watchdogConfig.HTTPReadTimeout,
-		WriteTimeout:   watchdogConfig.HTTPWriteTimeout,
+		Addr:           fmt.Sprintf(":%d", wc.TCPPort),
+		ReadTimeout:    wc.HTTPReadTimeout,
+		WriteTimeout:   wc.HTTPWriteTimeout,
 		MaxHeaderBytes: 1 << 20, // Max header of 1MB
 	}
 
 	log.Printf("Timeouts: read: %s, write: %s hard: %s.\n",
-		watchdogConfig.HTTPReadTimeout,
-		watchdogConfig.HTTPWriteTimeout,
-		watchdogConfig.ExecTimeout)
-	log.Printf("Listening on port: %d\n", watchdogConfig.TCPPort)
+		wc.HTTPReadTimeout,
+		wc.HTTPWriteTimeout,
+		wc.ExecTimeout)
+	log.Printf("Listening on port: %d\n", wc.TCPPort)
 
-	listenUntilShutdown(shutdownTimeout, s, watchdogConfig.SuppressLock)
+	listenUntilShutdown(shutdownTimeout, s, wc.SuppressLock)
 }
 
 func markUnhealthy() error {
@@ -148,18 +149,18 @@ func listenUntilShutdown(shutdownTimeout time.Duration, s *http.Server, suppress
 	<-idleConnsClosed
 }
 
-func buildRequestHandler(watchdogConfig config.WatchdogConfig) http.Handler {
+func buildRequestHandler(wc config.WatchdogConfig) http.Handler {
 	var requestHandler http.HandlerFunc
 
-	switch watchdogConfig.OperationalMode {
+	switch wc.OperationalMode {
 	case config.ModeHTTP:
-		requestHandler = makeHTTPRequestHandler(watchdogConfig)
+		requestHandler = makeHTTPRequestHandler(wc)
 	default:
-		log.Panicf("unknown watchdog mode: %d", watchdogConfig.OperationalMode)
+		log.Panicf("unknown watchdog mode: %d", wc.OperationalMode)
 	}
 
-	if watchdogConfig.MaxInflight > 0 {
-		return limiter.NewConcurrencyLimiter(requestHandler, watchdogConfig.MaxInflight)
+	if wc.MaxInflight > 0 {
+		return limiter.NewConcurrencyLimiter(requestHandler, wc.MaxInflight)
 	}
 
 	return requestHandler
@@ -185,20 +186,20 @@ func createLockFile() (string, error) {
 	return path, nil
 }
 
-func makeHTTPRequestHandler(watchdogConfig config.WatchdogConfig) func(http.ResponseWriter, *http.Request) {
-	commandName, arguments := watchdogConfig.Process()
+func makeHTTPRequestHandler(wc config.WatchdogConfig) func(http.ResponseWriter, *http.Request) {
+	commandName, arguments := wc.Process()
 	functionInvoker := executor.HTTPFunctionRunner{
-		ExecTimeout:    watchdogConfig.ExecTimeout,
+		ExecTimeout:    wc.ExecTimeout,
 		Process:        commandName,
 		ProcessArgs:    arguments,
-		BufferHTTPBody: watchdogConfig.BufferHTTPBody,
+		BufferHTTPBody: wc.BufferHTTPBody,
 	}
 
-	if len(watchdogConfig.UpstreamURL) == 0 {
+	if len(wc.UpstreamURL) == 0 {
 		log.Fatal(`For "mode=http" you must specify a valid URL for "http_upstream_url"`)
 	}
 
-	urlValue, upstreamURLErr := url.Parse(watchdogConfig.UpstreamURL)
+	urlValue, upstreamURLErr := url.Parse(wc.UpstreamURL)
 	if upstreamURLErr != nil {
 		log.Fatal(upstreamURLErr)
 	}
@@ -224,8 +225,8 @@ func makeHTTPRequestHandler(watchdogConfig config.WatchdogConfig) func(http.Resp
 		}
 
 		err := functionInvoker.Run(req, r.ContentLength, r, w)
-
 		if err != nil {
+			log.Errorf("Failed to run function invocation: %s", err)
 			w.WriteHeader(500)
 			_, err := w.Write([]byte(err.Error()))
 			if err != nil {
@@ -233,8 +234,32 @@ func makeHTTPRequestHandler(watchdogConfig config.WatchdogConfig) func(http.Resp
 			}
 		}
 
+		// Maybe this should be done in a go routine to shave time off?
+		// payload := &broker.Log{
+		// 	Message: broker.Message{
+		// 		Type: broker.ExecutionType,
+		// 	},
+		// 	ExecutionLog: &broker.ExecutionLog{
+		// 		STDOut: stdout,
+		// 		STDErr: stderr,
+		// 	},
+		// }
+		// if err := bc.PublishAsync(wc.StanLogsSubject, payload); err != nil {
+		// 	log.Errorf("Failed to publish execution results")
+		// }
 	}
 }
+
+// func publishLogs(sc stan.Conn, logs []string) {
+// 		nuid, err := sc.PublishAsync("logs", , func(ackedNuid string, err error){
+// 			if err != nil {
+// 				log.Warnf("Failed to publish msg id %s: %s", ackedNuid, err)
+// 			}
+// 		})
+// 		if err != nil {
+// 			log.Errorf("Failed to publish msg %s: %s", nuid, err)
+// 		}
+// }
 
 func lockFilePresent() bool {
 	path := filepath.Join(os.TempDir(), ".lock")

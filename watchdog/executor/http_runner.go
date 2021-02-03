@@ -3,6 +3,7 @@ package executor
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,6 +18,22 @@ import (
 	"time"
 )
 
+// FunctionRunner runs a function
+type FunctionRunner interface {
+	Run(f FunctionRequest) error
+}
+
+// FunctionRequest stores request for function execution
+type FunctionRequest struct {
+	Process     string
+	ProcessArgs []string
+	Environment []string
+
+	InputReader   io.ReadCloser
+	OutputWriter  io.Writer
+	ContentLength *int64
+}
+
 // HTTPFunctionRunner creates and maintains one process responsible for handling all calls
 type HTTPFunctionRunner struct {
 	ExecTimeout    time.Duration // ExecTimeout the maximum duration or an upstream function call
@@ -25,36 +42,40 @@ type HTTPFunctionRunner struct {
 	Process        string        // Process to run as fprocess
 	ProcessArgs    []string      // ProcessArgs to pass to command
 	Command        *exec.Cmd
-	StdinPipe      io.WriteCloser
-	StdoutPipe     io.ReadCloser
+	Stdout         *[]string
+	Stderr         *[]string
 	Client         *http.Client
 	UpstreamURL    *url.URL
 	BufferHTTPBody bool
+}
+
+type FunctionResponse struct {
+	Body   []byte   `json:"body,omitempty"`
+	Stdout []string `json:"stdout,omitempty"`
+	Stderr []string `json:"stderr,omitempty"`
 }
 
 // Start forks the process used for processing incoming requests
 func (f *HTTPFunctionRunner) Start() error {
 	cmd := exec.Command(f.Process, f.ProcessArgs...)
 
-	var stdinErr error
-	var stdoutErr error
+	f.Stdout = &[]string{}
+	f.Stderr = &[]string{}
 
 	f.Command = cmd
-	f.StdinPipe, stdinErr = cmd.StdinPipe()
-	if stdinErr != nil {
-		return stdinErr
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
 	}
 
-	f.StdoutPipe, stdoutErr = cmd.StdoutPipe()
-	if stdoutErr != nil {
-		return stdoutErr
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return err
 	}
 
-	errPipe, _ := cmd.StderrPipe()
-
-	// Logs lines from stderr and stdout to the stderr and stdout of this process
-	bindLoggingPipe("stderr", errPipe, os.Stderr)
-	bindLoggingPipe("stdout", f.StdoutPipe, os.Stdout)
+	// Logs lines from stderr and stdout to the output buffer
+	bindLoggingPipe("stderr", stdoutPipe, f.Stdout)
+	bindLoggingPipe("stdout", stderrPipe, f.Stderr)
 
 	f.Client = makeProxyClient(f.ExecTimeout)
 
@@ -70,7 +91,7 @@ func (f *HTTPFunctionRunner) Start() error {
 
 	}()
 
-	err := cmd.Start()
+	err = cmd.Start()
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
@@ -84,6 +105,10 @@ func (f *HTTPFunctionRunner) Start() error {
 // Run a function with a long-running process with a HTTP protocol for communication
 func (f *HTTPFunctionRunner) Run(req FunctionRequest, contentLength int64, r *http.Request, w http.ResponseWriter) error {
 	startedTime := time.Now()
+
+	// Wipe any previous output
+	*f.Stderr = []string{}
+	*f.Stdout = []string{}
 
 	upstreamURL := f.UpstreamURL.String()
 
@@ -100,11 +125,9 @@ func (f *HTTPFunctionRunner) Run(req FunctionRequest, contentLength int64, r *ht
 	}
 
 	request, _ := http.NewRequest(r.Method, upstreamURL, body)
-	for h := range r.Header {
-		request.Header.Set(h, r.Header.Get(h))
-	}
-
 	request.Host = r.Host
+
+	r.Header.Del("Content-Length")
 	copyHeaders(request.Header, &r.Header)
 
 	var reqCtx context.Context
@@ -150,9 +173,17 @@ func (f *HTTPFunctionRunner) Run(req FunctionRequest, contentLength int64, r *ht
 		return err
 	}
 
+	// In case we need to override the content-length
+	res.Header.Del("Content-Length")
 	copyHeaders(w.Header(), &res.Header)
+	copyHeaders(w.Header(), &r.Header)
 
 	w.Header().Set("X-Duration-Seconds", fmt.Sprintf("%f", time.Since(startedTime).Seconds()))
+
+	resp := FunctionResponse{
+		Stdout: *f.Stdout,
+		Stderr: *f.Stderr,
+	}
 
 	w.WriteHeader(res.StatusCode)
 	if res.Body != nil {
@@ -162,9 +193,17 @@ func (f *HTTPFunctionRunner) Run(req FunctionRequest, contentLength int64, r *ht
 		if bodyErr != nil {
 			log.Println("read body err", bodyErr)
 		}
-		_, err := w.Write(bodyBytes)
+		resp.Body = bodyBytes
+	}
+
+	if !resp.isEmpty() {
+		bodyBytes, err := json.Marshal(resp)
 		if err != nil {
-			log.Println("write body err", err)
+			return err
+		}
+		_, err = w.Write(bodyBytes)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -201,4 +240,11 @@ func makeProxyClient(dialTimeout time.Duration) *http.Client {
 	}
 
 	return &proxyClient
+}
+
+func (fr *FunctionResponse) isEmpty() bool {
+	if len(fr.Body) > 0 || len(fr.Stderr) > 0 || len(fr.Stdout) > 0 {
+		return false
+	}
+	return true
 }
