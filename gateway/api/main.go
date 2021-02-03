@@ -2,19 +2,27 @@ package main
 
 import (
 	"flag"
+	"os"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 
+	"eywa/gateway/api/server"
 	"eywa/gateway/clients/k8s"
 	"eywa/gateway/clients/registry"
+	"eywa/gateway/hooks"
 	"eywa/gateway/metrics"
-	"eywa/gateway/server"
+	"eywa/gateway/types"
+	"eywa/go-libs/broker"
+	"eywa/go-libs/trigger"
 )
 
 // Config represents gateway startup configuration
 type Config struct {
+	NatsURL             string        `envconfig:"nats_url" default:"nats://nats.nats:4222"`
+	StanClusterID       string        `envconfig:"stan_cluster_id" default:"stan"`
+	StanClientID        string        `envconfig:"stan_client_id" default:"gateway"`
 	RegistryURL         string        `envconfig:"registry_url" default:"registry.faas-system:8080"`
 	CacheExpiryDuration time.Duration `envconfig:"cache_expiry_duration" default:"5s"`
 	LimitCPUMin         string        `envconfig:"limit_cpu_min" default:"20m"`
@@ -55,10 +63,23 @@ func main() {
 
 	registry := registry.New(conf.RegistryURL)
 
+	hostname, _ := os.Hostname()
+	clientID := conf.StanClientID + broker.GetClientID(hostname)
+	bc, err := broker.Connect(conf.NatsURL, conf.StanClusterID, clientID, 100, 5)
+	if err != nil {
+		log.Fatalf("Failed to setup nats-streaming broker: %s", err)
+	}
+
+	eventHook := broker.NewLogHandler(types.LogsSubject, bc, hooks.EventHook, true)
+	timelineHook := broker.NewLogHandler(types.LogsSubject, bc, hooks.TimelineHook, true)
+	trigger.AddHook(eventHook, []trigger.Type{types.EventHookType})
+	trigger.AddHook(timelineHook, []trigger.Type{types.TimelineHookType})
+
 	params := &server.ContextParams{
 		K8s:      k8s,
 		Metrics:  metrics,
 		Registry: registry,
+		Broker:   bc,
 	}
 
 	server.Run(params)

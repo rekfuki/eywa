@@ -1,4 +1,4 @@
-IMAGE = gateway
+IMAGE = gateway-api
 DEBUG ?= false
 BUILD_CONTEXT := .
 DOCKER_REGISTRY = registry.eywa.rekfuki.dev
@@ -10,12 +10,12 @@ endif
 
 .PHONY: run
 run:
-	@echo "Running gateway..."
+	@echo "Running $(IMAGE)..."
 	GO111MODULE=on go run main.go -in-cluster=false -debug=$(DEBUG)
 
 .PHONY: go-build
 go-build:
-	@echo "Build gateway binary..."
+	@echo "Build $(IMAGE) binary..."
 	GO111MODULE=on CGO_ENABLED=0 go build -o $(BUILD_CONTEXT)/$(IMAGE) -v main.go
 
 .PHONY: build

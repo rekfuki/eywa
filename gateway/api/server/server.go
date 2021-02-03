@@ -11,16 +11,17 @@ import (
 	"github.com/miketonks/swag"
 	sv "github.com/miketonks/swag-validator"
 	"github.com/miketonks/swag/swagger"
+	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/resty.v1"
 
-	log "github.com/sirupsen/logrus"
-
+	"eywa/gateway/api/controllers"
 	"eywa/gateway/clients/k8s"
 	"eywa/gateway/clients/registry"
-	"eywa/gateway/controllers"
 	"eywa/gateway/metrics"
 	"eywa/gateway/types"
 	"eywa/go-libs/auth"
+	"eywa/go-libs/broker"
 )
 
 // ContextParams holds the objects required to initialise the server.
@@ -28,6 +29,7 @@ type ContextParams struct {
 	K8s      *k8s.Client
 	Metrics  *metrics.Client
 	Registry *registry.Client
+	Broker   *broker.Client
 }
 
 func contextObjects(contextParams *ContextParams) echo.MiddlewareFunc {
@@ -54,6 +56,7 @@ func contextObjects(contextParams *ContextParams) echo.MiddlewareFunc {
 			c.Set("k8s", contextParams.K8s)
 			c.Set("metrics", contextParams.Metrics)
 			c.Set("registry", contextParams.Registry)
+			c.Set("broker", contextParams.Broker)
 			return next(c)
 		}
 	}
@@ -62,6 +65,11 @@ func contextObjects(contextParams *ContextParams) echo.MiddlewareFunc {
 func checkAuth() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			if c.Request().Header.Get("X-Request-Id") == "" {
+				id, _ := uuid.NewV4()
+				c.Request().Header.Set("X-Request-Id", id.String())
+			}
+
 			auth := auth.FromHeaders(c.Request().Header)
 			if !auth.Check() {
 				return c.JSON(http.StatusForbidden, "Forbidden")
@@ -75,6 +83,7 @@ func checkAuth() echo.MiddlewareFunc {
 func zeroScale() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+
 			auth := c.Get("auth").(*auth.Auth)
 			k8sClient := c.Get("k8s").(*k8s.Client)
 			functionID := c.Param("function_id")
@@ -98,6 +107,13 @@ func zeroScale() echo.MiddlewareFunc {
 				log.Errorf("Function %q scale request timed-out after %fs", functionID, scaleResult.Duration)
 			}
 
+			// Should always exist
+			functionName := "UNKNOWN"
+			if val, exists := scaleResult.FunctionStatus.Labels[types.UserDefinedNameLabel]; exists {
+				functionName = val
+			}
+
+			c.Set("function_name", functionName)
 			return next(c)
 		}
 	}
@@ -126,7 +142,9 @@ func createRouter(params *ContextParams) *echo.Echo {
 	e.POST("/eywa/api/system/alert", controllers.InvocationAlert)
 
 	// Proxy direct function calls
-	e.Match([]string{"POST", "PUT", "PATCH", "DELETE", "GET"}, "/eywa/api/functions/invoke/:function_id/*path", controllers.Proxy, checkAuth(), zeroScale())
+	syncMethods := []string{"POST", "PUT", "PATCH", "DELETE", "GET"}
+	e.Match(syncMethods, "/eywa/api/functions/sync/:function_id/*path", controllers.Proxy, checkAuth(), zeroScale())
+	e.POST("/eywa/api/functions/async/:function_id/*path", controllers.AsyncInvocation, checkAuth())
 
 	enableCors := true
 	gatewayAPI := createGatewayAPI()

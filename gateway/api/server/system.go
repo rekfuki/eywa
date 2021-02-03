@@ -6,7 +6,7 @@ import (
 	"github.com/miketonks/swag/endpoint"
 	"github.com/miketonks/swag/swagger"
 
-	"eywa/gateway/controllers"
+	"eywa/gateway/api/controllers"
 	"eywa/gateway/types"
 )
 

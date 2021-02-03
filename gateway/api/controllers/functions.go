@@ -55,6 +55,10 @@ func GetFunction(c echo.Context) error {
 		return err
 	}
 
+	if fs == nil {
+		return c.JSON(http.StatusNotFound, "Function Not Found")
+	}
+
 	return c.JSON(http.StatusOK, makeFunctionStatusResponse(fs))
 }
 
@@ -92,24 +96,22 @@ func DeployFunction(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Function with specified name already exists")
 	}
 
-	filter = k8s.LabelSelector().
-		In(types.SecretIDLabel, dr.Secrets).
-		Equals(types.UserIDLabel, auth.UserID)
-	secrets, err := k8sClient.GetSecretsFiltered(filter)
-	if err != nil {
-		log.Errorf("Failed to get secrets from k8s: %s", err)
-		return err
-	}
+	secrets := []k8s.Secret{}
+	if len(dr.Secrets) > 0 {
+		filter = k8s.LabelSelector().
+			In(types.SecretIDLabel, dr.Secrets).
+			Equals(types.UserIDLabel, auth.UserID)
+		secrets, err = k8sClient.GetSecretsFiltered(filter)
+		if err != nil {
+			log.Errorf("Failed to get secrets from k8s: %s", err)
+			return err
+		}
 
-	notFoundSecrets := validateSecrets(dr.Secrets, secrets)
-	if len(notFoundSecrets) > 0 {
-		message := fmt.Sprintf("Following secrets not found: %#v", notFoundSecrets)
-		return c.JSON(http.StatusNotFound, message)
-	}
-
-	if len(notFoundSecrets) > 0 {
-		message := fmt.Sprintf("Following secrets not found: %#v", notFoundSecrets)
-		return c.JSON(http.StatusNotFound, message)
+		notFoundSecrets := validateSecrets(dr.Secrets, secrets)
+		if len(notFoundSecrets) > 0 {
+			message := fmt.Sprintf("Following secrets not found: %#v", notFoundSecrets)
+			return c.JSON(http.StatusNotFound, message)
+		}
 	}
 
 	image, err := rc.GetImage(dr.ImageID, auth.UserID)
@@ -274,6 +276,10 @@ func buildK8sName(name, userID string) string {
 }
 
 func parseEnvVars(fr types.FunctionRequest) map[string]string {
+	if fr.EnvVars == nil {
+		fr.EnvVars = map[string]string{}
+	}
+
 	envVars := map[string]string{}
 	fr.EnvVars["write_debug"] = "false"
 	if fr.WriteDebug {

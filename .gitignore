@@ -2,8 +2,10 @@ htpasswd
 ca.crt
 ca.key
 go-watchdog
+watchdog/of-watchdog
 handler
-gateway/gateway
+gateway/api/gateway-api
+gateway/consumer/gateway-consumer
 registry/registry
 idler/idler
 test-kube
