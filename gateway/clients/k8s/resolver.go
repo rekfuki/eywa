@@ -12,6 +12,7 @@ func (c *Client) Resolve(fnName string) (string, error) {
 		fnName = strings.TrimSuffix(fnName, "."+faasNamespace)
 	}
 
+	fnName = "s-" + fnName
 	svc, err := c.endpointLister.Get(fnName)
 	if err != nil {
 		return "", fmt.Errorf("Error listing \"%s.%s\": %s", fnName, faasNamespace, err)

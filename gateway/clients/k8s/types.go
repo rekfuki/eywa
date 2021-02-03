@@ -48,9 +48,10 @@ type FunctionResources struct {
 
 // FunctionZeroScaleResult represents status of function scaling from zero
 type FunctionZeroScaleResult struct {
-	Found     bool
-	Available bool
-	Duration  time.Duration
+	Found          bool
+	Available      bool
+	Duration       time.Duration
+	FunctionStatus *FunctionStatus
 }
 
 // ResourceLimits represents response of resource limits

@@ -80,19 +80,24 @@ func buildService(request *DeployFunctionRequest) *corev1.Service {
 		annotations = request.Annotations
 	}
 
+	// DNS records cannot start with a number.
+	// Since all the names are UUIDs, there is a
+	// high chance that a number will be the first character.
+	serviceName := "s-" + request.Service
 	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        request.Service,
+			Name:        serviceName,
 			Annotations: annotations,
+			Labels:      request.Labels,
 		},
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 			Selector: map[string]string{
-				faasIDLabel: request.Service,
+				faasIDLabel: request.Service, // Deployment can start with a number
 			},
 			Ports: []corev1.ServicePort{
 				{
@@ -223,6 +228,11 @@ func buildDeployment(request *DeployFunctionRequest) (*appsv1.Deployment, error)
 					Annotations: annotations,
 				},
 				Spec: apiv1.PodSpec{
+					ImagePullSecrets: []corev1.LocalObjectReference{
+						{
+							Name: dockerPullSecret,
+						},
+					},
 					Containers: []apiv1.Container{
 						{
 							Name:  request.Service,
@@ -297,9 +307,10 @@ func (c *Client) DeleteFunction(fnName string) error {
 		return err
 	}
 
+	serviceName := "s-" + fnName
 	if err := c.clientset.CoreV1().
 		Services(faasNamespace).
-		Delete(context.TODO(), fnName, *opts); err != nil {
+		Delete(context.TODO(), serviceName, *opts); err != nil {
 		return err
 
 	}
@@ -502,8 +513,9 @@ func (c *Client) ScaleFromZero(filter Selector) (*FunctionZeroScaleResult, error
 		}
 		if cached.AvailableReplicas > 0 {
 			return &FunctionZeroScaleResult{
-				Available: true,
-				Found:     true,
+				Available:      true,
+				Found:          true,
+				FunctionStatus: cached,
 			}, nil
 		}
 	}
@@ -577,9 +589,10 @@ func (c *Client) ScaleFromZero(filter Selector) (*FunctionZeroScaleResult, error
 					filter.String(), totalTime.Seconds(), functionStatus.AvailableReplicas)
 
 				return &FunctionZeroScaleResult{
-					Available: true,
-					Found:     true,
-					Duration:  totalTime,
+					Available:      true,
+					Found:          true,
+					Duration:       totalTime,
+					FunctionStatus: functionStatus,
 				}, nil
 			}
 
@@ -588,9 +601,10 @@ func (c *Client) ScaleFromZero(filter Selector) (*FunctionZeroScaleResult, error
 	}
 
 	return &FunctionZeroScaleResult{
-		Available: true,
-		Found:     true,
-		Duration:  time.Since(start),
+		Available:      true,
+		Found:          true,
+		Duration:       time.Since(start),
+		FunctionStatus: functionStatus,
 	}, nil
 }
 

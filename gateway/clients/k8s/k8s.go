@@ -35,6 +35,8 @@ const (
 	defaultScalingFactor = 20
 
 	limitRangeName = "resources-min-max"
+
+	dockerPullSecret = "image-pull-secret"
 )
 
 // Config represents the configuration of k8s client
