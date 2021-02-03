@@ -3,6 +3,7 @@ package docker
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"time"
 
 	"gopkg.in/resty.v1"
@@ -34,6 +35,9 @@ func (c *Client) DeleteImage(repository, version string) error {
 	}
 
 	if resp.IsError() {
+		if resp.StatusCode() == http.StatusNotFound {
+			return nil
+		}
 		return fmt.Errorf("Docker registry returned unxpected response: %s", resp.Status())
 	}
 
@@ -48,6 +52,9 @@ func (c *Client) DeleteImage(repository, version string) error {
 	}
 
 	if resp.IsError() {
+		if resp.StatusCode() == http.StatusNotFound {
+			return nil
+		}
 		return fmt.Errorf("Docker registry returned unxpected response: %s", resp.Status())
 	}
 
