@@ -33,5 +33,6 @@ spec:
   releaseName: stan
   targetNamespace: nats
   values:
-    nats:
-      url: nats://nats:4222
+    stan:
+      nats:
+        url: nats://nats.nats:4222
