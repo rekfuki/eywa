@@ -33,7 +33,7 @@ func Setup(k8sClient *k8s.Client, watchInterval time.Duration) *Client {
 	gatewayFunctionsHistogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name: "gateway_functions_seconds",
 		Help: "Function time taken",
-	}, []string{"function_name"})
+	}, []string{"function_name", "user_id"})
 
 	gatewayFunctionInvocation := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -42,7 +42,7 @@ func Setup(k8sClient *k8s.Client, watchInterval time.Duration) *Client {
 			Name:      "invocation_total",
 			Help:      "Function metrics",
 		},
-		[]string{"function_name", "code"},
+		[]string{"function_name", "user_id", "code"},
 	)
 
 	serviceReplicas := prometheus.NewGaugeVec(
@@ -81,18 +81,18 @@ func Setup(k8sClient *k8s.Client, watchInterval time.Duration) *Client {
 }
 
 // Observe records metrics in Prometheus
-func (c *Client) Observe(method string, URL string, fnName string, statusCode int, event string, duration time.Duration) {
+func (c *Client) Observe(method, fnName, userID string, statusCode int, event string, duration time.Duration) {
 	switch event {
 	case "completed":
 		seconds := duration.Seconds()
 		c.metrics.functionsHistogram.
-			WithLabelValues(fnName).
+			With(prometheus.Labels{"function_name": fnName, "user_id": userID}).
 			Observe(seconds)
 
 		code := strconv.Itoa(statusCode)
 
 		c.metrics.functionInvocation.
-			With(prometheus.Labels{"function_name": fnName, "code": code}).
+			With(prometheus.Labels{"function_name": fnName, "user_id": userID, "code": code}).
 			Inc()
 	case "started":
 		c.metrics.functionInvocationStarted.WithLabelValues(fnName).Inc()
