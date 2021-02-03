@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Chart.Name }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      {{ include "labels" .Values.labels | indent 8 }}
+  template:
+    metadata:
+      namespace: {{ .Values.namespace }}
+      labels:
+      {{ include "labels" .Values.labels | indent 8 }}
+      annotations:
+      {{- range $k, $v := .Values.annotations }}
+        {{ $k }}: {{ quote $v }}
+      {{- end }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: {{ .Values.container.image }}
+        imagePullPolicy: {{ .Values.container.imagePullPolicy }}
+        ports:
+        {{ include "ports" .Values.container.ports | indent 10 }}
+        env:
+        {{- range $k, $v := .Values.container.env }}
+        - name: {{ $v.name }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ $v.secretName }}
+              key: {{ $v.secretField }}
+        {{- end }}
+      imagePullSecrets: 
+      - name: {{ .Values.imagePullSecret }}
