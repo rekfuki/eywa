@@ -1,2 +1,0 @@
-{{ $data := dict "data" .Values.nsqlookupd.statefulSet "namespace" .Values.namespaceName }}
-{{- include "statefulSet" $data }}
