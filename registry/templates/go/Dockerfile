@@ -1,9 +1,9 @@
-FROM openfaas/of-watchdog:0.8.0 as watchdog
+FROM registry.eywa.rekfuki.dev/of-watchdog:latest as watchdog
 FROM golang:1.15-alpine3.12 as build
 
 RUN apk --no-cache add git
 
-COPY --from=watchdog /fwatchdog /usr/bin/fwatchdog
+COPY --from=watchdog /of-watchdog /usr/bin/fwatchdog
 RUN chmod +x /usr/bin/fwatchdog
 
 ENV CGO_ENABLED=0
