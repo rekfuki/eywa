@@ -11,4 +11,14 @@ const (
 	FunctionIDLabel = "function_id"
 	// UserDefinedNameLabel key of the user defined name label in k8s
 	UserDefinedNameLabel = "user_defined_name"
+
+	// LogsSubject is the subject of logs produced to stan
+	LogsSubject = "logs"
+	// AsyncExecSubject is the subject of asynchronous executions produced to stan
+	AsyncExecSubject = "gateway-async"
+
+	// EventHookType represnets event hook type
+	EventHookType = 1
+	// TimelineHookType represents timeline hook type
+	TimelineHookType = 2
 )
