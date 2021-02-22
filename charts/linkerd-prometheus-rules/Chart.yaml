@@ -1,5 +1,0 @@
-apiVersion: v2
-name: linkerd-prometheus-rules
-description: Linkerd prometheus config
-version: 0.1.2
-appVersion: 1.16.1
