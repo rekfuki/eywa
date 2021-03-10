@@ -4,6 +4,9 @@ metadata:
   name: stolon
   namespace: flux-system
 spec:
+  dependsOn:
+    - name: generated-secrets
+      namespace: flux-system
   chart:
     spec:
       chart: stolon
@@ -18,3 +21,40 @@ spec:
       name: stolon-superuser
     replicationSecret:
       name: stolon-replication
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: init-stolon
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: stolon
+      namespace: flux-system
+  chart:
+    spec:
+      chart: ./charts/init-stolon
+      sourceRef:
+        kind: GitRepository
+        name: eywa-charts
+  interval: 5m0s
+  releaseName: init-stolon
+  valuesFrom:
+  - secretKeyRef:
+      name: warden-psql-creds
+      namespace: faas-system
+      valuesKey: password
+      targetPath: envVars[2].value
+  - secretKeyRef:
+      name: execution-tracker-psql-creds
+      namespace: faas-system
+      valuesKey: password
+      targetPath: envVars[3].value
+  values:
+    envVars:
+    - name: COMPONENTS
+      value: WARDEN|EXECUTION_TRACKER
+    - name: HOST
+      value: stolon-proxy.stolon
+    - name: WARDEN_PASSWORD
+    - name: EXECUTION_TRACKER_PASSWORD
