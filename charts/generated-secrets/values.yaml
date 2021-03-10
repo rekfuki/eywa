@@ -1,7 +1,8 @@
 secrets:
 # BEGIN STOLON
 - name: stolon-replication
-  namespace: stolon
+  namespaces:
+  - stolon
   fields:
   - name: pg_repl_username
     value: repl-admin
@@ -9,7 +10,8 @@ secrets:
     generate: true
 
 - name: stolon-superuser
-  namespace: stolon
+  namespaces: 
+  - stolon
   fields:
   - name: pg_su_username
     value: admin
@@ -18,14 +20,18 @@ secrets:
 
 # EXECUTION TRACKER
 - name: execution-tracker-psql-creds
-  namespace: faas-system
+  namespaces:
+  - faas-system
+  - stolon
   fields:
   - name: password
     generate: true
 
 # WARDEN
 - name: warden-psql-creds
-  namespace: faas-system
+  namespaces:
+  - faas-system
+  - stolon
   fields:
   - name: password
     generate: true

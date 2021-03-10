@@ -1,9 +1,0 @@
-{{- define "generated-secrets.autogenerate" -}}
-{{- range . }}
-{{- if .generate }}
-{{- if eq .generate true }}
-  secret-generator.v1.mittwald.de/autogenerate: {{ .name}}
-{{- end }}
-{{- end }}
-{{- end }}
-{{- end }}
