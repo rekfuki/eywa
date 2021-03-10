@@ -4,7 +4,7 @@ secrets:
   namespace: stolon
   fields:
   - name: pg_repl_username
-    generate: true
+    value: admin
   - name: pg_repl_password
     generate: true
 
