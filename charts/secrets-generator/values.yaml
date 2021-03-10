@@ -22,7 +22,7 @@ secrets:
 - name: execution-tracker-psql-creds
   namespaces:
   - faas-system
-  - stolon
+  - flux-system
   fields:
   - name: password
     generate: true
@@ -31,7 +31,7 @@ secrets:
 - name: warden-psql-creds
   namespaces:
   - faas-system
-  - stolon
+  - flux-system
   fields:
   - name: password
     generate: true
