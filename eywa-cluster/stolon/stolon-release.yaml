@@ -42,6 +42,14 @@ spec:
   targetNamespace: stolon
   valuesFrom:
   - kind: Secret
+    name: stolon-superuser
+    valuesKey: pg_su_username
+    targetPath: envVars.username
+  - kind: Secret
+    name: stolon-superuser
+    valuesKey: pg_su_password
+    targetPath: envVars.pgpassword
+  - kind: Secret
     name: warden-psql-creds
     valuesKey: password
     targetPath: envVars.warden_password
