@@ -4,11 +4,6 @@ metadata:
   name: stolon
   namespace: flux-system
 spec:
-  dependsOn:
-    - name: sealed-secrets
-      namespace: flux-system
-    - name: sealed-secrets-dependents
-      namespace: flux-system
   chart:
     spec:
       chart: stolon
