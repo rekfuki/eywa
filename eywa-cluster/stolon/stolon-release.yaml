@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   dependsOn:
-    - name: generated-secrets
+    - name: secrets-generator
       namespace: flux-system
   chart:
     spec:
