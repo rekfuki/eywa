@@ -3,6 +3,7 @@ secrets:
 - name: stolon-replication
   namespaces:
   - stolon
+  - flux-system
   fields:
   - name: pg_repl_username
     value: repl-admin
@@ -12,6 +13,7 @@ secrets:
 - name: stolon-superuser
   namespaces: 
   - stolon
+  - flux-system
   fields:
   - name: pg_su_username
     value: admin
