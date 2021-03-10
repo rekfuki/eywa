@@ -40,11 +40,11 @@ spec:
   interval: 5m0s
   releaseName: init-stolon
   valuesFrom:
-  - kind: Secret:
+  - kind: Secret
     name: warden-psql-creds
     valuesKey: password
     targetPath: envVars[2].value
-  - kind: Secret:
+  - kind: Secret
     name: execution-tracker-psql-creds
     valuesKey: password
     targetPath: envVars[3].value
@@ -55,4 +55,6 @@ spec:
     - name: HOST
       value: stolon-proxy.stolon
     - name: WARDEN_PASSWORD
+      tmp: ""
     - name: EXECUTION_TRACKER_PASSWORD
+      tmp: ""
