@@ -44,16 +44,12 @@ spec:
   - kind: Secret
     name: warden-psql-creds
     valuesKey: password
-    targetPath: envVars[2].value
+    targetPath: envVars.warden_password
   - kind: Secret
     name: execution-tracker-psql-creds
     valuesKey: password
-    targetPath: envVars[3].value
+    targetPath: envVars.execution_tracker_password
   values:
     envVars:
-    - name: COMPONENTS
-      value: WARDEN|EXECUTION_TRACKER
-    - name: HOST
-      value: stolon-proxy.stolon
-    - name: WARDEN_PASSWORD
-    - name: EXECUTION_TRACKER_PASSWORD
+      components: WARDEN|EXECUTION_TRACKER
+      host: stolon-proxy.stolon
