@@ -39,6 +39,7 @@ spec:
         name: eywa-charts
   interval: 5m0s
   releaseName: init-stolon
+  targetNamespace: stolon
   valuesFrom:
   - kind: Secret
     name: warden-psql-creds
@@ -55,6 +56,4 @@ spec:
     - name: HOST
       value: stolon-proxy.stolon
     - name: WARDEN_PASSWORD
-      tmp: ""
     - name: EXECUTION_TRACKER_PASSWORD
-      tmp: ""
