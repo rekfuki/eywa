@@ -1,0 +1,31 @@
+secrets:
+# BEGIN STOLON
+- name: stolon-replication
+  namespace: stolon
+  fields:
+  - name: pg_repl_username
+    generate: true
+  - name: pg_repl_password
+    generate: true
+
+- name: stolon-superuser
+  namespace: stolon
+  fields:
+  - name: pg_su_username
+    value: admin
+  - name: pg_su_password
+    generate: true
+
+# EXECUTION TRACKER
+- name: execution-tracker-psql-creds
+  namespace: faas-system
+  fields:
+  - name: password
+    generate: true
+
+# WARDEN
+- name: warden-psql-creds
+  namespace: faas-system
+  fields:
+  - name: password
+    generate: true
