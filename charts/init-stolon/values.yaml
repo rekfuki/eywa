@@ -13,5 +13,5 @@ initdbScripts:
     done
   init_execution_tracker.sql: |
 
-envVars:
+envVars: {}
 # Pass via HelmRelease ValueFrom
