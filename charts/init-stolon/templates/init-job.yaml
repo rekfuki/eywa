@@ -29,9 +29,9 @@ spec:
       - name: {{.Chart.Name}}
         image: 'postgres'
         env:
-        {{- range .Values.envVars}}
-          - name: {{ .name }}
-            value: {{ .value | quote }}
+        {{- range $k, $v := .Values.envVars}}
+          - name: {{ $k | upper }}
+            value: {{ $v | quote }}
         {{- end }}
         command: ["/bin/bash", "-e", "/tmp/init-scripts/create_script.sh"]
         volumeMounts:
