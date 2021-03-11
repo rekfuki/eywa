@@ -7,10 +7,7 @@ initdbScripts:
 
       PASSWORD="${component}_PASSWORD"
 
-      if psql --host ${HOST} -U ${USERNAME} -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='${component}';" | grep -q 1; then
-        echo "Database ${component} already exists, skipping..."
-        continue
-      else
+      if ! psql --host ${HOST} -U ${USERNAME} -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='${component}';" | grep -q 1; then
         psql --host ${HOST} -U ${USERNAME} -d postgres -c "CREATE DATABASE ${component,,};"
         psql --host ${HOST} -U ${USERNAME} -d ${component,,} -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
         psql --host ${HOST} -U ${USERNAME} -d ${component,,} -c 'CREATE EXTENSION IF NOT EXISTS "pg_trgm";'
