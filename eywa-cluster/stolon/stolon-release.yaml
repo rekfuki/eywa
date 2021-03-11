@@ -42,6 +42,8 @@ spec:
   targetNamespace: stolon
   upgrade:
     force: true
+    remediation: 
+      strategy: uninstall
   valuesFrom:
   - kind: Secret
     name: stolon-superuser
