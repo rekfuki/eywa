@@ -40,6 +40,8 @@ spec:
   interval: 5m0s
   releaseName: init-stolon
   targetNamespace: stolon
+  upgrade:
+    force: true
   valuesFrom:
   - kind: Secret
     name: stolon-superuser
@@ -57,6 +59,10 @@ spec:
     name: execution-tracker-psql-creds
     valuesKey: password
     targetPath: envVars.execution_tracker_password
+  - kind: Secret
+    name: registry-psql-creds
+    valuesKey: password
+    targetPath: envVars.registry_password
   values:
     envVars:
       components: WARDEN|EXECUTION_TRACKER
