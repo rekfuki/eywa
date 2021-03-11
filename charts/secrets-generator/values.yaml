@@ -43,6 +43,7 @@ secrets:
   namespaces:
   - mongodb
   - flux-system
+  - faas-system
   fields:
   - name: admin_password
     generate: true
