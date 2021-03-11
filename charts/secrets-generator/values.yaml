@@ -37,3 +37,13 @@ secrets:
   fields:
   - name: password
     generate: true
+
+# MONGODB
+- name: mongodb-superuser
+  namespaces:
+  - mongodb
+  - flux-system
+  fields:
+  - name: admin_password
+    generate: true
+
