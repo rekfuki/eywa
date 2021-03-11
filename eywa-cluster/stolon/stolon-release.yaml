@@ -40,10 +40,6 @@ spec:
   interval: 5m0s
   releaseName: init-stolon
   targetNamespace: stolon
-  upgrade:
-    force: true
-    remediation: 
-      strategy: uninstall
   valuesFrom:
   - kind: Secret
     name: stolon-superuser
