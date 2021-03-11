@@ -48,3 +48,11 @@ secrets:
   - name: admin_password
     generate: true
 
+# REGISTRY
+- name: registry-psql-creds
+  namespaces:
+  - faas-system
+  - flux-system
+  fields:
+  - name: password
+    generate: true
