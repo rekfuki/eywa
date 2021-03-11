@@ -37,12 +37,3 @@ secrets:
   fields:
   - name: password
     generate: true
-
-# TEST
-- name: test-psql-creds
-  namespaces:
-  - faas-system
-  - flux-system
-  fields:
-  - name: password
-    generate: true
