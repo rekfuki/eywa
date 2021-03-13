@@ -48,11 +48,11 @@ const steps = [
   {
     label: 'Environment Variables',
     icon: ListIcon
-  },
-  {
-    label: 'Resources',
-    icon: SlidersIcon
   }
+  // {
+  //   label: 'Resources',
+  //   icon: SlidersIcon
+  // }
 ];
 
 const CustomStepConnector = withStyles((theme) => ({
@@ -143,19 +143,19 @@ const FunctionCreateView = () => {
         "secrets": payload.secrets.map((secret) => secret.id),
         "image_id": payload.image.id,
         "read_timeout": `${payload.read_timeout}s`,
-        "write_timeout": `${payload.write_timeout}s`,
-        "resources": {
-          "max_cpu": `${payload.resources.max_cpu}m`,
-          "min_cpu": `${payload.resources.min_cpu}m`,
-          "max_memory": `${payload.resources.max_memory}Mi`,
-          "min_memory": `${payload.resources.min_memory}Mi`,
-        }
+        "write_timeout": `${payload.write_timeout}s`
+        // "resources": {
+        //   "max_cpu": `${payload.resources.max_cpu}m`,
+        //   "min_cpu": `${payload.resources.min_cpu}m`,
+        //   "max_memory": `${payload.resources.max_memory}Mi`,
+        //   "min_memory": `${payload.resources.min_memory}Mi`,
+        // }
       };
       delete payload["image"];
 
       const response = await axios.post("/eywa/api/functions", payload)
       enqueueSnackbar('Function updated', {
-        variant: 'success',
+        variant: 'success'
       });
       history.push("/app/functions/" + response.data.id)
     } catch (err) {
@@ -165,7 +165,7 @@ const FunctionCreateView = () => {
         msg = err.response.data
       }
       enqueueSnackbar(msg, {
-        variant: 'error',
+        variant: 'error'
       });
     }
   };
@@ -179,7 +179,7 @@ const FunctionCreateView = () => {
     } catch (err) {
       console.error(err);
       enqueueSnackbar('Failed to get secrets', {
-        variant: 'error',
+        variant: 'error'
       });
     }
   }, [isMountedRef]);
@@ -193,7 +193,7 @@ const FunctionCreateView = () => {
     } catch (err) {
       console.error(err);
       enqueueSnackbar('Failed to get images', {
-        variant: 'error',
+        variant: 'error'
       });
     }
   }, [isMountedRef]);
@@ -303,17 +303,18 @@ const FunctionCreateView = () => {
                       payload={getPayload()}
                       setPayload={setPayload}
                       onBack={handleBack}
-                      onNext={handleNext}
+                      onNext={handleComplete}
+                    // onComplete={handleComplete}
                     />
                   )}
-                  {activeStep === 2 && (
+                  {/* {activeStep === 2 && (
                     <Resources
                       payload={getPayload()}
                       setPayload={setPayload}
                       onBack={handleBack}
                       onComplete={handleComplete}
                     />
-                  )}
+                  )} */}
                 </Box>
               </Grid>
             </Grid>

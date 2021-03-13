@@ -271,7 +271,7 @@ const EnvVars = ({
               variant="contained"
               size="large"
             >
-              Next
+              Create
             </Button>
           </Box>
         </form>

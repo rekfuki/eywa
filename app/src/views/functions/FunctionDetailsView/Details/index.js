@@ -52,7 +52,7 @@ const Details = ({
       >
         <MountedSecrets secrets={fn.secrets || []} />
       </Grid>
-      <Grid
+      {/* <Grid
         item
         lg={4}
         md={6}
@@ -60,7 +60,7 @@ const Details = ({
         xs={12}
       >
         <Resources resources={fn.resources} />
-      </Grid>
+      </Grid> */}
     </Grid>
   );
 };

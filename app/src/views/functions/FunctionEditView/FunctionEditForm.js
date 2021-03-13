@@ -19,7 +19,7 @@ import {
 } from '@material-ui/core';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import {
-  X as XIcon,
+  X as XIcon
 } from 'react-feather';
 import axios from 'src/utils/axios';
 
@@ -57,15 +57,15 @@ const FunctionEditForm = ({
         maxConcurrency: fn.max_concurrency || 0,
         readTimeout: fn.read_timeout.replace('s', '') || '10',
         writeTimeout: fn.write_timeout.replace('s', '') || '10',
-        minCpu: fn.resources.min_cpu.replace('m', '') || '20',
-        maxCpu: fn.resources.max_cpu.replace('m', '') || '50',
-        minMemory: fn.resources.min_memory.replace('Mi', '') || '20',
-        maxMemory: fn.resources.max_memory.replace('Mi', '') || '50',
+        // minCpu: fn.resources.min_cpu.replace('m', '') || '20',
+        // maxCpu: fn.resources.max_cpu.replace('m', '') || '50',
+        // minMemory: fn.resources.min_memory.replace('Mi', '') || '20',
+        // maxMemory: fn.resources.max_memory.replace('Mi', '') || '50',
         writeDebug: fn.write_debug || false,
         secrets: fn.secrets || [],
         envVars: envVarsArr || [],
         image: setImage || {},
-        submit: null,
+        submit: null
       }}
       validationSchema={Yup.object().shape({
         minReplicas: Yup
@@ -108,38 +108,38 @@ const FunctionEditForm = ({
           .integer("Must be an integer")
           .required("Required")
           .min(0, "Must be greater than or equal to 0"),
-        minCpu: Yup
-          .number()
-          .typeError("Must be a number")
-          .integer("Must be an integer")
-          .required("Required")
-          .min(20, "Must be greater than or equal to 20 milicores")
-          .max(500, "Must be less than or equal to 500 milicores")
-          .max(Yup.ref("maxCpu"), "Must be less than or equal to Maximum CPU"),
-        maxCpu: Yup
-          .number()
-          .typeError("Must be a number")
-          .integer("Must be an integer")
-          .required("Required")
-          .min(20, "Must be greater than or equal to 20 milicores")
-          .min(Yup.ref("minCpu"), "Must be greater than or equal to Minimum CPU")
-          .max(500, "Must be less than or equal to 500 milicores"),
-        minMemory: Yup
-          .number()
-          .typeError("Must be a number")
-          .integer("Must be an integer")
-          .required("Required")
-          .min(20, "Must be greater than or equal to 20 mebibytes")
-          .max(2000, "Must be less than or equal to 2000 mebibytes")
-          .max(Yup.ref("maxMemory"), "Must be less than or equal to Maximum Memory"),
-        maxMemory: Yup
-          .number()
-          .typeError("Must be a number")
-          .integer("Must be an integer")
-          .required("Required")
-          .min(20, "Must be greater than or equal to 20 mebibytes")
-          .min(Yup.ref("minMemory"), "Must be greater than or equal to Minimum Memory")
-          .max(2000, "Must be less than or equal to 2000 mebibytes"),
+        // minCpu: Yup
+        //   .number()
+        //   .typeError("Must be a number")
+        //   .integer("Must be an integer")
+        //   .required("Required")
+        //   .min(20, "Must be greater than or equal to 20 milicores")
+        //   .max(500, "Must be less than or equal to 500 milicores")
+        //   .max(Yup.ref("maxCpu"), "Must be less than or equal to Maximum CPU"),
+        // maxCpu: Yup
+        //   .number()
+        //   .typeError("Must be a number")
+        //   .integer("Must be an integer")
+        //   .required("Required")
+        //   .min(20, "Must be greater than or equal to 20 milicores")
+        //   .min(Yup.ref("minCpu"), "Must be greater than or equal to Minimum CPU")
+        //   .max(500, "Must be less than or equal to 500 milicores"),
+        // minMemory: Yup
+        //   .number()
+        //   .typeError("Must be a number")
+        //   .integer("Must be an integer")
+        //   .required("Required")
+        //   .min(20, "Must be greater than or equal to 20 mebibytes")
+        //   .max(2000, "Must be less than or equal to 2000 mebibytes")
+        //   .max(Yup.ref("maxMemory"), "Must be less than or equal to Maximum Memory"),
+        // maxMemory: Yup
+        //   .number()
+        //   .typeError("Must be a number")
+        //   .integer("Must be an integer")
+        //   .required("Required")
+        //   .min(20, "Must be greater than or equal to 20 mebibytes")
+        //   .min(Yup.ref("minMemory"), "Must be greater than or equal to Minimum Memory")
+        //   .max(2000, "Must be less than or equal to 2000 mebibytes"),
         envVars: Yup.array().of(
           Yup.object().shape({
             "key": Yup
@@ -151,7 +151,7 @@ const FunctionEditForm = ({
               .string()
               .required("Required")
               .min(1, "Must be at least one character long")
-              .max(2000, "Must be at most 2000 characters long"),
+              .max(2000, "Must be at most 2000 characters long")
           }))
       })}
       onSubmit={async (values, {
@@ -175,13 +175,13 @@ const FunctionEditForm = ({
             "max_concurrency": parseInt(values.maxConcurrency, 10),
             "write_debug": values.writeDebug,
             "read_timeout": `${values.readTimeout}s`,
-            "write_timeout": `${values.writeTimeout}s`,
-            "resources": {
-              "min_cpu": `${values.minCpu}m`,
-              "max_cpu": `${values.maxCpu}m`,
-              "min_memory": `${values.minMemory}Mi`,
-              "max_memory": `${values.maxMemory}Mi`,
-            }
+            "write_timeout": `${values.writeTimeout}s`
+            // "resources": {
+            //   "min_cpu": `${values.minCpu}m`,
+            //   "max_cpu": `${values.maxCpu}m`,
+            //   "min_memory": `${values.minMemory}Mi`,
+            //   "max_memory": `${values.maxMemory}Mi`,
+            // }
           }
 
           console.log(payload)
@@ -190,7 +190,7 @@ const FunctionEditForm = ({
           setStatus({ success: true });
           setSubmitting(false);
           enqueueSnackbar('Function updated', {
-            variant: 'success',
+            variant: 'success'
           });
           history.push("/app/functions/" + fn.id)
         } catch (err) {
@@ -199,7 +199,7 @@ const FunctionEditForm = ({
           setErrors({ submit: err.message });
           setSubmitting(false);
           enqueueSnackbar('Failed to update', {
-            variant: 'error',
+            variant: 'error'
           });
         }
       }}
@@ -532,7 +532,7 @@ const FunctionEditForm = ({
                   />
                 </Grid>
               </Grid>
-              <Box mb={3} mt={3}>
+              {/* <Box mb={3} mt={3}>
                 <Typography variant="h4" component="h4" gutterBottom>
                   Resources
                 </Typography>
@@ -635,7 +635,7 @@ const FunctionEditForm = ({
                     </Grid>
                   </Typography>
                 </Grid>
-              </Grid>
+              </Grid> */}
               <Box mt={2} display="flex" flexDirection="row-reverse">
                 <Button
                   variant="contained"
