@@ -1,7 +1,6 @@
 import React, {
   useState,
-  useCallback,
-  useEffect
+  useCallback
 } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
@@ -14,14 +13,12 @@ import {
   Card,
   CardContent,
   Container,
-  IconButton,
   Grid,
   Link,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Tooltip,
   Typography,
   TextField,
   FormControl,
@@ -33,9 +30,7 @@ import {
 import { useSnackbar } from 'notistack';
 import axios from 'src/utils/axios';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
-import MoreIcon from '@material-ui/icons/MoreVert';
 import Page from 'src/components/Page';
-import useIsMountedRef from 'src/hooks/useIsMountedRef';
 import Header from './Header';
 import bytesToSize from 'src/utils/bytesToSize';
 
@@ -185,7 +180,7 @@ const ImageCreateView = () => {
   return (
     <Page
       className={classes.root}
-      title="Function Edit"
+      title="Create Image"
     >
       <Container maxWidth={false}>
         <Header />
@@ -197,8 +192,9 @@ const ImageCreateView = () => {
               name: "",
               language: "go",
               version: "1.0.0",
+              executablePath: "",
               files: [],
-              submit: null,
+              submit: null
             }}
             validationSchema={Yup.object().shape({
               name: Yup
@@ -216,6 +212,12 @@ const ImageCreateView = () => {
                 .string()
                 .typeError("Must be a string")
                 .required("Required"),
+              executablePath: Yup
+                .string()
+                .typeError("Must be a string")
+                .min(1, "Must be at least 1 characters long")
+                .matches(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\/[a-z0-9]([a-z0-9-]*[a-z0-9])?)*(\/[a-z0-9]([a-z0-9-\.]*[a-z0-9])?)?$/,
+                  "Path must be a valid relative path (i.e. foo | foo/bar | foo/bar.sh )"),
               files: Yup.array().min(1, "File is required")
             })}
             onSubmit={async (values, {
@@ -230,10 +232,14 @@ const ImageCreateView = () => {
                 formData.append("name", values.name)
                 formData.append("language", values.language)
 
+                if (values.language === "custom") {
+                  formData.append("executable_path", values.executablePath)
+                }
+
                 const response = await axios.post("/eywa/api/images", formData, {
                   headers: {
-                    'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
-                  },
+                    'Content-Type': `multipart/form-data; boundary=${formData._boundary}`
+                  }
                 })
 
                 const buildID = response.data.build_id
@@ -241,7 +247,7 @@ const ImageCreateView = () => {
                 setStatus({ success: true });
                 setSubmitting(false);
                 enqueueSnackbar('Image created', {
-                  variant: 'success',
+                  variant: 'success'
                 });
 
                 history.push(`/app/images/${buildID}/buildlogs`)
@@ -257,7 +263,7 @@ const ImageCreateView = () => {
                   message = "Image with the same name already exists"
                 }
                 enqueueSnackbar(message, {
-                  variant: 'error',
+                  variant: 'error'
                 });
               }
             }}
@@ -344,15 +350,29 @@ const ImageCreateView = () => {
                             <MenuItem value={"python3"}>Python 3</MenuItem>
                             <MenuItem value={"ruby"}>Ruby</MenuItem>
                             <MenuItem value={"csharp"}>C#</MenuItem>
+                            <MenuItem value={"custom"}>Custom</MenuItem>
                           </Select>
                         </FormControl>
                       </Grid>
-                      <Grid
-                        item
-                        md={6}
-                        xs={12}
-                      >
-                      </Grid>
+                      {values.language === "custom" &&
+                        <Grid
+                          item
+                          xs={12}
+                        >
+                          <TextField
+                            error={Boolean(touched.executablePath && errors.executablePath)}
+                            fullWidth
+                            helperText={touched.executablePath && errors.executablePath}
+                            label="Executable filepath (relative to your zip structure)"
+                            name="executablePath"
+                            onBlur={handleBlur}
+                            onChange={handleChange}
+                            required
+                            value={values.executablePath}
+                            variant="outlined"
+                          />
+                        </Grid>
+                      }
                     </Grid>
                     <Grid item xs={12} md={12}>
                       <FilesDropzone
