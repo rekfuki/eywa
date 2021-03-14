@@ -1,0 +1,21 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: gateway-consumer
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: nats-streaming
+      namespace: flux-system
+    - name: prometheus-operator-dependents
+      namespace: flux-system
+  chart:
+    spec:
+      chart: ./charts/gateway-consumer
+      sourceRef:
+        kind: GitRepository
+        name: eywa-charts
+  interval: 5m0s
+  releaseName: gateway-consumer
+  targetNamespace: faas-system
