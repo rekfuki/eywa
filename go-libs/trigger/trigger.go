@@ -45,9 +45,3 @@ func (trigger *Trigger) WithFields(fields Fields) *Entry {
 	entry := &Entry{Trigger: trigger, Data: Fields{}}
 	return entry.WithFields(fields)
 }
-
-// Fire triggers hooks based on type
-func (trigger *Trigger) Fire(t Type, args ...interface{}) {
-	entry := &Entry{Trigger: trigger, Data: Fields{}}
-	entry.Fire(t, args...)
-}

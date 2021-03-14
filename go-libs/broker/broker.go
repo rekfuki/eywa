@@ -12,6 +12,15 @@ import (
 
 var supportedCharacters = regexp.MustCompile("[^a-zA-Z0-9-_]+")
 
+// Config represents configuration of stan broker
+type Config struct {
+	NatsURL        string
+	ClusterID      string
+	ClientID       string
+	MaxReconnect   int
+	ReconnectDelay time.Duration
+}
+
 // Client represents broker client wrapper around stan
 type Client struct {
 	natsURL        string
@@ -19,39 +28,41 @@ type Client struct {
 	clientID       string
 	maxReconnect   int
 	reconnectDelay time.Duration
+	conf           *Config // For reconnect
 	stan.Conn
 }
 
 // Connect connects to nats streaming
-func Connect(natsURL, clusterID, clientID string, maxReconnect int, rcDelay time.Duration) (*Client, error) {
-	log.Printf("Connect: %s\n", natsURL)
+func Connect(conf *Config) (*Client, error) {
+	log.Printf("Connect: %s\n", conf.NatsURL)
 
 	broker := &Client{
-		natsURL:        natsURL,
-		clusterID:      clusterID,
-		clientID:       clientID,
-		maxReconnect:   maxReconnect,
-		reconnectDelay: rcDelay,
+		natsURL:        conf.NatsURL,
+		clusterID:      conf.ClusterID,
+		clientID:       conf.ClientID,
+		maxReconnect:   conf.MaxReconnect,
+		reconnectDelay: conf.ReconnectDelay,
+		conf:           conf,
 	}
 
-	nc, err := nats.Connect(natsURL, nats.MaxReconnects(-1))
+	nc, err := nats.Connect(broker.natsURL, nats.MaxReconnects(-1))
 	if err != nil {
 		log.Fatalf("Failed to connect to nats: %s", err)
 	}
 
 	sc, err := stan.Connect(
-		clusterID,
-		clientID,
+		broker.clusterID,
+		broker.clientID,
 		stan.NatsConn(nc),
 		stan.SetConnectionLostHandler(func(_ stan.Conn, err error) {
-			log.Errorf("Disconnected from %s", natsURL)
+			log.Errorf("Disconnected from %s", broker.natsURL)
 			broker.reconnect()
 		}))
 	if err != nil {
 		return nil, err
 	}
 
-	log.Infof("Connected to: %s", natsURL)
+	log.Infof("Connected to: %s", broker.natsURL)
 	broker.Conn = sc
 
 	return broker, err
@@ -61,7 +72,7 @@ func (c *Client) reconnect() {
 	log.Printf("Reconnect\n")
 
 	for i := 0; i < c.maxReconnect; i++ {
-		newClient, err := Connect(c.natsURL, c.clusterID, c.clientID, c.maxReconnect, c.reconnectDelay)
+		newClient, err := Connect(c.conf)
 		if err == nil {
 			c = newClient
 			log.Printf("Reconnecting (%d/%d) to %s succeeded\n", i+1, c.maxReconnect, c.natsURL)

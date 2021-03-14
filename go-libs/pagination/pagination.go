@@ -32,7 +32,7 @@ func Validate() echo.MiddlewareFunc {
 
 				qPerPage := c.QueryParam("per_page")
 				if qPerPage != "" {
-					page, err = strconv.Atoi(qPerPage)
+					perPage, err = strconv.Atoi(qPerPage)
 					if err != nil {
 						return c.JSON(http.StatusBadRequest, map[string]interface{}{
 							"message": "Validation error",

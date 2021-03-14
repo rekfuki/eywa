@@ -48,12 +48,6 @@ type Log struct {
 	EventLog    *EventLog    `json:"event_log,omitempty"`
 }
 
-// TimelineLogMessage represents timeline log message
-type TimelineLogMessage struct {
-	Message
-	Payload TimelineLog `json:"payload"`
-}
-
 // TimelineLog represents timeline log message payload
 type TimelineLog struct {
 	FunctionID string    `json:"function_id"`
@@ -65,20 +59,15 @@ type TimelineLog struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
-// EventLogMessage represents event log message
-type EventLogMessage struct {
-	Message
-	Payload EventLog `struct:"payload"`
-}
-
 // EventLog represents any events that occur during execution
 type EventLog struct {
-	Type         string    `json:"type"`
-	IsError      bool      `json:"is_error"`
-	FunctionName string    `json:"function_name"`
-	FunctionID   string    `json:"function_id"`
-	Message      string    `json:"message"`
-	CreatedAt    time.Time `json:"generated_at"`
+	Type         string                 `json:"type"`
+	IsError      bool                   `json:"is_error"`
+	FunctionName string                 `json:"function_name"`
+	FunctionID   string                 `json:"function_id"`
+	Message      string                 `json:"message"`
+	Payload      map[string]interface{} `json:"payload,omitempty"`
+	CreatedAt    time.Time              `json:"generated_at"`
 }
 
 // QueueRequestMessage for sending async request message via stan

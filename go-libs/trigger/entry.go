@@ -11,7 +11,6 @@ type Entry struct {
 	Trigger *Trigger
 	Data    Fields
 	Type    Type
-	Message string
 	Time    time.Time
 }
 
@@ -29,21 +28,20 @@ func (entry *Entry) WithFields(fields Fields) *Entry {
 }
 
 // Fire fires the entry
-func (entry *Entry) Fire(t Type, args ...interface{}) {
-	entry.fire(t, fmt.Sprint(args...))
+func (entry *Entry) Fire(t Type) {
+	entry.fire(t)
 }
 
-// FireForEach trigers all the hooks for each arg seperately
-func (entry *Entry) FireForEach(t Type, args ...interface{}) {
-	for _, arg := range args {
-		entry.fire(t, fmt.Sprint(arg))
-	}
-}
+// // FireForEach trigers all the hooks for each arg seperately
+// func (entry *Entry) FireForEach(t Type, args ...interface{}) {
+// 	for _, arg := range args {
+// 		entry.fire(t)
+// 	}
+// }
 
-func (entry Entry) fire(t Type, msg string) {
+func (entry Entry) fire(t Type) {
 	entry.Time = time.Now()
 	entry.Type = t
-	entry.Message = msg
 
 	err := entry.Trigger.Hooks.Fire(entry.Type, &entry)
 	if err != nil {
