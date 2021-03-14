@@ -35,8 +35,10 @@ clusterRoleBinding:
   subjects:
   - kind: ServiceAccount
     name: gateway-api
+    namespace: faas-system
   - kind: ServiceAccount
     name: gateway-consumer
+    namespace: faas-system
 
 serviceMonitor:
 
