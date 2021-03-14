@@ -1,0 +1,18 @@
+{{- define "common.servicemonitor.tpl" -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+{{ template "common.metadata" . }}
+spec:
+  selector:
+    matchLabels:
+      {{ template "common.labels.standard" . }}
+  endpoints:
+  {{ range $k, $v := .endpoints }}
+  - port: {{ $v.port }}
+    path: {{ $v.path }}
+    interval: {{ $v.interval }}
+  {{ end }}
+{{- end -}}
+{{- define "common.servicemonitor" -}}
+{{- template "common.util.merge" (append . "common.servicemonitor.tpl") -}}
+{{- end -}}

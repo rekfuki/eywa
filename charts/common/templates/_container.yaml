@@ -1,0 +1,13 @@
+{{- define "common.container.tpl" -}}
+name: {{ .name }}
+image: "{{ .image.repository }}:{{ .image.tag }}"
+imagePullPolicy: {{ .image.pullPolicy }}
+{{ template "common.ports" .ports }}
+resources:
+{{ toYaml .resources | indent 2 }}
+{{- end -}}
+{{- define "common.container" -}}
+{{- /* clear new line so indentation works correctly */ -}}
+{{- println "" -}}
+{{- include "common.util.merge" (append . "common.container.tpl") | indent 8 -}}
+{{- end -}}
