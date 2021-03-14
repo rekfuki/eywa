@@ -1,0 +1,21 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: execution-tracker-api
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: nats-streaming
+      namespace: flux-system
+    - name: init-stolon
+      namespace: flux-system
+  chart:
+    spec:
+      chart: ./charts/execution-tracker-api
+      sourceRef:
+        kind: GitRepository
+        name: eywa-charts
+  interval: 5m0s
+  releaseName: execution-tracker-api
+  targetNamespace: faas-system
