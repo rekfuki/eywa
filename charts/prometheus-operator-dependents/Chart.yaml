@@ -1,0 +1,11 @@
+apiVersion: v2
+name: prometheus-operator-dependents
+description: A Helm chart for deploying prometheus-operator dependents
+type: application
+version: 0.0.1
+appVersion: 0.0.1
+
+dependencies:
+- name: common
+  version: 0.0.2
+  repository: file://../common

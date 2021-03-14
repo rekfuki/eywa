@@ -1,0 +1,50 @@
+gatewayAlerting:
+  name: gateway-api-config
+  labels:
+    alertmanagerConfig: custom-alerting-rules
+  spec:
+    route:
+      groupBy: [alertname, service]
+      groupWait: 2s
+      groupInterval: 3s
+      repeatInterval: 5s
+      receiver: scale-up
+      matchers:
+      - name: service
+        value: gateway-api
+      - name: severity
+        value: major
+    inhibitRules:
+    - sourceMatch:
+      - name: severity
+        value: critical
+      targetMatch:
+      - name: severity
+        value: warning
+      equal: [alertname, service]
+    receivers:
+    - name: scale-up
+      webhookConfigs:
+      - url: http://gateway-api.faas-system:8080/eywa/api/system/alert
+        sendResolved: true
+
+prometheusAlertRule:
+  name: high-invocation-rates
+  labels:
+    app: kube-prometheus-stack
+    release: prometheus-operator
+  spec:
+    groups:
+    - name: gateway-api.rules
+      rules:
+      - alert: APIHighInvocationRate
+        expr: sum(rate(gateway_function_invocation_total{code=~"2.."}[10s])) BY (function_name) > 5
+        for: 5s
+        labels:
+          service: gateway-api
+          severity: major
+          job: gateway-api
+          namespace: faas-system
+        annotations:
+          description: High invocation total on {{ $labels.function_name }}
+          summary: High invocation total on {{ $labels.function_name }}

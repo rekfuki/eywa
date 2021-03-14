@@ -1,0 +1,10 @@
+{{ with .Values.gatewayAlerting }}
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: {{ .name }}
+  labels:
+    {{- include "common.labelize" .labels | indent 4}}
+spec:
+{{ toYaml .spec | indent 2 }}
+{{- end -}}
