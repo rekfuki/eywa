@@ -1,13 +1,6 @@
-namespace: faas-system
-replicas: 3
-labels:
-  app: execution-tracker-consumer
-imagePullSecret: image-pull-secret
-annotations:
-  config.linkerd.io/skip-outbound-ports: 4222
-container:
-  image: registry.eywa.rekfuki.dev/execution-tracker-consumer:latest
-  imagePullPolicy: Always
+deployment:
+  name: execution-watcher-consumer
+  replicas: 3
   ports:
   - containerPort: 10080
     name: http
@@ -15,3 +8,8 @@ container:
   - name: EXECUTION_TRACKER_DB_PASSWORD
     secretName: execution-tracker-psql-creds
     secretField: password
+  image:
+    repository: registry.eywa.rekfuki.dev/execution-tracker-consumer
+    tag: latest
+    pullPolicy: Always
+  imagePullSecret: image-pull-secret
