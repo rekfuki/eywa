@@ -1,0 +1,15 @@
+deployment:
+  name: execution-tracker-api
+  replicas: 1
+  ports:
+  - containerPort: 10080
+    name: http
+  env:
+  - name: EXECUTION_TRACKER_DB_PASSWORD
+    secretName: execution-tracker-psql-creds
+    secretField: password
+  image:
+    repository: registry.eywa.rekfuki.dev/execution-tracker-api
+    tag: latest
+    pullPolicy: Always
+  imagePullSecret: image-pull-secret

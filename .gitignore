@@ -7,6 +7,7 @@ watchdog/templates/go/function/handler.go
 handler
 gateway/api/gateway-api
 gateway/consumer/gateway-consumer
+execution-tracker/consumer/execution-tracker-consumer
 registry/registry
 idler/idler
 test-kube
@@ -37,3 +38,7 @@ app/.env.production.local
 app/npm-debug.log*
 app/yarn-debug.log*
 app/yarn-error.log*
+dev-app/*
+
+*.tgz
+Chart.lock
