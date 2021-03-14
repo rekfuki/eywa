@@ -80,17 +80,37 @@ type TimelineLogsResponse struct {
 	Objects    []TimelineBrief `json:"objects"`
 }
 
+// EventLogPayload custom type to be stored/scaned as jsonb
+type EventLogPayload map[string]interface{}
+
+// Value returns marshaled headers
+func (elp EventLogPayload) Value() (driver.Value, error) {
+	return json.Marshal(elp)
+}
+
+// Scan unmarshals jsonb in postgres to map[string]interface
+func (elp *EventLogPayload) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+
+	return json.Unmarshal(b, &elp)
+}
+
 // EventLog represents event log entry
 type EventLog struct {
-	RequestID    string    `json:"request_id" db:"request_id"`
-	UserID       string    `json:"user_id" db:"user_id"`
-	Type         string    `json:"type" db:"type"`
-	FunctionName string    `json:"function_name" db:"function_name"`
-	FunctionID   string    `json:"function_id" db:"function_id"`
-	Message      string    `json:"message" db:"message"`
-	IsError      bool      `json:"is_error" db:"is_error"`
-	Timestamp    time.Time `json:"created_at" db:"timestamp"`
-	ExpiresAt    time.Time `json:"-" db:"expires_at"`
+	ID           string          `json:"id" db:"id"`
+	RequestID    string          `json:"request_id" db:"request_id"`
+	UserID       string          `json:"user_id" db:"user_id"`
+	Type         string          `json:"-" db:"type"`
+	FunctionName string          `json:"function_name" db:"function_name"`
+	FunctionID   string          `json:"function_id" db:"function_id"`
+	Message      string          `json:"message" db:"message"`
+	IsError      bool            `json:"is_error" db:"is_error"`
+	Timestamp    time.Time       `json:"created_at" db:"timestamp"`
+	ExpiresAt    time.Time       `json:"-" db:"expires_at"`
+	Payload      EventLogPayload `json:"details" db:"payload"`
 }
 
 // EventLogsResponse represents response when multiple events are returned
@@ -134,6 +154,8 @@ type EventDetails struct {
 // EventLogsQuery API request payload for filtering search
 type EventLogsQuery struct {
 	UserID       string    `json:"-"`
+	FunctionID   string    `json:"function_id"`
+	RequestID    string    `json:"request_id"`
 	Query        string    `json:"query"`
 	OnlyErrors   bool      `json:"only_errors"`
 	Level        string    `json:"level" enum:"all,user,system"`

@@ -21,9 +21,9 @@ type Config struct {
 	NatsURL           string        `envconfig:"nats_url" default:"nats://nats.nats:4222"`
 	StanClusterID     string        `default:"stan"`
 	StanClientID      string        `default:"execution-tracker-consumer"`
-	BatchSize         int           `envconfig:"lumberjack_batch_size" default:"1000"`
-	FlushSeconds      int           `envconfig:"lumberjack_flush_seconds" default:"1"`
-	ExpireLogsMinutes time.Duration `envconfig:"lumberjack_expire_logs" default:"10080m"`
+	BatchSize         int           `envconfig:"execution_tracker_batch_size" default:"3000"`
+	FlushSeconds      int           `envconfig:"execution_tracker_flush_seconds" default:"2"`
+	ExpireLogsMinutes time.Duration `envconfig:"execution_tracker_expire_logs" default:"10080m"`
 	Postgres          db.Config
 }
 
@@ -36,7 +36,7 @@ func main() {
 
 	db, err := db.Connect(conf.Postgres)
 	if err != nil {
-		log.Fatalf("failed to connect to trident db: %s", err)
+		log.Fatalf("failed to connect to execution-tracker db: %s", err)
 	}
 
 	// delete expired logs

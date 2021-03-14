@@ -19,7 +19,7 @@ func main() {
 
 	db, err := db.Connect(conf.Postgres)
 	if err != nil {
-		log.Fatalf("failed to connect to sawmill db: %s", err)
+		log.Fatalf("failed to connect to execution-tracker db: %s", err)
 	}
 
 	server.Run(conf, db)
@@ -29,7 +29,7 @@ func migrateDB(dbConf db.Config, target uint) {
 	log.Info("Migrating Database Schema")
 	db, err := db.Connect(dbConf)
 	if err != nil {
-		log.Fatalf("failed to connect to trident db: %s", err)
+		log.Fatalf("failed to connect to execution-tracker db: %s", err)
 	}
 
 	err = db.Migrate("./migrations", target)

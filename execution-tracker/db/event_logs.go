@@ -1,10 +1,6 @@
 package db
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/lib/pq"
 	"xorm.io/builder"
 
@@ -38,7 +34,7 @@ func (c *Client) BulkInsertEventLogs(records []types.EventLog) (int, error) {
 
 	stmnt, err := tx.Preparex(pq.CopyIn("event_logs",
 		"request_id", "user_id", "type", "function_name", "function_id",
-		"message", "is_error", "timestamp", "expires_at"))
+		"message", "payload", "is_error", "timestamp", "expires_at"))
 	if err != nil {
 		return 0, err
 	}
@@ -47,7 +43,7 @@ func (c *Client) BulkInsertEventLogs(records []types.EventLog) (int, error) {
 	for _, record := range records {
 		_, err = stmnt.Exec(record.RequestID, record.UserID,
 			record.Type, record.FunctionName, record.FunctionID,
-			record.Message, record.IsError, record.Timestamp,
+			record.Message, record.Payload, record.IsError, record.Timestamp,
 			record.ExpiresAt)
 		if err != nil {
 			return 0, err
@@ -78,10 +74,16 @@ func applyEventLogFilter(query *builder.Builder, name string, filter types.Event
 	if filter.UserID != "" {
 		query = query.And(builder.Eq{name + ".user_id": filter.UserID})
 	}
+	if filter.FunctionID != "" {
+		query = query.And(builder.Eq{name + ".function_id": filter.FunctionID})
+	}
+	if filter.RequestID != "" {
+		query = query.And(builder.Eq{name + ".request_id": filter.RequestID})
+	}
 	if !filter.TimestampMax.IsZero() {
 		query = query.And(builder.Lte{name + ".timestamp": filter.TimestampMax})
 	}
-	if filter.TimestampMin.IsZero() {
+	if !filter.TimestampMin.IsZero() {
 		query = query.And(builder.Gte{name + ".timestamp": filter.TimestampMin})
 	}
 
@@ -103,26 +105,4 @@ func applyEventLogFilter(query *builder.Builder, name string, filter types.Event
 	}
 
 	return query
-}
-
-func getStatusCriteria(status string) (gte, lt int) {
-	res := strings.TrimRight(status, "x")
-	num, err := strconv.Atoi(res)
-	if err != nil { // should never happen
-		panic(fmt.Sprintf("Failed to convert status to number %s", err))
-	}
-
-	switch len(res) {
-	case 1:
-		gte = num * 100
-		lt = gte + 100
-	case 3:
-		gte = num
-		lt = gte + 1
-	default:
-		// should never happen
-		panic(fmt.Sprintf("Invalid status criteria %q", status))
-	}
-
-	return
 }

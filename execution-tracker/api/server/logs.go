@@ -16,11 +16,18 @@ func logsAPI() []*swagger.Endpoint {
 		endpoint.QueryMap(map[string]swagger.Parameter{
 			"page": {
 				Type:        "integer",
+				Minimum:     &[]int64{1}[0],
 				Description: "Page number to return",
 			},
 			"per_page": {
 				Type:        "integer",
+				Minimum:     &[]int64{0}[0],
 				Description: "Number of records per page",
+			},
+			"function_id": {
+				Type:        "string",
+				Format:      "uuid",
+				Description: "UUID of a function",
 			},
 			"query": {
 				Type:        "string",
@@ -43,14 +50,16 @@ func logsAPI() []*swagger.Endpoint {
 		endpoint.QueryMap(map[string]swagger.Parameter{
 			"page": {
 				Type:        "integer",
+				Minimum:     &[]int64{1}[0],
 				Description: "Page number to return",
 			},
 			"per_page": {
 				Type:        "integer",
+				Minimum:     &[]int64{0}[0],
 				Description: "Number of records per page",
 			},
 		}),
-		endpoint.Body(types.EventLogsQuery{}, "Query object that needs to be added", true),
+		endpoint.Body(types.EventLogsQuery{}, "Query object that needs to be added", false),
 		endpoint.Response(http.StatusOK, types.EventLogsResponse{}, "success"),
 		endpoint.Tags("Events"),
 	)

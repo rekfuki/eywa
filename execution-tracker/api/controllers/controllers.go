@@ -21,8 +21,9 @@ func GetInvocationList(c echo.Context) error {
 	perPage := c.Get("per_page").(int)
 	pageNumber := c.Get("page_number").(int)
 	query := c.QueryParam("query")
+	functionID := c.QueryParam("function_id")
 
-	timelines, total, err := db.GetTimelines(auth.UserID, query, perPage, pageNumber)
+	timelines, total, err := db.GetTimelines(auth.UserID, functionID, query, perPage, pageNumber)
 	if err != nil {
 		log.Errorf("Error getting timeline logs: %s", err)
 		return c.JSON(http.StatusInternalServerError, "Internal Server Error")
@@ -44,7 +45,12 @@ func GetInvocationList(c echo.Context) error {
 		startedAt := tl[0].Timestamp
 		lastEventAt := tl[len(tl)-1].Timestamp
 
-		brief.Duration = lastEventAt.Sub(startedAt).Milliseconds()
+		if len(tl) == 1 {
+			brief.Duration = tl[0].Duration
+		} else {
+			brief.Duration = lastEventAt.Sub(startedAt).Milliseconds()
+		}
+
 		brief.Age = startedAt
 		brief.Status = tl[len(tl)-1].Response
 
@@ -140,10 +146,11 @@ func GetInvocation(c echo.Context) error {
 					duration = events[0].Duration
 				}
 				tld.Events = append(tld.Events, types.EventDetails{
-					Name:     attempt,
-					Response: events[0].Response,
-					Duration: duration,
-					IsError:  isErrorResponse(events[0].Response),
+					Name:      attempt,
+					Response:  events[0].Response,
+					Duration:  duration,
+					IsError:   isErrorResponse(events[0].Response),
+					Timestamp: events[0].Timestamp,
 				})
 			} else if len(events) == 2 {
 				// Could be failed or completed
@@ -169,6 +176,7 @@ func isErrorResponse(response int) bool {
 
 // GetEventLogs returns event logs
 func GetEventLogs(c echo.Context) error {
+	auth := c.Get("auth").(*auth.Auth)
 	db := c.Get("db").(*db.Client)
 	perPage := c.Get("per_page").(int)
 	pageNumber := c.Get("page_number").(int)
@@ -192,6 +200,7 @@ func GetEventLogs(c echo.Context) error {
 
 	query.TimestampMax = top
 	query.TimestampMin = bottom
+	query.UserID = auth.UserID
 
 	alogs, total, err := db.GetEventLogs(query, pageNumber, perPage)
 	if err != nil {
@@ -209,20 +218,9 @@ func GetEventLogs(c echo.Context) error {
 
 func checkTimeRange(c echo.Context, top, bottom time.Time) (time.Time, time.Time, error) {
 	if bottom.IsZero() {
-		if top.IsZero() {
-			t := time.Now().UTC()
-			top = t
-			delta := top.Add(time.Hour * 1)
-			bottom = delta
-			return top, bottom, nil
+		if !top.IsZero() {
+			return top, bottom, errors.New("Minimum time range value is required")
 		}
-
-		return top, bottom, errors.New("Minimum time range value is required")
-	}
-
-	if top.IsZero() {
-		t := time.Now().UTC()
-		top = t
 	}
 
 	if bottom.After(top) {

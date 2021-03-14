@@ -21,12 +21,14 @@ CREATE INDEX timeline_logs_timestamp_idx ON timeline_logs USING btree ("timestam
 CREATE INDEX timeline_logs_expires_at_idx ON timeline_logs USING btree (expires_at);
 
 CREATE TABLE event_logs (
+    id serial primary key,
     request_id uuid NOT NULL,
     user_id uuid,
     type text,
     function_name text,
     function_id text,
     message text,
+    payload bytea,
     is_error boolean default TRUE,
     "timestamp" timestamp without time zone,
     expires_at timestamp without time zone

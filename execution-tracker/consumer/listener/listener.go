@@ -89,6 +89,7 @@ func (l *Listener) batchInsert(batch []*stan.Msg) {
 				FunctionName: el.FunctionName,
 				FunctionID:   el.FunctionID,
 				Message:      el.Message,
+				Payload:      el.Payload,
 				IsError:      el.IsError,
 				Timestamp:    el.CreatedAt,
 				ExpiresAt:    expiresAt,

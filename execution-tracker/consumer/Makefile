@@ -11,12 +11,12 @@ endif
 
 .PHONY: run
 run:
-	@echo "Running execution-tracker-consumer..."
+	@echo "Running $(IMAGE)..."
 	GO111MODULE=on go run main.go -debug=$(DEBUG)
 
 .PHONY: go-build
 go-build:
-	@echo "Build execution-tracker-consumer binary..."
+	@echo "Build $(IMAGE) binary..."
 	GO111MODULE=on CGO_ENABLED=0 go build -o $(BUILD_CONTEXT)/$(IMAGE) -v main.go
 
 .PHONY: build
