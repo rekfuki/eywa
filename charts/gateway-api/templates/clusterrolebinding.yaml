@@ -1,0 +1,15 @@
+{{- with .Values.clusterRoleBinding -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+{{ template "common.metadata" . }}
+roleRef:
+  apiGroup: {{ .roleRef.apiGroup }}
+  kind: {{ .roleRef.kind }}
+  name: {{ .roleRef.name }}
+subjects:
+{{- range $k, $v := .subjects }}
+- {{ range $kk, $vv := $v }}
+   {{ $kk }}: {{ $vv }}
+{{- end }}
+{{- end }}
+{{- end -}}

@@ -1,0 +1,11 @@
+{{- template "common.servicemonitor" (list .Values.serviceMonitor "gateway-api.servicemonitor") -}}
+{{- define "gateway-api.servicemonitor" -}}
+metadata:
+  labels:
+  {{ include "common.labelize" .labels | indent 4 }}
+spec:
+  jobLabel: {{ .jobLabel }}
+  selector:
+    matchLabels:
+      {{ toYaml .selectorMatchLabels }}
+{{- end -}}

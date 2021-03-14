@@ -1,0 +1,54 @@
+deployment:
+
+  name: gateway-api
+  replicas: 3
+  serviceAccountName: gateway-api
+  image:
+    repository: registry.eywa.rekfuki.dev/gateway-api
+    tag: latest
+    pullPolicy: Always
+  ports:
+  - name: http
+    containerPort: 8080
+  imagePullSecret: image-pull-secret
+
+service:
+
+  name: gateway-api
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
+
+serviceAccount:
+
+  name: gateway-api
+
+clusterRoleBinding:
+
+  name: faas-editor
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: edit
+  subjects:
+  - kind: ServiceAccount
+    name: gateway-api
+  - kind: ServiceAccount
+    name: gateway-consumer
+
+serviceMonitor:
+
+  name: gateway-api-servicemonitor
+  jobLabel: gateway-api
+  labels:
+    release: prometheus-operator
+  selectorMatchLabels:
+    app: gateway-api
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 1s
+
+  
