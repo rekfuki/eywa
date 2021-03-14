@@ -15,7 +15,7 @@ import (
 
 // Config represents gateway startup configuration
 type Config struct {
-	GatewayURL         string        `envconfig:"gateway_url" default:"http://gateway.faas-system:8080"`
+	GatewayURL         string        `envconfig:"gateway_url" default:"http://gateway-api.faas-system:8080"`
 	PrometheusURL      string        `envconfig:"prometheus_url" default:"http://linkerd-prometheus.linkerd:9090"`
 	InactivityDuration time.Duration `envconfig:"inactivity_duration" default:"5m"`
 }
