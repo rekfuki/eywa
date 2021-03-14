@@ -1,5 +1,5 @@
 deployment:
-  name: execution-watcher-consumer
+  name: execution-tracker-consumer
   replicas: 3
   ports:
   - containerPort: 10080

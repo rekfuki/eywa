@@ -1,0 +1,17 @@
+{{- template "common.deployment" (list .Values.deployment "execution-tracker-consumer.deployment") -}}
+{{- define "execution-tracker-consumer.deployment" -}}
+spec:
+  replicas: {{ .replicas }}
+  template:
+    spec:
+      imagePullSecrets: 
+      - name: {{ .imagePullSecret }}
+      containers:
+      - {{ template "common.container" (list . "execution-tracker-consumer.container") }}
+{{- end -}}
+{{- define "execution-tracker-consumer.container" -}}
+env:
+{{- range $k, $v := .env }}
+- {{ template "common.envvar.secret" (list $v.name $v.secretName $v.secretField )}}
+{{- end }}
+{{- end -}}
