@@ -36,7 +36,7 @@ metadata:
   namespace: flux-system
 spec:
   dependsOn:
-    - name: kube-prometheus-stack
+    - name: prometheus-operator
       namespace: flux-system
   chart:
     spec:
