@@ -28,7 +28,7 @@ func SystemGetFunctions(c echo.Context) error {
 
 	sfss := []types.FunctionStatusResponse{}
 	for _, fs := range fss {
-		sfss = append(sfss, makeFunctionStatusResponse(&fs))
+		sfss = append(sfss, makeFunctionStatusResponse(&fs, nil))
 	}
 
 	return c.JSON(http.StatusOK, types.MultiFunctionStatusResponse{

@@ -33,8 +33,8 @@ func (c *Client) GetImage(imageID, userID string) (*rt.Image, error) {
 	var result rt.Image
 	resp, err := c.rc.R().
 		SetResult(&result).
-		SetHeader("X-User-Id", userID).
-		SetHeader("X-Real-User-Id", auth.OperatorUserID).
+		SetHeader("X-Eywa-User-Id", userID).
+		SetHeader("X-Eywa-Real-User-Id", auth.OperatorUserID).
 		Get("/eywa/api/images/" + imageID)
 	if err != nil {
 		return nil, err

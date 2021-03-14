@@ -31,6 +31,7 @@ type FunctionStatus struct {
 	MinReplicas       int
 	ScalingFactor     int
 	AvailableReplicas int
+	Available         bool
 	Annotations       map[string]string
 	Labels            map[string]string
 	Limits            *FunctionResources

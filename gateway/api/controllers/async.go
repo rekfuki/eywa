@@ -46,6 +46,7 @@ func AsyncInvocation(c echo.Context) error {
 		functionName = val
 	}
 
+	stripHeaders(c.Request().Header)
 	requestID := c.Request().Header.Get("X-Request-Id")
 	payload := broker.QueueRequestMessage{
 		Payload: broker.QueueRequest{
@@ -87,7 +88,8 @@ func AsyncInvocation(c echo.Context) error {
 		"type":          ett.EventTypeSystem,
 		"function_name": functionName,
 		"function_id":   functionID,
-	}).Fire(types.EventHookType, eventMessage)
+		"message":       eventMessage,
+	}).Fire(types.EventHookType)
 
 	c.Response().Header().Set("X-Request-Id", requestID)
 	return c.NoContent(http.StatusAccepted)

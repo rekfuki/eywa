@@ -30,7 +30,7 @@ func InvocationAlert(c echo.Context) error {
 			"description":   alert.Annotations.Description,
 		}).Info("Received alert")
 
-		filter := k8s.LabelSelector().Equals(types.FunctionIDLabel, alert.Labels.FunctionName)
+		filter := k8s.LabelSelector().Equals(types.UserDefinedNameLabel, alert.Labels.FunctionName)
 		fs, err := k8sClient.GetFunctionStatus(filter)
 		if err != nil {
 			log.Errorf("Failed to get function status: %s", err)

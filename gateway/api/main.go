@@ -23,12 +23,14 @@ type Config struct {
 	NatsURL             string        `envconfig:"nats_url" default:"nats://nats.nats:4222"`
 	StanClusterID       string        `envconfig:"stan_cluster_id" default:"stan"`
 	StanClientID        string        `envconfig:"stan_client_id" default:"gateway"`
+	PrometheusURL       string        `envconfig:"prometheus_url" default:"http://prometheus-operator-kube-p-prometheus.faas-system:9090"`
 	RegistryURL         string        `envconfig:"registry_url" default:"registry.faas-system:8080"`
 	CacheExpiryDuration time.Duration `envconfig:"cache_expiry_duration" default:"5s"`
 	LimitCPUMin         string        `envconfig:"limit_cpu_min" default:"20m"`
 	LimitCPUMax         string        `envconfig:"limit_cpu_max" default:"500m"`
 	LimitMemMin         string        `envconfig:"limit_mem_min" default:"20Mi"`
-	LimitMemMax         string        `envconfig:"limit_mem_max" default:"2000Mi"`
+	LimitMemMax         string        `envconfig:"limit_mem_max" default:"500Mi"`
+	MongoDBHost         string        `envconfig:"mongodb_host" default:"mongodb.mongodb:27017"`
 }
 
 func main() {
@@ -42,12 +44,14 @@ func main() {
 	debug := flag.Bool("debug", false, "(optional) set log level to debug")
 	flag.Parse()
 
+	log.SetLevel(log.ErrorLevel)
 	if *debug {
 		log.SetLevel(log.DebugLevel)
 	}
 
 	k8s, err := k8s.Setup(&k8s.Config{
 		InCluster:           *inCluster,
+		MongoDBHost:         conf.MongoDBHost,
 		CacheExpiryDuration: conf.CacheExpiryDuration,
 		LimitCPUMin:         conf.LimitCPUMin,
 		LimitCPUMax:         conf.LimitCPUMax,
@@ -58,14 +62,20 @@ func main() {
 		log.Fatalf("Failed to setup k8s client: %s", err)
 	}
 
-	metrics := metrics.Setup(k8s, time.Second*5)
+	metrics := metrics.Setup(k8s, &conf.PrometheusURL, time.Second*5)
 	go metrics.FunctionWatcher()
 
 	registry := registry.New(conf.RegistryURL)
 
 	hostname, _ := os.Hostname()
 	clientID := conf.StanClientID + broker.GetClientID(hostname)
-	bc, err := broker.Connect(conf.NatsURL, conf.StanClusterID, clientID, 100, 5)
+	bc, err := broker.Connect(&broker.Config{
+		NatsURL:        conf.NatsURL,
+		ClusterID:      conf.StanClusterID,
+		ClientID:       clientID,
+		MaxReconnect:   100,
+		ReconnectDelay: 5,
+	})
 	if err != nil {
 		log.Fatalf("Failed to setup nats-streaming broker: %s", err)
 	}

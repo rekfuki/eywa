@@ -132,9 +132,10 @@ func Run(params *ContextParams) {
 
 func createRouter(params *ContextParams) *echo.Echo {
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(contextObjects(params))
+
+	log.SetLevel(log.ErrorLevel)
 
 	// Expose metrics for prometheus
 	e.GET("/metrics", echo.WrapHandler(params.Metrics.PrometheusHandler()))
@@ -179,6 +180,7 @@ func createGatewayAPI() *swagger.API {
 		swag.Endpoints(aggregateEndpoints(
 			functionsAPI(),
 			secretsAPI(),
+			metricsAPI(),
 		)...,
 		),
 	)

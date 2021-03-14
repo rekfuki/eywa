@@ -107,22 +107,16 @@ func (c *Client) CreateSecret(sr *SecretRequest) (*Secret, error) {
 
 // UpdateSecret updates an existing secret inside k8s
 // Only data field has to be set, everything else is ignored in the request
-func (c *Client) UpdateSecret(secretID string, sr *SecretRequest) (*Secret, error) {
+func (c *Client) UpdateSecret(secretID string, data map[string][]byte) (*Secret, error) {
+	if len(data) == 0 {
+		return nil, fmt.Errorf("Secret data must not be empty")
+	}
+
 	secret, err := c.clientset.CoreV1().
 		Secrets(faasNamespace).
 		Get(context.TODO(), secretID, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
-	}
-
-	data := map[string][]byte{}
-
-	if len(sr.Data) == 0 {
-		return nil, fmt.Errorf("Secret data must not be empty")
-	}
-
-	for k, v := range sr.Data {
-		data[k] = []byte(v)
 	}
 
 	secret.Data = data

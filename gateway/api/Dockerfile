@@ -1,8 +1,8 @@
 FROM scratch
 
-COPY gateway /gateway
+COPY gateway-api /gateway-api
 
 # ADD https://raw.githubusercontent.com/ConnectCorp/docker-scratch-ssl/master/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 
-CMD ["/gateway"]
+CMD ["/gateway-api"]

@@ -10,19 +10,28 @@ type CreateSecretRequest struct {
 
 // UpdateSecretRequest represents a request to update a secret
 type UpdateSecretRequest struct {
-	Data map[string]string `json:"data" binding:"required"`
+	Upserts map[string]string `json:"upserts"`
+	Deletes []string          `json:"deletes"`
 }
 
 // MultiSecretResponse represents the response of multiple secrets
 type MultiSecretResponse struct {
 	Objects []SecretResponse `json:"objects"`
-	Total   int              `json:"total"`
+	Total   int              `json:"total_count"`
 }
 
 // SecretResponse represents the responses involving secrets
 type SecretResponse struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID         string            `json:"id"`
+	Name       string            `json:"name"`
+	Mounts     []MountedFunction `json:"mounted_functions"`
+	DataFields []string          `json:"data_fields"`
+	CreatedAt  time.Time         `json:"created_at"`
+	UpdatedAt  time.Time         `json:"updated_at"`
+}
+
+// MountedFunction holds information about the function the secret is mounted to
+type MountedFunction struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }

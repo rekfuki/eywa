@@ -141,14 +141,18 @@ func (l *Listener) process(msg *stan.Msg) {
 		sleepDuration = sleepDuration + time.Minute*3
 
 		started := time.Now()
-		// TODO: Observer time spent in queue metrics
+		l.metrics.ObserveDwellTime(req.FunctionID, req.FunctionName, req.UserID, started.Sub(req.QueuedAt))
 
-		trigger.WithFields(defaultEventFields).FireForEach(types.EventHookType,
-			types.AttemptMessage(attempt, req.RequestID, req.FunctionID, req.FunctionName),
-			types.RequestContextMessage(req.Path, req.QueryParams, req.Body, req.Headers),
-		)
+		trigger.WithFields(defaultEventFields).WithFields(trigger.Fields{
+			"path":         req.Path,
+			"query_params": req.QueryParams,
+			"body":         req.Body,
+			"headers":      req.Headers,
+			"message":      types.AsyncExecutionStartMessage(attempt, req.FunctionName),
+		}).Fire(types.EventHookType)
 
-		l.metrics.Observe(http.MethodPost, req.FunctionName, req.UserID, http.StatusProcessing, "started", time.Second*0)
+		l.metrics.ObserveInvocationStarted(req.FunctionID, req.FunctionName,
+			req.UserID, req.Path, http.MethodPost)
 
 		filter := k8s.LabelSelector().
 			Equals(types.UserIDLabel, req.UserID).
@@ -165,8 +169,10 @@ func (l *Listener) process(msg *stan.Msg) {
 			}).Fire(types.TimelineHookType)
 
 			trigger.WithFields(defaultEventFields).
-				WithFields(trigger.Fields{"is_error": true}).
-				Fire(types.EventHookType, types.ServerErrorMessage())
+				WithFields(trigger.Fields{
+					"is_error": true,
+					"message":  types.ServerErrorMessage(),
+				}).Fire(types.EventHookType)
 
 			continue
 		}
@@ -182,10 +188,10 @@ func (l *Listener) process(msg *stan.Msg) {
 			}).Fire(types.TimelineHookType)
 
 			trigger.WithFields(defaultEventFields).
-				WithFields(trigger.Fields{"is_error": true}).
-				Fire(types.EventHookType,
-					types.FunctionNotFoundMessage(req.RequestID, req.FunctionID, req.FunctionName),
-				)
+				WithFields(trigger.Fields{
+					"is_error": true,
+					"message":  types.FunctionNotFoundMessage(req.RequestID, req.FunctionID, req.FunctionName),
+				}).Fire(types.EventHookType)
 
 			continue
 		}
@@ -201,8 +207,10 @@ func (l *Listener) process(msg *stan.Msg) {
 			}).Fire(types.TimelineHookType)
 
 			trigger.WithFields(defaultEventFields).
-				WithFields(trigger.Fields{"is_error": true}).
-				Fire(types.EventHookType, types.ServerErrorMessage())
+				WithFields(trigger.Fields{
+					"is_error": true,
+					"message":  types.ServerErrorMessage(),
+				}).Fire(types.EventHookType)
 
 			continue
 		}
@@ -220,13 +228,13 @@ func (l *Listener) process(msg *stan.Msg) {
 			}).Fire(types.TimelineHookType)
 
 			trigger.WithFields(defaultEventFields).
-				WithFields(trigger.Fields{"is_error": true}).
-				Fire(types.EventHookType, types.ServerErrorMessage())
+				WithFields(trigger.Fields{
+					"is_error": true,
+					"message":  types.ServerErrorMessage(),
+				}).Fire(types.EventHookType)
 
 			continue
 		}
-
-		functionAddr = "http://localhost:8080"
 
 		trigger.WithFields(defaultTimelineFields).WithFields(trigger.Fields{
 			"event_name": fmt.Sprintf("Attempt #%d", attempt),
@@ -248,7 +256,7 @@ func (l *Listener) process(msg *stan.Msg) {
 			SetHeaders(headers).
 			SetQueryString(req.QueryParams).
 			Post(url)
-		if err != nil {
+		if err != nil || functionRes.IsError() {
 			log.Errorf("Failed to execute function request [%s] %q: %s", http.MethodPost, url, err)
 
 			trigger.WithFields(defaultTimelineFields).WithFields(trigger.Fields{
@@ -259,50 +267,52 @@ func (l *Listener) process(msg *stan.Msg) {
 			}).Fire(types.TimelineHookType)
 
 			trigger.WithFields(defaultEventFields).
-				WithFields(trigger.Fields{"is_error": true}).
-				Fire(types.EventHookType, types.ServerErrorMessage())
+				WithFields(trigger.Fields{
+					"is_error": true,
+					"message":  types.ServerErrorMessage(),
+				}).Fire(types.EventHookType)
 
 			continue
 		}
 
 		duration := time.Since(start)
+		l.metrics.ObserveInvocationComplete(req.FunctionID, req.FunctionName, req.UserID, req.Path, result.Status, duration)
 
 		log.Infof("[Attempt: #%s] Invoked: %s-%s [%d] in %fs", attempt, req.FunctionID,
-			req.FunctionName, functionRes.StatusCode(), duration.Seconds())
+			req.FunctionName, result.Status, duration.Seconds())
 
 		eventType := ett.TimelineEventTypeFinished
-		if functionRes.IsError() {
+		if result.Status >= 400 {
 			eventType = ett.TimelineEventTypeFailed
 		}
 
 		trigger.WithFields(defaultTimelineFields).WithFields(trigger.Fields{
 			"event_name": fmt.Sprintf("Attempt #%d", attempt),
 			"event_type": eventType,
-			"response":   functionRes.StatusCode(),
+			"response":   result.Status,
 			"duration":   duration.Milliseconds(),
 		}).Fire(types.TimelineHookType)
 
 		defaultEventFields["type"] = ett.EventTypeUser
 		defaultEventFields["created_at"] = started.Add(duration)
 
-		fields := []interface{}{
-			types.ResponseContextMessage(req.Path, req.QueryParams, req.Body,
-				functionRes.Header(), functionRes.StatusCode()),
+		// Inject back request id header
+		if result.Headers == nil {
+			result.Headers = http.Header{}
 		}
 
-		if len(result.Stdout) > 0 {
-			message := strings.Join(result.Stdout, "\n")
-			fields = append(fields, types.StdoutMessage(message))
-		}
+		result.Headers.Set("X-Request-Id", req.RequestID)
+		result.Headers.Del("X-Eywa-Token")
 
-		if len(result.Stderr) > 0 {
-			message := strings.Join(result.Stderr, "\n")
-			fields = append(fields, types.StderrMessage(message))
-		}
-
-		trigger.WithFields(defaultEventFields).
-			WithFields(trigger.Fields{"is_error": eventType == ett.TimelineEventTypeFailed}).
-			FireForEach(types.EventHookType, fields...)
+		trigger.WithFields(defaultEventFields).WithFields(trigger.Fields{
+			"is_error": eventType == ett.TimelineEventTypeFailed,
+			"status":   result.Status,
+			"headers":  result.Headers,
+			"body":     result.Body,
+			"stdout":   result.Stdout,
+			"stderr":   result.Stderr,
+			"message":  types.AsyncExecutionFinishMessage(req.FunctionName, attempt, result.Status, duration),
+		}).Fire(types.EventHookType)
 
 		if req.CallbackURL != "" {
 			log.Infof("Sending callback to: %s\n", req.CallbackURL)
@@ -310,15 +320,16 @@ func (l *Listener) process(msg *stan.Msg) {
 				SetHeaders(map[string]string{
 					"X-Function-Name":   req.FunctionName,
 					"X-Function-Id":     req.FunctionID,
-					"X-Function-Status": fmt.Sprint(functionRes.StatusCode()),
+					"X-Function-Status": fmt.Sprint(result.Status),
 				}).
 				SetBody(functionRes.Body()).
 				Post(req.CallbackURL)
 			if err != nil {
 				log.Warnf("Failed call callback url %q: %s", req.CallbackURL, err)
-				trigger.WithFields(defaultEventFields).
-					WithFields(trigger.Fields{"is_error": true}).
-					Fire(types.EventHookType, types.CallbackError(err.Error()))
+				trigger.WithFields(defaultEventFields).WithFields(trigger.Fields{
+					"is_error": true,
+					"message":  types.CallbackError(err.Error()),
+				}).Fire(types.EventHookType)
 			}
 		}
 

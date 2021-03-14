@@ -31,7 +31,18 @@ func GetFunctions(c echo.Context) error {
 
 	sfss := []types.FunctionStatusResponse{}
 	for _, fs := range fss {
-		sfss = append(sfss, makeFunctionStatusResponse(&fs))
+		var secrets []k8s.Secret
+		if len(fs.MountedSecrets) > 0 {
+			filter = k8s.LabelSelector().
+				In(types.SecretNameLabel, fs.MountedSecrets).
+				Equals(types.UserIDLabel, auth.UserID)
+			secrets, err = k8sClient.GetSecretsFiltered(filter)
+			if err != nil {
+				log.Errorf("Failed to get secrets from k8s: %s", err)
+				return err
+			}
+		}
+		sfss = append(sfss, makeFunctionStatusResponse(&fs, secrets))
 	}
 
 	return c.JSON(http.StatusOK, types.MultiFunctionStatusResponse{
@@ -59,7 +70,19 @@ func GetFunction(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, "Function Not Found")
 	}
 
-	return c.JSON(http.StatusOK, makeFunctionStatusResponse(fs))
+	var secrets []k8s.Secret
+	if len(fs.MountedSecrets) > 0 {
+		filter = k8s.LabelSelector().
+			In(types.SecretNameLabel, fs.MountedSecrets).
+			Equals(types.UserIDLabel, auth.UserID)
+		secrets, err = k8sClient.GetSecretsFiltered(filter)
+		if err != nil {
+			log.Errorf("Failed to get secrets from k8s: %s", err)
+			return err
+		}
+	}
+
+	return c.JSON(http.StatusOK, makeFunctionStatusResponse(fs, secrets))
 }
 
 // DeployFunction deploys a new function onto k8s
@@ -137,16 +160,9 @@ func DeployFunction(c echo.Context) error {
 		Labels: map[string]string{
 			types.UserIDLabel:          auth.UserID,
 			types.ImageIDLabel:         image.ID,
+			types.ImageNameLabel:       image.Name,
 			types.FunctionIDLabel:      serviceName,
 			types.UserDefinedNameLabel: dr.Name,
-		},
-		Limits: &k8s.FunctionResources{
-			CPU:    dr.Resources.MaxCPU,
-			Memory: dr.Resources.MaxMemory,
-		},
-		Requests: &k8s.FunctionResources{
-			CPU:    dr.Resources.MinCPU,
-			Memory: dr.Resources.MinMemory,
 		},
 	}
 
@@ -156,13 +172,14 @@ func DeployFunction(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusCreated, makeFunctionStatusResponse(fs))
+	return c.JSON(http.StatusCreated, makeFunctionStatusResponse(fs, secrets))
 }
 
 // UpdateFunction updates function deployment
 func UpdateFunction(c echo.Context) error {
 	auth := c.Get("auth").(*auth.Auth)
 	k8sClient := c.Get("k8s").(*k8s.Client)
+	rc := c.Get("registry").(*registry.Client)
 	functionID := c.Param("function_id")
 
 	var ur types.UpdateFunctionRequest
@@ -210,10 +227,21 @@ func UpdateFunction(c echo.Context) error {
 		}
 	}
 
+	image, err := rc.GetImage(ur.ImageID, auth.UserID)
+	if err != nil {
+		log.Errorf("Failed to get image from registry: %s", err)
+		return err
+	}
+
+	if image == nil {
+		return c.JSON(http.StatusNotFound, "Image Not Found")
+	}
+	fs.Labels["image_id"] = image.ID
+
 	ur.EnvVars = parseEnvVars(ur.FunctionRequest)
 
 	fr := &k8s.DeployFunctionRequest{
-		Image:         fs.Image,
+		Image:         image.TaggedRegistry,
 		Service:       fs.Name,
 		EnvVars:       ur.EnvVars,
 		Secrets:       secrets,
@@ -221,14 +249,6 @@ func UpdateFunction(c echo.Context) error {
 		MaxReplicas:   ur.MaxReplicas,
 		ScalingFactor: ur.ScalingFactor,
 		Labels:        fs.Labels,
-		Limits: &k8s.FunctionResources{
-			CPU:    ur.Resources.MaxCPU,
-			Memory: ur.Resources.MaxMemory,
-		},
-		Requests: &k8s.FunctionResources{
-			CPU:    ur.Resources.MinCPU,
-			Memory: ur.Resources.MinMemory,
-		},
 	}
 
 	fs, err = k8sClient.UpdateFunction(fs.Name, fr)
@@ -237,7 +257,7 @@ func UpdateFunction(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusCreated, makeFunctionStatusResponse(fs))
+	return c.JSON(http.StatusOK, makeFunctionStatusResponse(fs, secrets))
 }
 
 // DeleteFunction deletes a function
@@ -327,30 +347,6 @@ func validateK8sParams(dr *types.FunctionRequest, l *k8s.ResourceLimits) map[str
 		errors["max_replicas"] = append(errors["max_replicas"], "value must be at least equal to min_replicas")
 	}
 
-	if lt(dr.Resources.MaxCPU, dr.Resources.MinCPU) {
-		errors["max_cpu"] = append(errors["max_cpu"], "value must be at least equal to min_cpu")
-	}
-
-	if lt(dr.Resources.MaxMemory, dr.Resources.MinMemory) {
-		errors["max_memory"] = append(errors["max_memory"], "value must be at least equal to min_memory")
-	}
-
-	if lt(dr.Resources.MinCPU, l.MinCPU) {
-		errors["min_cpu"] = append(errors["min_cpu"], "minimum value allowed "+l.MinCPU)
-	}
-
-	if gt(dr.Resources.MaxCPU, l.MaxCPU) {
-		errors["max_cpu"] = append(errors["max_cpu"], "maximum value allowed "+l.MaxCPU)
-	}
-
-	if lt(dr.Resources.MinMemory, l.MinMem) {
-		errors["min_memory"] = append(errors["min_memory"], "minimum value allowed "+l.MinMem)
-	}
-
-	if gt(dr.Resources.MaxMemory, l.MaxMem) {
-		errors["max_memory"] = append(errors["max_memory"], "maximum value allowed "+l.MaxMem)
-	}
-
 	return errors
 }
 
@@ -371,23 +367,21 @@ func cmpLimitStr(a, b string) bool {
 	return valA > valB
 }
 
-func makeFunctionStatusResponse(fs *k8s.FunctionStatus) (r types.FunctionStatusResponse) {
+func makeFunctionStatusResponse(fs *k8s.FunctionStatus, secrets []k8s.Secret) (r types.FunctionStatusResponse) {
 	r = types.FunctionStatusResponse{
 		EnvVars:           fs.Env,
-		Secrets:           fs.MountedSecrets,
 		AvailableReplicas: fs.AvailableReplicas,
+		Available:         fs.Available,
 		MinReplicas:       fs.MinReplicas,
 		MaxReplicas:       fs.MaxReplicas,
 		ScalingFactor:     fs.ScalingFactor,
 		CreatedAt:         fs.CreatedAt,
 		UpdatedAt:         fs.UpdatedAt,
 		DeletedAt:         fs.DeletedAt,
-		Resources: types.FunctionResources{
-			MaxCPU:    fs.Limits.CPU,
-			MaxMemory: fs.Limits.Memory,
-			MinCPU:    fs.Requests.CPU,
-			MinMemory: fs.Requests.Memory,
-		},
+	}
+
+	for _, secret := range secrets {
+		r.Secrets = append(r.Secrets, makeSecretResponse(&secret, nil))
 	}
 
 	for k, v := range fs.Labels {
@@ -396,6 +390,8 @@ func makeFunctionStatusResponse(fs *k8s.FunctionStatus) (r types.FunctionStatusR
 			r.ID = v
 		case types.ImageIDLabel:
 			r.ImageID = v
+		case types.ImageNameLabel:
+			r.ImageName = v
 		case types.UserDefinedNameLabel:
 			r.Name = v
 		}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -68,14 +67,18 @@ func proxyRequest(c echo.Context) error {
 		return err
 	}
 
-	path := c.Param("*")
-	trigger.WithFields(defaultEventFields).FireForEach(types.EventHookType,
-		types.StartMessage(requestID, functionID, functionName),
-		types.RequestContextMessage(path, c.QueryString(), requestBody, c.Request().Header),
-	)
+	stripHeaders(c.Request().Header)
+	path := "/" + c.Param("*")
+	trigger.WithFields(defaultEventFields).WithFields(trigger.Fields{
+		"path":         path,
+		"query_params": c.QueryString(),
+		"body":         requestBody,
+		"headers":      c.Request().Header,
+		"message":      types.SyncExecutionStartMessage(functionName),
+	}).Fire(types.EventHookType)
 
-	metrics.Observe(c.Request().Method, functionName, auth.UserID,
-		http.StatusProcessing, "started", time.Second*0)
+	metrics.ObserveInvocationStarted(functionID, functionName,
+		auth.UserID, path, c.Request().Method)
 
 	fullChainStart := time.Now()
 
@@ -90,14 +93,15 @@ func proxyRequest(c echo.Context) error {
 			"duration":   time.Since(fullChainStart).Milliseconds(),
 		}).Fire(types.TimelineHookType)
 
-		trigger.WithFields(defaultEventFields).
-			WithFields(trigger.Fields{"is_error": true}).
-			Fire(types.EventHookType, types.ServerErrorMessage())
+		trigger.WithFields(defaultEventFields).WithFields(trigger.Fields{
+			"is_error": true,
+			"message":  types.ServerErrorMessage(),
+		}).Fire(types.EventHookType)
 
-		return c.JSON(http.StatusServiceUnavailable, err)
+		return echo.NewHTTPError(http.StatusServiceUnavailable)
 	}
 
-	url := fmt.Sprintf("%s/%s", functionAddr, path)
+	url := fmt.Sprintf("%s%s", functionAddr, path)
 	proxyRequest := proxyClient.R().SetQueryString(c.QueryString())
 
 	if len(requestBody) > 0 {
@@ -111,7 +115,7 @@ func proxyRequest(c echo.Context) error {
 	response, err := proxyRequest.
 		SetResult(&result).
 		Execute(c.Request().Method, url)
-	if err != nil {
+	if err != nil || response.IsError() {
 		log.Errorf("Error with proxy request to: %s, %s\n", proxyRequest.URL, err)
 
 		trigger.WithFields(defaultTimelineFields).WithFields(trigger.Fields{
@@ -121,9 +125,10 @@ func proxyRequest(c echo.Context) error {
 			"duration":   time.Since(fullChainStart).Milliseconds(),
 		}).Fire(types.TimelineHookType)
 
-		trigger.WithFields(defaultEventFields).
-			WithFields(trigger.Fields{"is_error": true}).
-			Fire(types.EventHookType, types.ServerErrorMessage())
+		trigger.WithFields(defaultEventFields).WithFields(trigger.Fields{
+			"is_error": true,
+			"message":  types.ServerErrorMessage(),
+		}).Fire(types.EventHookType)
 
 		return c.JSON(http.StatusServiceUnavailable, "Service Unavailable")
 	}
@@ -131,59 +136,48 @@ func proxyRequest(c echo.Context) error {
 	proxyFinish := time.Since(proxyStart)
 	log.Infof("%s took %f seconds\n", functionID, proxyFinish.Seconds())
 
-	metrics.Observe(c.Request().Method, functionName, auth.UserID,
-		http.StatusOK, "completed", time.Since(fullChainStart))
+	metrics.ObserveInvocationComplete(functionID, functionName, auth.UserID, path, result.Status, proxyFinish)
 
 	eventType := ett.TimelineEventTypeFinished
-	if response.IsError() {
+	if result.Status >= 400 {
 		eventType = ett.TimelineEventTypeFailed
 	}
 
 	trigger.WithFields(defaultTimelineFields).WithFields(trigger.Fields{
 		"event_name": functionName,
 		"event_type": eventType,
-		"response":   response.StatusCode(),
+		"response":   result.Status,
 		"duration":   proxyFinish.Milliseconds(),
 	}).Fire(types.TimelineHookType)
 
 	defaultEventFields["type"] = ett.EventTypeUser
 	defaultEventFields["created_at"] = fullChainStart.Add(proxyFinish)
 
-	fields := []interface{}{
-		types.ResponseContextMessage(path, c.QueryString(),
-			result.Body, response.Header(), response.StatusCode()),
+	// Inject back request id header
+	if result.Headers == nil {
+		result.Headers = http.Header{}
 	}
 
-	if len(result.Stdout) > 0 {
-		message := strings.Join(result.Stdout, "\n")
-		fields = append(fields, types.StdoutMessage(message))
-	}
+	result.Headers.Set("X-Request-Id", requestID)
+	result.Headers.Del("X-Eywa-Token")
 
-	if len(result.Stderr) > 0 {
-		message := strings.Join(result.Stderr, "\n")
-		fields = append(fields, types.StderrMessage(message))
-	}
+	trigger.WithFields(defaultEventFields).WithFields(trigger.Fields{
+		"is_error": eventType == ett.TimelineEventTypeFailed,
+		"status":   result.Status,
+		"headers":  result.Headers,
+		"body":     result.Body,
+		"stdout":   result.Stdout,
+		"stderr":   result.Stderr,
+		"message":  types.SyncExecutionFinishMessage(functionName, result.Status, proxyFinish),
+	}).Fire(types.EventHookType)
 
-	trigger.WithFields(defaultEventFields).
-		WithFields(trigger.Fields{"is_error": eventType == ett.TimelineEventTypeFailed}).
-		FireForEach(types.EventHookType, fields...)
-
-	response.Header().Del("Content-Length")
-	return copyResponse(c, response, result.Body)
+	return copyResponse(c, result.Status, result.Headers, result.Body)
 }
 
-func copyHeaders(destination http.Header, source *http.Header) {
-	for k, v := range *source {
-		vClone := make([]string, len(v))
-		copy(vClone, v)
-		(destination[k]) = v
-	}
-}
-
-func copyResponse(c echo.Context, response *resty.Response, body []byte) error {
+func copyResponse(c echo.Context, statusCode int, headers http.Header, body []byte) error {
 	h := c.Response().Header()
-	for k, v := range response.Header() {
+	for k, v := range headers {
 		h[k] = v
 	}
-	return c.Blob(response.StatusCode(), response.Header().Get("Content-Type"), body)
+	return c.Blob(statusCode, headers.Get("Content-Type"), body)
 }

@@ -34,6 +34,11 @@ const (
 	defaultMaxReplicas   = 100
 	defaultScalingFactor = 20
 
+	initialDelaySeconds = 0
+	timeoutSeconds      = 1
+	periodSeconds       = 1
+	probePathValue      = "/_/health"
+
 	limitRangeName = "resources-min-max"
 
 	dockerPullSecret = "image-pull-secret"
@@ -42,6 +47,7 @@ const (
 // Config represents the configuration of k8s client
 type Config struct {
 	InCluster           bool
+	MongoDBHost         string
 	CacheExpiryDuration time.Duration
 	LimitCPUMin         string
 	LimitMemMin         string
@@ -51,6 +57,7 @@ type Config struct {
 
 // Client represents the k8s client
 type Client struct {
+	mongoDBHost    string
 	clientset      *kubernetes.Clientset
 	endpointLister corelister.EndpointsNamespaceLister
 	limitRange     ResourceLimits
@@ -94,6 +101,7 @@ func Setup(conf *Config) (*Client, error) {
 	endpointsLister := endpointsInformer.Lister()
 
 	return &Client{
+		mongoDBHost:    conf.MongoDBHost,
 		clientset:      clientset,
 		endpointLister: endpointsLister.Endpoints(faasNamespace),
 		cache:          cache.New(conf.CacheExpiryDuration, conf.CacheExpiryDuration),

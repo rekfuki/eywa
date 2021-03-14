@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/resty.v1"
 
 	"eywa/gateway/clients/k8s"
 )
@@ -19,21 +21,48 @@ type Client struct {
 	services      []k8s.FunctionStatus
 	watchInterval time.Duration
 	k8sClient     *k8s.Client
+	promrc        *resty.Client
 }
 
 type metrics struct {
 	functionsHistogram        *prometheus.HistogramVec
+	queueHistogram            *prometheus.HistogramVec
 	functionInvocation        *prometheus.CounterVec
 	functionInvocationStarted *prometheus.CounterVec
 	serviceReplicasGauge      *prometheus.GaugeVec
 }
 
 // Setup sets up prometheus counters and histograms
-func Setup(k8sClient *k8s.Client, watchInterval time.Duration) *Client {
+func Setup(k8sClient *k8s.Client, prometheusURL *string, watchInterval time.Duration) *Client {
+	client := &Client{
+		metrics:       setupMetrics(),
+		services:      []k8s.FunctionStatus{},
+		watchInterval: watchInterval,
+		k8sClient:     k8sClient,
+	}
+
+	if prometheusURL != nil {
+		client.promrc = resty.New().
+			SetHostURL(*prometheusURL + "/api/v1").
+			SetLogger(ioutil.Discard).
+			SetRetryCount(3).
+			SetTimeout(10 * time.Second)
+	}
+
+	prometheus.MustRegister(client)
+	return client
+}
+
+func setupMetrics() *metrics {
 	gatewayFunctionsHistogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "gateway_functions_seconds",
+		Name: "gateway_function_duration_milliseconds",
 		Help: "Function time taken",
-	}, []string{"function_name", "user_id"})
+	}, []string{"function_id", "function_name", "user_id"})
+
+	gatewayAsyncQueueHistogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "gateway_queue_dwell_duration_milliseconds",
+		Help: "Function time taken",
+	}, []string{"function_id", "function_name", "user_id"})
 
 	gatewayFunctionInvocation := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -42,7 +71,7 @@ func Setup(k8sClient *k8s.Client, watchInterval time.Duration) *Client {
 			Name:      "invocation_total",
 			Help:      "Function metrics",
 		},
-		[]string{"function_name", "user_id", "code"},
+		[]string{"function_id", "function_name", "user_id", "path", "code"},
 	)
 
 	serviceReplicas := prometheus.NewGaugeVec(
@@ -61,44 +90,62 @@ func Setup(k8sClient *k8s.Client, watchInterval time.Duration) *Client {
 			Name:      "invocation_started",
 			Help:      "The total number of function HTTP requests started.",
 		},
-		[]string{"function_name"},
+		[]string{"function_id", "function_name", "user_id", "path", "method"},
 	)
 
-	client := &Client{
-		metrics: &metrics{
-			functionsHistogram:        gatewayFunctionsHistogram,
-			functionInvocation:        gatewayFunctionInvocation,
-			functionInvocationStarted: gatewayFunctionInvocationStarted,
-			serviceReplicasGauge:      serviceReplicas,
-		},
-		services:      []k8s.FunctionStatus{},
-		watchInterval: watchInterval,
-		k8sClient:     k8sClient,
+	return &metrics{
+		functionsHistogram:        gatewayFunctionsHistogram,
+		queueHistogram:            gatewayAsyncQueueHistogram,
+		functionInvocation:        gatewayFunctionInvocation,
+		functionInvocationStarted: gatewayFunctionInvocationStarted,
+		serviceReplicasGauge:      serviceReplicas,
 	}
-
-	prometheus.MustRegister(client)
-	return client
 }
 
-// Observe records metrics in Prometheus
-func (c *Client) Observe(method, fnName, userID string, statusCode int, event string, duration time.Duration) {
-	switch event {
-	case "completed":
-		seconds := duration.Seconds()
-		c.metrics.functionsHistogram.
-			With(prometheus.Labels{"function_name": fnName, "user_id": userID}).
-			Observe(seconds)
+// ObserveInvocationStarted records function invocation started metrics in Prometheus
+func (c *Client) ObserveInvocationStarted(fnID, fnName, userID, path, method string) {
+	c.metrics.functionInvocationStarted.With(prometheus.Labels{
+		"function_id":   fnID,
+		"function_name": fnName,
+		"user_id":       userID,
+		"path":          path,
+		"method":        method,
+	}).Inc()
+}
 
-		code := strconv.Itoa(statusCode)
+// ObserveInvocationComplete records function invocation complete metrics in Prometheus
+func (c *Client) ObserveInvocationComplete(fnID, fnName, userID, path string, statusCode int, duration time.Duration) {
+	milliseconds := duration.Milliseconds()
+	c.metrics.functionsHistogram.
+		With(prometheus.Labels{
+			"function_id":   fnID,
+			"function_name": fnName,
+			"user_id":       userID,
+		}).
+		Observe(float64(milliseconds))
 
-		c.metrics.functionInvocation.
-			With(prometheus.Labels{"function_name": fnName, "user_id": userID, "code": code}).
-			Inc()
-	case "started":
-		c.metrics.functionInvocationStarted.WithLabelValues(fnName).Inc()
-	default:
-		log.Errorf("Unknown metrics event %q", event)
-	}
+	code := strconv.Itoa(statusCode)
+	c.metrics.functionInvocation.
+		With(prometheus.Labels{
+			"function_id":   fnID,
+			"function_name": fnName,
+			"user_id":       userID,
+			"path":          path,
+			"code":          code,
+		}).
+		Inc()
+}
+
+// ObserveDwellTime records function dwell time in the queue metrics in Prometheus
+func (c *Client) ObserveDwellTime(fnID, fnName, userID string, duration time.Duration) {
+	milliseconds := duration.Milliseconds()
+	c.metrics.queueHistogram.
+		With(prometheus.Labels{
+			"function_id":   fnID,
+			"function_name": fnName,
+			"user_id":       userID,
+		}).
+		Observe(float64(milliseconds))
 }
 
 // FunctionWatcher watches currently deployed functions and stores them for metrics
@@ -120,6 +167,7 @@ func (c *Client) FunctionWatcher() {
 func (c *Client) Collect(ch chan<- prometheus.Metric) {
 	c.metrics.functionInvocation.Collect(ch)
 	c.metrics.functionsHistogram.Collect(ch)
+	c.metrics.queueHistogram.Collect(ch)
 	c.metrics.functionInvocationStarted.Collect(ch)
 	c.metrics.serviceReplicasGauge.Reset()
 	for _, service := range c.services {
@@ -139,6 +187,7 @@ func (c *Client) Collect(ch chan<- prometheus.Metric) {
 // Describe defines metrics description function for prometheus
 func (c *Client) Describe(ch chan<- *prometheus.Desc) {
 	c.metrics.functionInvocation.Describe(ch)
+	c.metrics.queueHistogram.Describe(ch)
 	c.metrics.functionsHistogram.Describe(ch)
 	c.metrics.serviceReplicasGauge.Describe(ch)
 	c.metrics.functionInvocationStarted.Describe(ch)

@@ -11,6 +11,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -20,10 +21,17 @@ import (
 
 // DeployFunction deploys function to the k8s cluster
 func (c *Client) DeployFunction(request *DeployFunctionRequest) (*FunctionStatus, error) {
-	deployment, err := buildDeployment(request)
+	request.Limits = &FunctionResources{
+		CPU:    c.limitRange.MaxCPU,
+		Memory: c.limitRange.MaxMem,
+	}
+
+	deployment, err := c.buildDeployment(request)
 	if err != nil {
 		return nil, err
 	}
+
+	setSecrets(request, deployment)
 
 	deployment, err = c.clientset.AppsV1().
 		Deployments(faasNamespace).
@@ -53,16 +61,40 @@ func (c *Client) UpdateFunction(oldName string, request *DeployFunctionRequest) 
 		return nil, err
 	}
 
-	baseDeployment, err := buildDeployment(request)
-	if err != nil {
-		return nil, err
+	if len(deployment.Spec.Template.Spec.Containers) > 0 {
+		request.Limits = &FunctionResources{
+			CPU:    c.limitRange.MaxCPU,
+			Memory: c.limitRange.MaxMem,
+		}
+
+		baseDeployment, err := c.buildDeployment(request)
+		if err != nil {
+			return nil, err
+		}
+
+		deployment.Spec.Template.Spec.Containers[0].Env = baseDeployment.Spec.Template.Spec.Containers[0].Env
+		deployment.Spec.Template.Spec.Containers[0].Image = baseDeployment.Spec.Template.Spec.Containers[0].Image
+
+		deployment.Spec.Template.Spec.NodeSelector = baseDeployment.Spec.Template.Spec.NodeSelector
+
+		deployment.Spec.Template.ObjectMeta.Labels = baseDeployment.Spec.Template.ObjectMeta.Labels
+		deployment.ObjectMeta.Labels = baseDeployment.ObjectMeta.Labels
+
+		deployment.Annotations = baseDeployment.Annotations
+		deployment.Spec.Template.Annotations = baseDeployment.Spec.Template.Annotations
+		deployment.Spec.Template.ObjectMeta.Annotations = baseDeployment.Spec.Template.ObjectMeta.Annotations
+
+		deployment.Spec.Template.Spec.Containers[0].Resources = baseDeployment.Spec.Template.Spec.Containers[0].Resources
+
+		setSecrets(request, deployment)
+
+		deployment.Spec.Template.Spec.Containers[0].LivenessProbe = baseDeployment.Spec.Template.Spec.Containers[0].LivenessProbe
+		deployment.Spec.Template.Spec.Containers[0].ReadinessProbe = baseDeployment.Spec.Template.Spec.Containers[0].ReadinessProbe
+
+		deployment.Spec.Replicas = baseDeployment.Spec.Replicas
 	}
 
-	deployment.ObjectMeta.Labels = baseDeployment.ObjectMeta.Labels
-	deployment.Spec.Replicas = baseDeployment.Spec.Replicas
-	deployment.Spec.Template.ObjectMeta.Labels = baseDeployment.Spec.Template.ObjectMeta.Labels
 	// This might cause side effects.
-	deployment.Spec.Template.Spec.Containers = baseDeployment.Spec.Template.Spec.Containers
 
 	deployment, err = c.clientset.AppsV1().
 		Deployments(faasNamespace).
@@ -114,8 +146,11 @@ func buildService(request *DeployFunctionRequest) *corev1.Service {
 	}
 }
 
-func buildDeployment(request *DeployFunctionRequest) (*appsv1.Deployment, error) {
-	envVars := []corev1.EnvVar{}
+func (c *Client) buildDeployment(request *DeployFunctionRequest) (*appsv1.Deployment, error) {
+	envVars := []corev1.EnvVar{{
+		Name:  "mongodb_host",
+		Value: c.mongoDBHost,
+	}}
 	for k, v := range request.EnvVars {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  k,
@@ -123,6 +158,7 @@ func buildDeployment(request *DeployFunctionRequest) (*appsv1.Deployment, error)
 		})
 	}
 
+	request.Labels[updatedAtLabel] = fmt.Sprint(time.Now().Unix())
 	labels := map[string]string{
 		faasIDLabel: request.Service,
 	}
@@ -188,11 +224,33 @@ func buildDeployment(request *DeployFunctionRequest) (*appsv1.Deployment, error)
 		resources.Requests[apiv1.ResourceCPU] = qty
 	}
 
-	imagePullPolicy := apiv1.PullIfNotPresent
+	imagePullPolicy := apiv1.PullAlways
 
 	annotations := map[string]string{}
 	if len(request.Annotations) > 0 {
 		annotations = request.Annotations
+	}
+
+	var handler corev1.Handler
+	initialDelaySeconds := initialDelaySeconds
+
+	handler = corev1.Handler{
+		HTTPGet: &corev1.HTTPGetAction{
+			Path: probePathValue,
+			Port: intstr.IntOrString{
+				Type:   intstr.Int,
+				IntVal: int32(8080),
+			},
+		},
+	}
+
+	probe := &corev1.Probe{
+		Handler:             handler,
+		InitialDelaySeconds: int32(initialDelaySeconds),
+		TimeoutSeconds:      int32(timeoutSeconds),
+		PeriodSeconds:       int32(periodSeconds),
+		SuccessThreshold:    1,
+		FailureThreshold:    3,
 	}
 
 	deployment := &appsv1.Deployment{
@@ -247,6 +305,8 @@ func buildDeployment(request *DeployFunctionRequest) (*appsv1.Deployment, error)
 							Env:             envVars,
 							Resources:       *resources,
 							ImagePullPolicy: imagePullPolicy,
+							LivenessProbe:   probe,
+							ReadinessProbe:  probe,
 						},
 					},
 					RestartPolicy: corev1.RestartPolicyAlways,
@@ -256,11 +316,15 @@ func buildDeployment(request *DeployFunctionRequest) (*appsv1.Deployment, error)
 		},
 	}
 
+	return deployment, nil
+}
+
+func setSecrets(request *DeployFunctionRequest, deployment *appsv1.Deployment) {
 	secretVolumeProjections := []apiv1.VolumeProjection{}
 	for _, secret := range request.Secrets {
 		projectedPaths := []apiv1.KeyToPath{}
 		for secretKey := range secret.Data {
-			projectedPaths = append(projectedPaths, apiv1.KeyToPath{Key: secretKey, Path: secretKey})
+			projectedPaths = append(projectedPaths, apiv1.KeyToPath{Key: secretKey, Path: secret.Name + "/" + secretKey})
 		}
 
 		projection := &apiv1.SecretProjection{Items: projectedPaths}
@@ -269,31 +333,61 @@ func buildDeployment(request *DeployFunctionRequest) (*appsv1.Deployment, error)
 		secretVolumeProjections = append(secretVolumeProjections, secretProjection)
 	}
 
-	if len(secretVolumeProjections) > 0 {
-		volumeName := fmt.Sprintf("%s-projected-secrets", request.Service)
-		projectedSecrets := apiv1.Volume{
-			Name: volumeName,
-			VolumeSource: apiv1.VolumeSource{
-				Projected: &apiv1.ProjectedVolumeSource{
-					Sources: secretVolumeProjections,
-				},
+	volumeName := fmt.Sprintf("%s-projected-secrets", request.Service)
+	projectedSecrets := apiv1.Volume{
+		Name: volumeName,
+		VolumeSource: apiv1.VolumeSource{
+			Projected: &apiv1.ProjectedVolumeSource{
+				Sources: secretVolumeProjections,
 			},
+		},
+	}
+
+	existingVolumes := removeVolume(volumeName, deployment.Spec.Template.Spec.Volumes)
+	deployment.Spec.Template.Spec.Volumes = existingVolumes
+	if len(secretVolumeProjections) > 0 {
+		deployment.Spec.Template.Spec.Volumes = append(existingVolumes, projectedSecrets)
+	}
+
+	updatedContainers := []apiv1.Container{}
+	for _, container := range deployment.Spec.Template.Spec.Containers {
+		mount := apiv1.VolumeMount{
+			Name:      volumeName,
+			ReadOnly:  true,
+			MountPath: faasSecretMount,
 		}
 
-		deployment.Spec.Template.Spec.Volumes = []corev1.Volume{projectedSecrets}
+		container.VolumeMounts = removeVolumeMount(volumeName, container.VolumeMounts)
+		if len(secretVolumeProjections) > 0 {
+			container.VolumeMounts = append(container.VolumeMounts, mount)
+		}
 
-		for i := range deployment.Spec.Template.Spec.Containers {
-			mount := apiv1.VolumeMount{
-				Name:      volumeName,
-				ReadOnly:  true,
-				MountPath: faasSecretMount,
-			}
+		updatedContainers = append(updatedContainers, container)
+	}
 
-			deployment.Spec.Template.Spec.Containers[i].VolumeMounts = []apiv1.VolumeMount{mount}
+	deployment.Spec.Template.Spec.Containers = updatedContainers
+}
+
+func removeVolume(volumeName string, volumes []corev1.Volume) []corev1.Volume {
+	newVolumes := volumes[:0]
+	for _, v := range volumes {
+		if v.Name != volumeName {
+			newVolumes = append(newVolumes, v)
 		}
 	}
 
-	return deployment, nil
+	return newVolumes
+}
+
+func removeVolumeMount(volumeName string, mounts []corev1.VolumeMount) []corev1.VolumeMount {
+	newMounts := mounts[:0]
+	for _, v := range mounts {
+		if v.Name != volumeName {
+			newMounts = append(newMounts, v)
+		}
+	}
+
+	return newMounts
 }
 
 // DeleteFunction deletes the function deployment and service
@@ -304,15 +398,18 @@ func (c *Client) DeleteFunction(fnName string) error {
 	if err := c.clientset.AppsV1().
 		Deployments(faasNamespace).
 		Delete(context.TODO(), fnName, *opts); err != nil {
-		return err
+		if !errors.IsNotFound(err) {
+			return err
+		}
 	}
 
 	serviceName := "s-" + fnName
 	if err := c.clientset.CoreV1().
 		Services(faasNamespace).
 		Delete(context.TODO(), serviceName, *opts); err != nil {
-		return err
-
+		if !errors.IsNotFound(err) {
+			return err
+		}
 	}
 	return nil
 }
@@ -422,19 +519,25 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 		}
 	}
 
-	for _, c := range deployment.Spec.Template.Spec.Containers {
-		for _, v := range c.Env {
-			function.Env[v.Name] = v.Value
-		}
+	c := deployment.Spec.Template.Spec.Containers[0]
+	for _, v := range c.Env {
+		function.Env[v.Name] = v.Value
+	}
 
-		function.Limits = &FunctionResources{
-			CPU:    c.Resources.Limits.Cpu().String(),
-			Memory: c.Resources.Limits.Memory().String(),
-		}
+	function.Limits = &FunctionResources{
+		CPU:    c.Resources.Limits.Cpu().String(),
+		Memory: c.Resources.Limits.Memory().String(),
+	}
 
-		function.Requests = &FunctionResources{
-			CPU:    c.Resources.Requests.Cpu().String(),
-			Memory: c.Resources.Requests.Memory().String(),
+	function.Requests = &FunctionResources{
+		CPU:    c.Resources.Requests.Cpu().String(),
+		Memory: c.Resources.Requests.Memory().String(),
+	}
+
+	for _, condition := range deployment.Status.Conditions {
+		if condition.Type == appsv1.DeploymentAvailable {
+			function.Available = condition.Status == corev1.ConditionTrue
+			break
 		}
 	}
 
@@ -456,11 +559,11 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 				function.ScalingFactor = i
 			}
 		case updatedAtLabel:
-			t, err := time.Parse(time.RFC3339, v)
+			t, err := strconv.ParseInt(v, 10, 64)
 			if err != nil {
 				return nil, err
 			}
-			function.UpdatedAt = t
+			function.UpdatedAt = time.Unix(t, 0)
 		}
 	}
 
@@ -573,7 +676,7 @@ func (c *Client) ScaleFromZero(filter Selector) (*FunctionZeroScaleResult, error
 
 		for i := 0; i < maxPollCount; i++ {
 			functionStatus, err := c.GetFunctionStatus(filter)
-			if err != nil {
+			if err != nil || functionStatus == nil {
 				return &FunctionZeroScaleResult{
 					Available: false,
 					Found:     true,

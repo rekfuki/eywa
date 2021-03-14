@@ -54,12 +54,18 @@ func main() {
 
 	hostname, _ := os.Hostname()
 	clientID := conf.StanClientID + broker.GetClientID(hostname)
-	bc, err := broker.Connect(conf.NatsURL, conf.StanClusterID, clientID, 100, 5)
+	bc, err := broker.Connect(&broker.Config{
+		NatsURL:        conf.NatsURL,
+		ClusterID:      conf.StanClusterID,
+		ClientID:       clientID,
+		MaxReconnect:   100,
+		ReconnectDelay: 5,
+	})
 	if err != nil {
 		log.Fatalf("Failed to setup nats-streaming broker: %s", err)
 	}
 
-	metrics := metrics.Setup(k8s, time.Second*5)
+	metrics := metrics.Setup(k8s, nil, time.Second*5)
 
 	e := echo.New()
 	e.Use(middleware.Recover())
@@ -79,7 +85,6 @@ func main() {
 	qSub, err := bc.QueueSubscribe(
 		types.AsyncExecSubject, "gateway-consumer",
 		listener.HandleMessage,
-		// stan.MaxInflight(conf.MaxInflight), // TODO: Not sure if needed
 		stan.DeliverAllAvailable(),
 		stan.SetManualAckMode(),
 		stan.DurableName("durable"))
@@ -89,7 +94,7 @@ func main() {
 
 	endless.DefaultHammerTime = 10 * time.Second
 	endless.DefaultReadTimeOut = 295 * time.Second
-	if err := endless.ListenAndServe(":8888", e); err != nil {
+	if err := endless.ListenAndServe(":8081", e); err != nil {
 		log.Infof("Server stopped: %s", err)
 	}
 
