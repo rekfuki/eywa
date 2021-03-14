@@ -4,6 +4,7 @@ spec:
   replicas: {{ .replicas }}
   template:
     spec:
+      serviceAccount: {{ .serviceAccountName }}
       imagePullSecrets: 
       - name: {{ .imagePullSecret }}
 {{- end -}}
