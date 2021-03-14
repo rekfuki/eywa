@@ -1,0 +1,41 @@
+deployment:
+
+  name: gateway-consumer
+  replicas: 1
+  serviceAccountName: gateway-consumer
+  image:
+    repository: registry.eywa.rekfuki.dev/gateway-consumer
+    tag: latest
+    pullPolicy: Always
+  ports:
+  - name: http
+    containerPort: 8081
+  imagePullSecret: image-pull-secret
+
+service:
+
+  name: gateway-consumer
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8080
+    targetPort: 8081
+
+serviceAccount:
+
+  name: gateway-consumer
+
+serviceMonitor:
+
+  name: gateway-consumer-servicemonitor
+  jobLabel: gateway-consumer
+  labels:
+    release: prometheus-operator
+  selectorMatchLabels:
+    app: gateway-consumer
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 1s
+
+  

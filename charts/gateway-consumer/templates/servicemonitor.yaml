@@ -1,0 +1,11 @@
+{{- template "common.servicemonitor" (list .Values.serviceMonitor "gateway-consumer.servicemonitor") -}}
+{{- define "gateway-consumer.servicemonitor" -}}
+metadata:
+  labels:
+  {{ include "common.labelize" .labels | indent 4 }}
+spec:
+  jobLabel: {{ .jobLabel }}
+  selector:
+    matchLabels:
+      {{ toYaml .selectorMatchLabels }}
+{{- end -}}
