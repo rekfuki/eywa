@@ -6,8 +6,7 @@ spec:
   type: {{ default "ClusterIP" .type }}
   {{ template "common.ports" .ports }}
   selector:
-    matchLabels:
-      {{ template "common.labels.standard" . }}
+    {{ template "common.labels.standard" . }}
 {{- end -}}
 {{- define "common.service" -}}
 {{- template "common.util.merge" (append . "common.service.tpl") -}}
