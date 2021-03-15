@@ -1,0 +1,31 @@
+deployment:
+
+  name: registry
+  replicas: 3
+  ports:
+  - containerPort: 9080
+    name: http
+  env:
+  - name: REGISTRY_DB_PASSWORD
+    secretName: registry-psql-creds
+    secretField: password
+  - name: REGISTRY_USER
+    secretName: docker-registry-creds
+    secretField: user
+  - name: REGISTRY_PASSWORD
+    secretName: docker-registry-creds
+    secretField: password
+  image:
+    repository: registry.eywa.rekfuki.dev/registry
+    tag: latest
+    pullPolicy: Always
+  imagePullSecret: image-pull-secret
+
+service:
+
+  name: registry
+  ports:
+  - name: http
+    protocol: TCP
+    port: 9080
+    targetPort: 9080

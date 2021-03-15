@@ -1,0 +1,17 @@
+{{- template "common.deployment" (list .Values.deployment "registry.deployment") -}}
+{{- define "registry.deployment" -}}
+spec:
+  replicas: {{ .replicas }}
+  template:
+    spec:
+      imagePullSecrets: 
+      - name: {{ .imagePullSecret }}
+      containers:
+      - {{ template "common.container" (list . "registry.container") }}
+{{- end -}}
+{{- define "registry.container" -}}
+env:
+{{- range $k, $v := .env }}
+- {{ template "common.envvar.secret" (list $v.name $v.secretName $v.secretField )}}
+{{- end }}
+{{- end -}}
