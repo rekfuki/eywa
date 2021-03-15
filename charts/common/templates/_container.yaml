@@ -2,7 +2,9 @@
 name: {{ .name }}
 image: "{{ .image.repository }}:{{ .image.tag }}"
 imagePullPolicy: {{ .image.pullPolicy }}
+{{- if .ports }}
 {{ template "common.ports" .ports }}
+{{- end}}
 resources:
 {{ toYaml .resources | indent 2 }}
 {{- end -}}
