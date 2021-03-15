@@ -13,6 +13,7 @@ execution-tracker/api/execution-tracker-api
 registry/registry
 idler/idler
 warden/warden
+tugrik/tugrik
 test-kube
 test-helm
 test-registry
