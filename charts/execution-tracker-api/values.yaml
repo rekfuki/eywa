@@ -1,4 +1,5 @@
 deployment:
+
   name: execution-tracker-api
   replicas: 1
   ports:
@@ -13,3 +14,12 @@ deployment:
     tag: latest
     pullPolicy: Always
   imagePullSecret: image-pull-secret
+
+service:
+
+  name: execution-tracker-api
+  ports:
+  - name: http
+    protocol: TCP
+    port: 10080
+    targetPort: 10080
