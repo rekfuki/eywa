@@ -1,0 +1,17 @@
+{{- template "common.deployment" (list .Values.deployment "warden.deployment") -}}
+{{- define "warden.deployment" -}}
+spec:
+  replicas: {{ .replicas }}
+  template:
+    spec:
+      imagePullSecrets: 
+      - name: {{ .imagePullSecret }}
+      containers:
+      - {{ template "common.container" (list . "warden.container") }}
+{{- end -}}
+{{- define "warden.container" -}}
+env:
+{{- range $k, $v := .env }}
+- {{ template "common.envvar.secret" (list $v.name $v.secretName $v.secretField )}}
+{{- end }}
+{{- end -}}

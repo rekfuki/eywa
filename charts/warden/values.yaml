@@ -1,0 +1,37 @@
+deployment:
+
+  name: warden
+  replicas: 3
+  ports:
+  - containerPort: 1080
+    name: http
+  env:
+  - name: WARDEN_DB_PASSWORD
+    secretName: warden-psql-creds
+    secretField: password
+  - name: WARDEN_SESSION_SIGNING_KEY
+    secretName: session-signing-key
+    secretField: session-signing-key
+  - name: WARDEN_GITHUB_CLIENT_SECRET
+    secretName: github-oauth
+    secretField: client-secret
+  - name: WARDEN_GITHUB_CLIENT_ID
+    secretName: github-oauth
+    secretField: client-id
+  - name: WARDEN_GITHUB_CLIENT_CALLBACK_URL
+    secretName: github-oauth
+    secretField: callback-url
+  image:
+    repository: registry.eywa.rekfuki.dev/warden
+    tag: latest
+    pullPolicy: Always
+  imagePullSecret: image-pull-secret
+
+service:
+
+  name: warden
+  ports:
+  - name: http
+    protocol: TCP
+    port: 1080
+    targetPort: 1080
