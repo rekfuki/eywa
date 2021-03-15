@@ -2,9 +2,8 @@ FROM alpine
 
 RUN apk add --no-cache shadow-uidmap libseccomp-dev img
 
-RUN mkdir /templates
 COPY templates /templates
-
+COPY migrations /migrations
 COPY registry /registry
 COPY img /img
 
