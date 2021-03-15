@@ -5,20 +5,27 @@ import "time"
 // GetImagesResponse represents GET ALL response
 type GetImagesResponse struct {
 	Objects []Image `json:"objects"`
-	Total   int     `json:"total"`
+	Total   int     `json:"total_count"`
 	Page    int     `json:"page_number"`
 	PerPage int     `json:"per_page"`
 }
 
+// ImageBuildResponse is returned when build request is issued
+type ImageBuildResponse struct {
+	BuildID   string    `json:"build_id"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 // Image represents an image
 type Image struct {
-	ID             string    `bson:"_id" json:"id"`
-	UserID         string    `bson:"user_id" json:"-"`
-	TaggedRegistry string    `bson:"registry" json:"tagged_registry,omitempty"`
-	Language       string    `bson:"languge" json:"language"`
-	Name           string    `bson:"name" json:"name"`
-	Version        string    `bson:"version" json:"version"`
-	CreatedAt      time.Time `bson:"created_at" json:"created_at"`
-	State          string    `bson:"state" json:"state"`
-	Source         string    `bson:"source" json:"-"`
+	ID             string    `db:"id" json:"id"`
+	UserID         string    `db:"user_id" json:"-"`
+	TaggedRegistry string    `db:"registry" json:"tagged_registry,omitempty"`
+	Language       string    `db:"language" json:"language"`
+	Name           string    `db:"name" json:"name"`
+	Version        string    `db:"version" json:"version"`
+	CreatedAt      time.Time `db:"created_at" json:"created_at"`
+	State          string    `db:"state" json:"state"`
+	Size           int       `db:"size" json:"size"`
+	Source         string    `db:"-" json:"-"`
 }

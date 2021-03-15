@@ -1,20 +1,16 @@
 package types
 
-import "archive/zip"
+import (
+	"time"
 
-const (
-	// StateBuilding ...
-	StateBuilding = "building"
-	// StateSuccess ...
-	StateSuccess = "success"
-	// StateFailed ...
-	StateFailed = "failed"
+	"github.com/lib/pq"
 )
 
-// BuildRequest represents the payload of a request to build a new image
-type BuildRequest struct {
-	ID        string
-	Language  string
-	Version   string
-	ZipReader *zip.Reader
+// Build represents a build inside db
+type Build struct {
+	ImageID   string         `db:"image_id"`
+	UserID    string         `db:"user_id"`
+	Logs      pq.StringArray `db:"logs"`
+	State     string         `db:"state"`
+	CreatedAt time.Time      `db:"created_at"`
 }
