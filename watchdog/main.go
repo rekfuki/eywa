@@ -41,22 +41,25 @@ func main() {
 			os.Exit(0)
 		}
 
-		fmt.Fprintf(os.Stderr, "unable to find lock file.\n")
-		os.Exit(1)
+		log.Fatal("Unable to find lock file")
 	}
 
 	atomic.StoreInt32(&acceptingConnections, 0)
 
 	wc := config.New(os.Environ())
+	fmt.Printf("post config parse")
 
 	if len(wc.FunctionProcess) == 0 && wc.OperationalMode != config.ModeStatic {
-		fmt.Fprintf(os.Stderr, "Provide a \"function_process\" or \"fprocess\" environmental variable for your function.\n")
-		os.Exit(1)
+		log.Fatal(`Provide a "function_process" or "fprocess" environmental variable for your function"`)
+	}
+
+	if wc.Debug == true {
+		log.Infof("Debug mode enabled")
 	}
 
 	requestHandler := buildRequestHandler(wc)
 
-	log.Printf("OperationalMode: %s\n", config.WatchdogMode(wc.OperationalMode))
+	log.Infof("OperationalMode: %s\n", config.WatchdogMode(wc.OperationalMode))
 
 	httpMetrics := metrics.NewHttp()
 	http.HandleFunc("/", metrics.InstrumentHandler(requestHandler, httpMetrics))
@@ -193,6 +196,7 @@ func makeHTTPRequestHandler(wc config.WatchdogConfig) func(http.ResponseWriter, 
 		Process:        commandName,
 		ProcessArgs:    arguments,
 		BufferHTTPBody: wc.BufferHTTPBody,
+		WriteDebug:     wc.Debug,
 	}
 
 	if len(wc.UpstreamURL) == 0 {
@@ -233,33 +237,8 @@ func makeHTTPRequestHandler(wc config.WatchdogConfig) func(http.ResponseWriter, 
 				log.Printf("Failed to wrtie error response: %s", err)
 			}
 		}
-
-		// Maybe this should be done in a go routine to shave time off?
-		// payload := &broker.Log{
-		// 	Message: broker.Message{
-		// 		Type: broker.ExecutionType,
-		// 	},
-		// 	ExecutionLog: &broker.ExecutionLog{
-		// 		STDOut: stdout,
-		// 		STDErr: stderr,
-		// 	},
-		// }
-		// if err := bc.PublishAsync(wc.StanLogsSubject, payload); err != nil {
-		// 	log.Errorf("Failed to publish execution results")
-		// }
 	}
 }
-
-// func publishLogs(sc stan.Conn, logs []string) {
-// 		nuid, err := sc.PublishAsync("logs", , func(ackedNuid string, err error){
-// 			if err != nil {
-// 				log.Warnf("Failed to publish msg id %s: %s", ackedNuid, err)
-// 			}
-// 		})
-// 		if err != nil {
-// 			log.Errorf("Failed to publish msg %s: %s", nuid, err)
-// 		}
-// }
 
 func lockFilePresent() bool {
 	path := filepath.Join(os.TempDir(), ".lock")

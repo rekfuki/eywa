@@ -20,6 +20,7 @@ type WatchdogConfig struct {
 	OperationalMode  int
 	SuppressLock     bool
 	UpstreamURL      string
+	Debug            bool
 
 	// BufferHTTPBody buffers the HTTP body in memory
 	// to prevent transfer type of chunked encoding
@@ -88,6 +89,7 @@ func New(env []string) WatchdogConfig {
 		OperationalMode:  ModeStreaming,
 		ContentType:      contentType,
 		SuppressLock:     getBool(envMap, "suppress_lock"),
+		Debug:            getBool(envMap, "write_debug"),
 		UpstreamURL:      upstreamURL,
 		BufferHTTPBody:   getBools(envMap, "buffer_http", "http_buffer_req_body"),
 		MetricsPort:      8081,

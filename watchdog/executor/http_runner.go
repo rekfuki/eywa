@@ -47,12 +47,15 @@ type HTTPFunctionRunner struct {
 	Client         *http.Client
 	UpstreamURL    *url.URL
 	BufferHTTPBody bool
+	WriteDebug     bool
 }
 
 type FunctionResponse struct {
-	Body   []byte   `json:"body,omitempty"`
-	Stdout []string `json:"stdout,omitempty"`
-	Stderr []string `json:"stderr,omitempty"`
+	Body    []byte      `json:"body,omitempty"`
+	Headers http.Header `json:"headers,omitempty"`
+	Status  int         `json:"status"`
+	Stdout  []string    `json:"stdout,omitempty"`
+	Stderr  []string    `json:"stderr,omitempty"`
 }
 
 // Start forks the process used for processing incoming requests
@@ -127,7 +130,6 @@ func (f *HTTPFunctionRunner) Run(req FunctionRequest, contentLength int64, r *ht
 	request, _ := http.NewRequest(r.Method, upstreamURL, body)
 	request.Host = r.Host
 
-	r.Header.Del("Content-Length")
 	copyHeaders(request.Header, &r.Header)
 
 	var reqCtx context.Context
@@ -145,7 +147,6 @@ func (f *HTTPFunctionRunner) Run(req FunctionRequest, contentLength int64, r *ht
 	defer cancel()
 
 	res, err := f.Client.Do(request.WithContext(reqCtx))
-
 	if err != nil {
 		log.Printf("Upstream HTTP request error: %s\n", err.Error())
 
@@ -173,41 +174,36 @@ func (f *HTTPFunctionRunner) Run(req FunctionRequest, contentLength int64, r *ht
 		return err
 	}
 
-	// In case we need to override the content-length
-	res.Header.Del("Content-Length")
-	copyHeaders(w.Header(), &res.Header)
-	copyHeaders(w.Header(), &r.Header)
-
 	w.Header().Set("X-Duration-Seconds", fmt.Sprintf("%f", time.Since(startedTime).Seconds()))
+	w.Header().Set("Content-Type", "application/json")
 
 	resp := FunctionResponse{
-		Stdout: *f.Stdout,
-		Stderr: *f.Stderr,
+		Status:  res.StatusCode,
+		Headers: http.Header{},
 	}
 
-	w.WriteHeader(res.StatusCode)
+	copyHeaders(resp.Headers, &res.Header)
+
+	if f.WriteDebug {
+		resp.Stdout = *f.Stdout
+		resp.Stderr = *f.Stderr
+	}
+
 	if res.Body != nil {
 		defer res.Body.Close()
 
 		bodyBytes, bodyErr := ioutil.ReadAll(res.Body)
 		if bodyErr != nil {
-			log.Println("read body err", bodyErr)
+			log.Printf("Failed to read body: %s", bodyErr)
 		}
 		resp.Body = bodyBytes
 	}
 
 	if !resp.isEmpty() {
-		bodyBytes, err := json.Marshal(resp)
-		if err != nil {
-			return err
-		}
-		_, err = w.Write(bodyBytes)
-		if err != nil {
-			return err
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.Printf("Failed to write response")
 		}
 	}
-
-	log.Printf("%s %s - %s - ContentLength: %d", r.Method, r.RequestURI, res.Status, res.ContentLength)
 
 	return nil
 }
@@ -243,7 +239,7 @@ func makeProxyClient(dialTimeout time.Duration) *http.Client {
 }
 
 func (fr *FunctionResponse) isEmpty() bool {
-	if len(fr.Body) > 0 || len(fr.Stderr) > 0 || len(fr.Stdout) > 0 {
+	if len(fr.Body) > 0 || len(fr.Stderr) > 0 || len(fr.Stdout) > 0 || len(fr.Headers) > 0 {
 		return false
 	}
 	return true
