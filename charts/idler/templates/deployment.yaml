@@ -1,0 +1,9 @@
+{{- template "common.deployment" (list .Values.deployment "idler.deployment") -}}
+{{- define "idler.deployment" -}}
+spec:
+  replicas: {{ .replicas }}
+  template:
+    spec:
+      imagePullSecrets: 
+      - name: {{ .imagePullSecret }}
+{{- end -}}

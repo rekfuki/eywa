@@ -1,0 +1,9 @@
+deployment:
+
+  name: idler
+  replicas: 1
+  image:
+    repository: registry.eywa.rekfuki.dev/idler
+    tag: latest
+    pullPolicy: Always
+  imagePullSecret: image-pull-secret
