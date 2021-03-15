@@ -1,31 +1,240 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <script type="text/javascript" src="js/jquery-2.1.0.min.js"></script>
-    <script type="text/javascript" src="js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
-    
-    <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"/>
-    <link href="css/main.css" rel="stylesheet">
+<head>
+    <title>Login</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type="text/css">
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            height: 100vh;
+            display: grid;
+            font-size: 18px;
+        }
+
+        #app {
+            align-self: center;
+            justify-self: center;
+            text-align: center;
+            width: 500px;
+            padding: 27px 18px;
+        }
+
+        h1 {
+            margin: 0;
+            padding-bottom: 18px;
+            font-size: 18px;
+        }
+
+        input,
+        button:not(.github) {
+            padding: 9px;
+            font-size: 18px;
+            margin-bottom: 9px;
+        }
+
+        button.github {
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            border: none;
+            background: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+        }
+
+        button.github img {
+            height: 25px;
+            margin-right: 10px;
+        }
+
+        pre {
+            text-align: left;
+            background: #f0f0f0;
+            padding: 25px;
+            border-radius: 10px;
+            overflow-x: scroll;
+        }
+    </style>
+    <script>
+        function redirect() {
+            window.location.href = "/oauth?provider=github";
+            return false;
+        }
+
+    </script>
 </head>
 
 <body>
-    
-    <div class="container">
-        <div class="jumbotron">
-            <h1 class="text-left">Login</h1>
-            <p class="text-left">Chose the account you wish to login with.</p>
-            <p>
-                <a class="btn btn-github-style btn-lg btn-block" href="/auth?provider=github">
-                    <i class="fa fa-github-square"></i>  <span>Login with <strong>Github</strong></span>
-                </a>
-            </p>
+    <div id="app">
+        <h1>Please log in</h1>
+        <form onsubmit="return redirect();">
+            <button id="btn-send" class="github" type="submit request">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="feather feather-github">
+                    <path
+                        d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 5.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                    </path>
+                </svg>
+                <span>Sign in with GitHub</span>
+            </button>
+        </form>
+    </div>
+</body>
+
+</html> -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Login</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type="text/css">
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            height: 100vh;
+            display: grid;
+            font-size: 18px;
+            background-color: #f4f6f8;
+            margin: 0;
+        }
+
+        #app {
+            align-self: center;
+            justify-self: center;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            height: 100%;
+            max-height: 400px;
+            padding: 27px 18px;
+            background-color: white;
+            border-radius: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 30px;
+            background-color: black;
+            color: white;
+            margin-bottom: 18px;
+            border-radius: 5px;
+            padding: 3px;
+        }
+
+        input,
+        button:not(.github) {
+            padding: 9px;
+            font-size: 18px;
+            margin-bottom: 9px;
+        }
+
+        button.github {
+            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            border: none;
+            background: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+        }
+
+        button.github img {
+            height: 25px;
+            margin-right: 10px;
+        }
+
+        pre {
+            text-align: left;
+            background: #f0f0f0;
+            padding: 25px;
+            border-radius: 10px;
+            overflow-x: scroll;
+        }
+
+        .content {
+            clear: both;
+            padding: 65px 50px 50px 50px;
+            margin: auto;
+            overflow: hidden;
+        }
+
+        .post {
+            float: left;
+            /* this*/
+            position: relative;
+        }
+
+        .post_container {
+            padding: 50px 30px;
+            background: #fff;
+            text-align: center;
+            position: relative;
+            margin: 0 auto;
+            border-radius: 10px;
+            box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.1);
+        }
+
+        .top-icon {
+            text-align: center;
+            padding: 6px 0px;
+            width: 30%;
+            position: absolute;
+            /* change this */
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            /* and this */
+            left: 50%;
+        }
+    </style>
+    <script>
+        function redirect() {
+            window.location.href = "/oauth?provider=github";
+            return false;
+        }
+    </script>
+</head>
+
+<body>
+    <div class="content">
+        <div class="post">
+            <div class="top-icon">
+                <svg style="background-color: white;border-radius: 100%;padding: 10px;box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.1);""
+            xmlns=" http://www.w3.org/2000/svg" width="50%" viewBox="0 0 24 24" fill="white" stroke="#3949ab"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-in">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+            </div>
+            <div class="post_container">
+                <h3>Login</h3>
+                <form onsubmit="return redirect();">
+                    <button id="btn-send" class="github" type="submit request">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            preserveAspectRatio="xMaxYMax meet" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" class="feather feather-github">
+                            <path
+                                d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 5.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                            </path>
+                        </svg>
+                        <span>Sign in with GitHub</span>
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </body>
