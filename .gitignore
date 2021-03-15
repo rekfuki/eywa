@@ -1,4 +1,5 @@
 htpasswd
+go.sum
 ca.crt
 ca.key
 go-watchdog
@@ -8,26 +9,23 @@ handler
 gateway/api/gateway-api
 gateway/consumer/gateway-consumer
 execution-tracker/consumer/execution-tracker-consumer
+execution-tracker/api/execution-tracker-api
 registry/registry
 idler/idler
 test-kube
 test-helm
 test-registry
 *-unsealed.yaml
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+app/yarn.lock
 app/node_modules
 app/.pnp
 app/.pnp.js
 
-# testing
 app/coverage
 
-# production
 app/build
 
-# misc
 app.DS_Store
 app/.env
 app/.env.local
