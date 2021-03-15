@@ -2,18 +2,38 @@ package db
 
 import (
 	"database/sql"
+	"time"
 
 	"xorm.io/builder"
 
 	"eywa/warden/types"
 )
 
-// GetUserByUserID returns user by user id
-func (c *Client) GetUserByUserID(userID string) (*types.User, error) {
+// GetUserByOauthUserID returns user by oauth user id
+func (c *Client) GetUserByOauthUserID(userID string) (*types.User, error) {
 	query := c.Builder().
 		Select("u.*").
 		From("users u").
 		Where(builder.Eq{"u.oauth_provider_id": userID})
+
+	var user types.User
+	err := c.Get(&user, query)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+// GetUserByInternalUserID returns user by internal user id
+func (c *Client) GetUserByInternalUserID(userID string) (*types.User, error) {
+	query := c.Builder().
+		Select("u.*").
+		From("users u").
+		Where(builder.Eq{"u.id": userID})
 
 	var user types.User
 	err := c.Get(&user, query)
@@ -51,6 +71,20 @@ func (c *Client) CreateUser(user *types.User) (*types.User, error) {
 	return user, nil
 }
 
+// DeleteUser deletes user from db
+func (c *Client) DeleteUser(userID string) error {
+	query := c.Builder().
+		Delete(builder.Eq{"id": userID}).
+		From("users")
+
+	_, err := c.Exec(query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // UpdateUser updates a user in the database
 func (c *Client) UpdateUser(user *types.User) error {
 	query := c.Builder().
@@ -64,6 +98,23 @@ func (c *Client) UpdateUser(user *types.User) error {
 		}).
 		From("users").
 		Where(builder.Eq{"id": user.ID})
+
+	_, err := c.Exec(query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SetUserLastSeenAt ...
+func (c *Client) SetUserLastSeenAt(userID string, lastSeenAt time.Time) error {
+	query := c.Builder().
+		Update(builder.Eq{
+			"last_seen_at": lastSeenAt,
+		}).
+		From("users").
+		Where(builder.Eq{"id": userID})
 
 	_, err := c.Exec(query)
 	if err != nil {

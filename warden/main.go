@@ -8,6 +8,8 @@ import (
 	"github.com/markbates/goth/providers/github"
 	log "github.com/sirupsen/logrus"
 
+	"eywa/warden/authn"
+	"eywa/warden/clients/tugrik"
 	"eywa/warden/db"
 	"eywa/warden/server"
 )
@@ -19,6 +21,8 @@ type Config struct {
 	SessionSigningKey      string        `envconfig:"warden_session_signing_key" default:"foo-bar"`
 	GithubClientID         string        `envconfig:"warden_github_client_id" required:"true"`
 	GithubClientSecret     string        `envconfig:"warden_github_client_secret" required:"true"`
+	GithubCallbackURL      string        `envconfig:"warden_callback_url" default:"https://tunnel.rekfuki.dev/oauth"`
+	TugrikURL              string        `envconfig:"tugrik_url" default:"http://tugrik.faas-system:11080"`
 }
 
 func main() {
@@ -28,8 +32,7 @@ func main() {
 		log.Fatalf("Failed to parse env: %s", err)
 	}
 
-	githubCallBackURL := "https://e06012e833c6.eu.ngrok.io/auth/callback"
-	goth.UseProviders(github.New(conf.GithubClientID, conf.GithubClientSecret, githubCallBackURL, "user:email"))
+	goth.UseProviders(github.New(conf.GithubClientID, conf.GithubClientSecret, conf.GithubCallbackURL, "user:email"))
 
 	migrateDB(conf.DB, 0)
 
@@ -38,10 +41,15 @@ func main() {
 		log.Fatalf("Failed to connect to database: %s", err)
 	}
 
+	authn.InitTokenCache(db)
+
+	tugrik := tugrik.New(conf.TugrikURL)
+
 	params := &server.ContextParams{
 		DB:                     db,
 		SessionSigningKey:      conf.SessionSigningKey,
 		SessionTimeoutDuration: conf.SessionTimeoutDuration,
+		Tugrik:                 tugrik,
 	}
 
 	server.Run(params)
