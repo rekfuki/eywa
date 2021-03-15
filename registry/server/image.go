@@ -23,6 +23,10 @@ func imagesAPI() []*swagger.Endpoint {
 				Type:        "integer",
 				Description: "Number of records per page",
 			},
+			"query": {
+				Type:        "string",
+				Description: "Query to filter by",
+			},
 		}),
 		endpoint.Response(http.StatusOK, types.GetImagesResponse{}, "Success"),
 		endpoint.Tags("Images"),
@@ -36,10 +40,10 @@ func imagesAPI() []*swagger.Endpoint {
 		endpoint.Tags("Images"),
 	)
 
-	createImage := endpoint.New("POST", "/images", "Create an image",
+	queueImageBuild := endpoint.New("POST", "/images", "Create an image",
 		endpoint.Description("Create an image"),
 		endpoint.Consumes("multipart/form-data"),
-		endpoint.Handler(controllers.CreateImage),
+		endpoint.Handler(controllers.RequestImageBuild),
 		endpoint.FormDataMap(map[string]swagger.Parameter{
 			"source": {
 				Type:        "string",
@@ -57,9 +61,14 @@ func imagesAPI() []*swagger.Endpoint {
 			"language": {
 				Type:        "string",
 				Format:      "string",
-				Enum:        []string{"Go"},
+				Enum:        []string{"go", "node14", "python3", "ruby", "csharp", "custom"},
 				Description: "Language the source is written in",
 				Required:    true,
+			},
+			"executable_path": {
+				Type:        "string",
+				Format:      "string",
+				Description: "Path to the executable (only applicable to custom runtimes)",
 			},
 			"name": {
 				Type:        "string",
@@ -70,6 +79,14 @@ func imagesAPI() []*swagger.Endpoint {
 			},
 		}),
 		endpoint.Response(http.StatusNoContent, types.Image{}, "Success"),
+		endpoint.Tags("Images"),
+	)
+
+	getImageBuildLogs := endpoint.New("GET", "/images/{image_id}/buildlogs", "Get image build logs",
+		endpoint.Description("Get image build logs"),
+		endpoint.Handler(controllers.GetImageBuildLogs),
+		endpoint.Path("image_id", "string", "uuid", "UUID of an image"),
+		endpoint.Response(http.StatusOK, "", "Success"),
 		endpoint.Tags("Images"),
 	)
 
@@ -84,7 +101,8 @@ func imagesAPI() []*swagger.Endpoint {
 	return []*swagger.Endpoint{
 		getImages,
 		getImage,
-		createImage,
+		queueImageBuild,
+		getImageBuildLogs,
 		deleteImage,
 	}
 }
