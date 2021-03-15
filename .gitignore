@@ -12,6 +12,7 @@ execution-tracker/consumer/execution-tracker-consumer
 execution-tracker/api/execution-tracker-api
 registry/registry
 idler/idler
+warden/warden
 test-kube
 test-helm
 test-registry
