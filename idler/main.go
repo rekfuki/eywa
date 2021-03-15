@@ -16,7 +16,7 @@ import (
 // Config represents gateway startup configuration
 type Config struct {
 	GatewayURL         string        `envconfig:"gateway_url" default:"http://gateway-api.faas-system:8080"`
-	PrometheusURL      string        `envconfig:"prometheus_url" default:"http://linkerd-prometheus.linkerd:9090"`
+	PrometheusURL      string        `envconfig:"prometheus_url" default:"http://prometheus-operator-kube-p-prometheus.faas-system:9090"`
 	InactivityDuration time.Duration `envconfig:"inactivity_duration" default:"5m"`
 }
 
@@ -81,7 +81,7 @@ func (i *Idler) buildMetricsMap(functions []gwt.FunctionStatusResponse) map[stri
 	metrics := make(map[string]float64)
 	duration := fmt.Sprintf("%dm", int(i.inactivityDuration.Minutes()))
 	for _, function := range functions {
-		query := `sum(rate(gateway_function_invocation_total{function_name="` + function.ID + `", code=~".*"}[` + duration + `])) by (code, function_name)`
+		query := `sum(rate(gateway_function_invocation_total{function_id="` + function.ID + `", code=~".*"}[` + duration + `])) by (code, function_id)`
 		res, err := i.prometheus.QueryMetrics(query)
 		if err != nil {
 			log.Errorf("Failed to get metrics from Prometheus: %s", err)
