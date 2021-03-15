@@ -16,24 +16,22 @@ import (
 	"eywa/go-libs/pagination"
 	"eywa/registry/builder"
 	"eywa/registry/clients/docker"
-	"eywa/registry/clients/mongo"
+	"eywa/registry/db"
 )
 
 // ContextParams holds the objects required to initialise the server.
 type ContextParams struct {
-	Mongo   *mongo.Client
+	DB      *db.Client
 	Builder *builder.Client
 	Docker  *docker.Client
-	// Gateway *gateway.Client
 }
 
 func contextObjects(contextParams *ContextParams) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			c.Set("mongo", contextParams.Mongo)
+			c.Set("db", contextParams.DB)
 			c.Set("builder", contextParams.Builder)
 			c.Set("docker", contextParams.Docker)
-			// c.Set("gateway", contextParams.Gateway)
 			return next(c)
 		}
 	}

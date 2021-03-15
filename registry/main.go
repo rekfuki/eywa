@@ -8,18 +8,17 @@ import (
 
 	"eywa/registry/builder"
 	"eywa/registry/clients/docker"
-	"eywa/registry/clients/mongo"
+	"eywa/registry/db"
 	"eywa/registry/server"
 )
 
 // Config represents registry startup configuration
 type Config struct {
-	Mongo            mongo.Config
+	Postgres         db.Config
 	Registry         string `envconfig:"registry_url" default:"registry.eywa.rekfuki.dev"`
 	RegistryUser     string `envconfig:"registry_user" required:"true"`
 	RegistryPassword string `envconfig:"registry_password" required:"true"`
 	NumWorkers       int    `envconfig:"builder_worker_count" default:"3"`
-	// GatewayURL       string `envconfig:"gateway_url" default:"gateway.faas-system:8080"`
 }
 
 func main() {
@@ -36,19 +35,20 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	mc, err := mongo.Connect(conf.Mongo)
+	migrateDB(conf.Postgres, 0)
+
+	db, err := db.Connect(conf.Postgres)
 	if err != nil {
-		log.Fatalf("Failed to connecto to mongo: %s", err)
+		log.Fatalf("failed to connect to registry db: %s", err)
 	}
 
 	docker := docker.New(conf.Registry, conf.RegistryUser, conf.RegistryPassword)
-	// gateway := gateway.New(conf.GatewayURL)
 
 	builder, err := builder.New(&builder.Config{
 		Registry:         conf.Registry,
 		RegistryUser:     conf.RegistryUser,
 		RegistryPassword: conf.RegistryPassword,
-		Mongo:            mc,
+		DB:               db,
 		NumWorkers:       3,
 	})
 	if err != nil {
@@ -57,13 +57,27 @@ func main() {
 	go builder.Start()
 
 	params := &server.ContextParams{
-		Mongo:   mc,
+		DB:      db,
 		Builder: builder,
 		Docker:  docker,
-		// Gateway: gateway,
 	}
 
 	server.Run(params)
 
 	log.Exit(0)
+}
+
+func migrateDB(dbConf db.Config, target uint) {
+	log.Info("Migrating Database Schema")
+	db, err := db.Connect(dbConf)
+	if err != nil {
+		log.Fatalf("failed to connect to registry db: %s", err)
+	}
+
+	err = db.Migrate("./migrations", target)
+	if err != nil {
+		log.Fatalf("failed to create schema: %s", err)
+	}
+
+	log.Info("Completed")
 }
