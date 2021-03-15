@@ -17,7 +17,7 @@ import (
 type Config struct {
 	GatewayURL         string        `envconfig:"gateway_url" default:"http://gateway-api.faas-system:8080"`
 	PrometheusURL      string        `envconfig:"prometheus_url" default:"http://prometheus-operator-kube-p-prometheus.faas-system:9090"`
-	InactivityDuration time.Duration `envconfig:"inactivity_duration" default:"5m"`
+	InactivityDuration time.Duration `envconfig:"inactivity_duration" default:"1m"`
 }
 
 // Idler represents the idler object
@@ -90,7 +90,6 @@ func (i *Idler) buildMetricsMap(functions []gwt.FunctionStatusResponse) map[stri
 
 		if len(res.Data.Result) > 0 {
 			for _, v := range res.Data.Result {
-				fmt.Println(v)
 				if v.Metric.FunctionName == function.ID {
 					metricValue := v.Value[1]
 					switch metricValue.(type) {
@@ -107,7 +106,6 @@ func (i *Idler) buildMetricsMap(functions []gwt.FunctionStatusResponse) map[stri
 			}
 
 		}
-
 	}
 
 	return metrics

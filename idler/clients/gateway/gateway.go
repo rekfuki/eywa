@@ -33,8 +33,8 @@ func (c *Client) GetFunctions() ([]gwt.FunctionStatusResponse, error) {
 	var result gwt.MultiFunctionStatusResponse
 	resp, err := c.rc.R().
 		SetResult(&result).
-		SetHeader("X-User-Id", auth.OperatorUserID).
-		SetHeader("X-Real-User-Id", auth.OperatorUserID).
+		SetHeader("X-Eywa-User-Id", auth.OperatorUserID).
+		SetHeader("X-Eywa-Real-User-Id", auth.OperatorUserID).
 		Get("/eywa/api/system/functions")
 	if err != nil {
 		return nil, err
