@@ -1,0 +1,17 @@
+{{- template "common.deployment" (list .Values.deployment "tugrik.deployment") -}}
+{{- define "tugrik.deployment" -}}
+spec:
+  replicas: {{ .replicas }}
+  template:
+    spec:
+      imagePullSecrets: 
+      - name: {{ .imagePullSecret }}
+      containers:
+      - {{ template "common.container" (list . "tugrik.container") }}
+{{- end -}}
+{{- define "tugrik.container" -}}
+env:
+{{- range $k, $v := .env }}
+- {{ template "common.envvar.secret" (list $v.name $v.secretName $v.secretField )}}
+{{- end }}
+{{- end -}}

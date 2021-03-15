@@ -1,0 +1,25 @@
+deployment:
+
+  name: tugrik
+  replicas: 2
+  ports:
+  - containerPort: 11080
+    name: http
+  env:
+  - name: TUGRIK_DB_PASSWORD
+    secretName: mongodb-superuser
+    secretField: admin_password
+  image:
+    repository: registry.eywa.rekfuki.dev/tugrik
+    tag: latest
+    pullPolicy: Always
+  imagePullSecret: image-pull-secret
+
+service:
+
+  name: tugrik
+  ports:
+  - name: http
+    protocol: TCP
+    port: 11080
+    targetPort: 11080
