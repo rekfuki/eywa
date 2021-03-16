@@ -1,0 +1,6 @@
+apiVersion: v2
+name: envoy-config
+description: A Helm chart for deploying Envoy config
+type: application
+version: 0.0.1
+appVersion: 0.0.1
