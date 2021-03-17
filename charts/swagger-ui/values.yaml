@@ -1,0 +1,32 @@
+deployment:
+
+  name: swagger-ui
+  replicas: 1
+  ports:
+  - containerPort: 8080
+    name: http
+  image:
+    repository: swaggerapi/swagger-ui
+    tag: latest
+    pullPolicy: Always
+  paths:
+  - url: /eywa/api/gateway/doc
+    name: gateway-api
+  - url: /eywa/api/warden/doc
+    name: warden
+  - url: /eywa/api/tracker/doc
+    name: execution-tracker
+  - url: /eywa/api/tugrik/doc
+    name: tugrik
+  - url: /eywa/api/registry/doc
+    name: registry
+  baseUrl: /api-docs
+
+service:
+
+  name: swagger-ui
+  ports:
+  - name: http
+    protocol: TCP
+    port: 1180
+    targetPort: 8080

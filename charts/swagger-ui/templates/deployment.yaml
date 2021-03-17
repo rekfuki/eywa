@@ -1,0 +1,16 @@
+{{- template "common.deployment" (list .Values.deployment "swagger-ui.deployment") -}}
+{{- define "swagger-ui.deployment" -}}
+spec:
+  replicas: {{ .replicas }}
+  template:
+    spec:
+      containers:
+      - {{ template "common.container" (list . "swagger-ui.container") }}
+{{- end -}}
+{{- define "swagger-ui.container" -}}
+env:
+- name: URLS
+  value: {{ toJson .paths | quote }}
+- name: BASE_URL
+  value: {{ .baseUrl }}
+{{- end -}}
