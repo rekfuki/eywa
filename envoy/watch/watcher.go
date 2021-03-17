@@ -35,7 +35,7 @@ func main() {
 		ts2 := info.ModTime()
 
 		if ts2 != ts {
-			log.Println(spacer + "Config file updated, reloading Lobby" + spacer)
+			log.Println(spacer + "Config file updated, reloading Envoy" + spacer)
 			ts = ts2
 
 			// Copy over new files
