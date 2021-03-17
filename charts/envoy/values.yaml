@@ -1,0 +1,30 @@
+deployment:
+
+  name: envoy
+  replicas: 3
+  ports:
+  - containerPort: 80
+    name: http
+  image:
+    repository: registry.eywa.rekfuki.dev/envoy
+    tag: latest
+    pullPolicy: Always
+  mount:
+    volumes:
+      - name: "envoy-config-volume"
+        configMap:
+          name: "envoy-config"
+    volumeMounts:
+      - mountPath: "/configmap/"
+        name: "envoy-config-volume"
+  imagePullSecret: image-pull-secret
+
+service:
+
+  name: envoy
+  type: NodePort
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80

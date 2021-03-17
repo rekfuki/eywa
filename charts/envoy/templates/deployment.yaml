@@ -1,0 +1,24 @@
+{{- template "common.deployment" (list .Values.deployment "warden.deployment") -}}
+{{- define "warden.deployment" -}}
+spec:
+  replicas: {{ .replicas }}
+  template:
+    spec:
+      volumes:
+        {{- range .mount.volumes }}
+        - name: {{ .name }}
+          configMap:
+            name: {{ .configMap.name }}
+        {{- end }}
+      imagePullSecrets: 
+      - name: {{ .imagePullSecret }}
+      containers:
+      - {{ template "common.container" (list . "warden.container") }}
+{{- end -}}
+{{- define "warden.container" -}}
+volumeMounts:
+  {{- range .mount.volumeMounts }}
+  - name: {{ .name }}
+    mountPath: {{ .mountPath }}
+  {{- end }}
+{{- end -}}

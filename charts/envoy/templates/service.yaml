@@ -1,0 +1,5 @@
+{{- template "common.service" (list .Values.service "envoy.service") -}}
+{{- define "envoy.service" -}}
+spec:
+  type: {{ .type }}
+{{- end -}}
