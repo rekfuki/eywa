@@ -38,6 +38,13 @@ secrets:
   - name: password
     generate: true
 
+- name: session-signing-key
+  namespaces:
+  - faas-system
+  fields:
+  - name: session_signing_key
+    generate: true
+
 # MONGODB
 - name: mongodb-superuser
   namespaces:
