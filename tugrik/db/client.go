@@ -20,7 +20,7 @@ type Config struct {
 	Host     string `envconfig:"mongodb_host" default:"mongodb.mongodb:27017"`
 	Database string `envconfig:"-" default:"admin"`
 	User     string `envconfig:"-" default:"root"`
-	Password string `envconfig:"tugrik_mongodb_password"`
+	Password string `envconfig:"tugrik_db_password"`
 }
 
 const (

@@ -31,8 +31,6 @@ require (
 	github.com/markbates/goth v1.67.1
 	github.com/miketonks/swag v0.0.0-20201101082928-809ef19ffaec
 	github.com/miketonks/swag-validator v0.0.0-20200618082841-744f7d5ba06b
-	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
-	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/nats-io/jwt v1.2.2 // indirect
 	github.com/nats-io/nats-streaming-server v0.20.0 // indirect
 	github.com/nats-io/nats.go v1.10.0
@@ -56,7 +54,6 @@ require (
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	gopkg.in/resty.v1 v1.12.0
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c // indirect
-	gotest.tools/v3 v3.0.3 // indirect
 	k8s.io/api v0.19.4
 	k8s.io/apimachinery v0.19.4
 	k8s.io/client-go v0.19.2
