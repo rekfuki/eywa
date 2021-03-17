@@ -45,14 +45,6 @@ const Header = ({ className, ...rest }) => {
           >
             Dashboard
           </Link>
-          <Link
-            variant="body1"
-            color="inherit"
-            to="/app/management"
-            component={RouterLink}
-          >
-            Management
-          </Link>
           <Typography
             variant="body1"
             color="textPrimary"
@@ -66,7 +58,7 @@ const Header = ({ className, ...rest }) => {
         >
           All Executions
         </Typography>
-     </Grid>
+      </Grid>
     </Grid>
   );
 };

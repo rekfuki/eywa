@@ -10,9 +10,8 @@ ifeq ("$(VERSION)","")
 endif
 
 .PHONY: run
-run:
+run: yarn-build
 	@echo "Running $(IMAGE)..."
-	yarn build
 	GO111MODULE=on go run main.go -debug=$(DEBUG)
 
 .PHONY: go-build
@@ -20,8 +19,13 @@ go-build:
 	@echo "Build $(IMAGE) binary..."
 	GO111MODULE=on CGO_ENABLED=0 go build -o $(BUILD_CONTEXT)/$(IMAGE) -v main.go
 
+.PHONY: yarn-build
+yarn-build:
+	@echo "Build $(IMAGE) static files"
+	yarn build
+
 .PHONY: build
-build: go-build
+build: yarn-build go-build
 	@echo "Build docker image..."
 	docker build --tag $(IMAGE):$(VERSION) $(BUILD_CONTEXT)
 	docker tag $(IMAGE):$(VERSION) $(IMAGE):latest
