@@ -29,7 +29,7 @@ func (c *Client) GetAccessToken(userID, tokenID string) (*types.AccessToken, err
 // GetAccessTokens returns access tokens beloging to a user
 func (c *Client) GetAccessTokens(userID, filter string, pageNumber, perPage int) (int, []types.AccessToken, error) {
 	query := c.Builder().
-		Select("at.*").
+		Select("at.id, at.user_id, at.name, at.created_at, at.expires_at").
 		From("access_tokens at").
 		Where(builder.Eq{"at.user_id": userID})
 
