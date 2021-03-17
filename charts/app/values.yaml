@@ -1,0 +1,21 @@
+deployment:
+
+  name: app
+  replicas: 1
+  ports:
+  - containerPort: 5000
+    name: http
+  image:
+    repository: registry.eywa.rekfuki.dev/app
+    tag: latest
+    pullPolicy: Always
+  imagePullSecret: image-pull-secret
+
+service:
+
+  name: app
+  ports:
+  - name: http
+    protocol: TCP
+    port: 5000
+    targetPort: 5000

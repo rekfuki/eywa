@@ -1,0 +1,9 @@
+{{- template "common.deployment" (list .Values.deployment "app.deployment") -}}
+{{- define "app.deployment" -}}
+spec:
+  replicas: {{ .replicas }}
+  template:
+    spec:
+      imagePullSecrets: 
+      - name: {{ .imagePullSecret }}
+{{- end -}}

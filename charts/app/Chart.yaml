@@ -1,0 +1,11 @@
+apiVersion: v2
+name: app
+description: A Helm chart for deploying front-end App
+type: application
+version: 0.0.1
+appVersion: 0.0.1
+
+dependencies:
+- name: common
+  version: 0.0.2
+  repository: file://../common
