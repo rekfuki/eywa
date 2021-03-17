@@ -1,7 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: .Values.name
+  name: envoy-config
 data:
-  envoy.conf: |-
+  marker: |
+  
+  envoy.conf: |
 {{ .Files.Get "configs/envoy.conf" | indent 4 }}
