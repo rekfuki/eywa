@@ -65,9 +65,10 @@ func createRouter(params *ContextParams) *echo.Echo {
 	e.Use(middleware.Recover())
 	e.Use(contextObjects(params))
 
-	lumberjackAPI := createLogsSwaggerAPI()
-	api := e.Group("", checkAuth(), sv.SwaggerValidatorEcho(lumberjackAPI), pagination.Validate())
-	lumberjackAPI.Walk(func(path string, endpoint *swagger.Endpoint) {
+	executionTrackerAPI := createLogsSwaggerAPI()
+	e.GET("/eywa/api/tracker/doc", echo.WrapHandler(executionTrackerAPI.Handler(true)))
+	api := e.Group("", checkAuth(), sv.SwaggerValidatorEcho(executionTrackerAPI), pagination.Validate())
+	executionTrackerAPI.Walk(func(path string, endpoint *swagger.Endpoint) {
 		h := endpoint.Handler.(func(c echo.Context) error)
 		path = swag.ColonPath(path)
 		api.Add(endpoint.Method, path, h)
