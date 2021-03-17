@@ -11,16 +11,16 @@ deployment:
     secretField: password
   - name: WARDEN_SESSION_SIGNING_KEY
     secretName: session-signing-key
-    secretField: session-signing-key
+    secretField: session_signing_key
   - name: WARDEN_GITHUB_CLIENT_SECRET
     secretName: github-oauth
-    secretField: client-secret
+    secretField: client_secret
   - name: WARDEN_GITHUB_CLIENT_ID
     secretName: github-oauth
-    secretField: client-id
+    secretField: client_id
   - name: WARDEN_GITHUB_CLIENT_CALLBACK_URL
     secretName: github-oauth
-    secretField: callback-url
+    secretField: callback_url
   image:
     repository: registry.eywa.rekfuki.dev/warden
     tag: latest
