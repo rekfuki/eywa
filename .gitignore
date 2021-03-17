@@ -14,6 +14,7 @@ registry/registry
 idler/idler
 warden/warden
 tugrik/tugrik
+app/app
 test-kube
 test-helm
 test-registry

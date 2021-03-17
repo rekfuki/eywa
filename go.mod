@@ -1,6 +1,6 @@
 module eywa
 
-go 1.15
+go 1.16
 
 replace github.com/miketonks/swag-validator => /repos/swag-validator
 
