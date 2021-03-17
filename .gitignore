@@ -16,6 +16,7 @@ warden/warden
 tugrik/tugrik
 app/app
 test-kube
+envoy/watcher
 test-helm
 test-registry
 *-unsealed.yaml
