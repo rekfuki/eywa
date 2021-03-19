@@ -1,6 +1,6 @@
 {{- define "common.container.tpl" -}}
 name: {{ .name }}
-image: "{{ .image.repository }}:{{ .image.tag }}"
+image: "{{ .image.repository }}:{{ .AppVersion }}"
 imagePullPolicy: {{ .image.pullPolicy }}
 {{- if .ports }}
 {{ template "common.ports" .ports }}
