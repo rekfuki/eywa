@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(3),
     paddingBottom: theme.spacing(3)
   },
-    valueContainer: {
+  valueContainer: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
@@ -49,6 +49,7 @@ const ImageBuildView = () => {
   const [image, setImage] = useState(null)
   const [building, setBuilding] = useState(false);
   const [userScrolled, setUserScrolled] = useState(false);
+  const [time, setTime] = React.useState(0);
 
   const getImage = async () => {
     try {
@@ -67,49 +68,49 @@ const ImageBuildView = () => {
     }
   };
 
+  const getBuildInfo = () => {
+    return buildInfo;
+  }
+
+  let timer = null;
+  useEffect(() => {
+    if (image && (image.state === "building" || image.state === "queued")) {
+      timer = setInterval(() => { setTime(prevTime => prevTime + 1) }, 3000);
+    }
+    return () => { clearInterval(timer) };
+  }, [image]);
+
   const getImageBuildInfo = async () => {
     try {
       const url = `/eywa/api/images/${imageId}/buildlogs`
-      const response = await fetch(url);
-      const reader = response.body
-        .pipeThrough(new TextDecoderStream())
-        .getReader();
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-          getImage()
-          break;
-        }
-
-        setBuildInfo(buildInfo => [...buildInfo, value]);
-      }
+      const response = await axios.get(url);
+      const diff = response.data.split("\n").filter(x => !buildInfo.includes(x));
+      setBuildInfo([...buildInfo, ...diff]);
     } catch (err) {
       console.error(err);
       enqueueSnackbar('Failed to get images build logs', {
-        variant: 'error',
+        variant: 'error'
       });
     }
   };
 
   const handleScroll = () => {
     setUserScrolled(true)
-};
+  };
 
-useEffect(() => {
+  useEffect(() => {
     window.addEventListener('wheel', handleScroll, { passive: true });
     return () => window.removeEventListener('wheel', handleScroll);
-}, [])
+  }, [])
 
   useEffect(() => {
     getImage();
     getImageBuildInfo()
-  
-  }, []);
+  }, [time]);
 
   useEffect(() => {
-    if(fieldRef.current && !userScrolled) {
-      fieldRef.current.scrollIntoView({block:"end"});
+    if (fieldRef.current && !userScrolled) {
+      fieldRef.current.scrollIntoView({ block: "end" });
     }
   }, [buildInfo, image])
 
@@ -123,14 +124,14 @@ useEffect(() => {
       title="Timeline Details"
     >
       <Container maxWidth={false} onScroll={handleScroll}>
-        <Header imageId={imageId}/>
+        <Header imageId={imageId} />
         <Box mt={3}>
           <Paper>
             <CardContent>
               <Box display="flex">
                 <Box mr={1}>
                   <Typography variant="body1">
-                    IMAGE ID: 
+                    IMAGE ID:
                   </Typography>
                 </Box>
                 <Box>
@@ -139,18 +140,18 @@ useEffect(() => {
                   </Typography>
                 </Box>
                 <Box ml={3} mr={1}>
-                    <Typography variant="body1">
-                      IMAGE NAME: 
+                  <Typography variant="body1">
+                    IMAGE NAME:
                     </Typography>
                 </Box>
                 <Box>
-                    <Typography variant="h5">
-                      {image.name}
-                    </Typography>
+                  <Typography variant="h5">
+                    {image.name}
+                  </Typography>
                 </Box>
                 <Box ml={3} mr={1}>
-                    <Typography variant="body1">
-                      Status: 
+                  <Typography variant="body1">
+                    Status:
                     </Typography>
                 </Box>
                 <Box>
@@ -160,8 +161,8 @@ useEffect(() => {
                         image.state === "building"
                           ? 'warning'
                           : image.state === "success"
-                          ? 'success'
-                          : 'error'
+                            ? 'success'
+                            : 'error'
                       }
                     >
                       {image.state}
@@ -170,12 +171,12 @@ useEffect(() => {
                 </Box>
               </Box>
             </CardContent>
-            <Divider/>
-            {building && <LinearProgress/>}
+            <Divider />
+            {building && <LinearProgress />}
             <CardContent>
               <PerfectScrollbar>
-                <Typography ref={fieldRef} style={{whiteSpace: 'pre-line'}} variant="body1">
-                      {buildInfo.map((log) => log)}
+                <Typography ref={fieldRef} style={{ whiteSpace: 'pre-line' }} variant="body1">
+                  {buildInfo.map((log) => log + '\n')}
                 </Typography>
               </PerfectScrollbar>
             </CardContent>
