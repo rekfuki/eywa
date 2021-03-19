@@ -153,8 +153,7 @@ func GetImageBuildLogs(c echo.Context) error {
 			log.Errorf("Failed to open log file: %s", err)
 			return c.JSON(http.StatusInternalServerError, "Internal Server Error")
 		}
-		c.Response().Write(dat)
-		c.Response().Flush()
+		return c.Blob(http.StatusOK, echo.MIMETextPlainCharsetUTF8, dat)
 	} else {
 		dbBuild, err := db.GetBuild(imageID, auth.UserID)
 		if err != nil {
