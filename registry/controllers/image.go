@@ -3,6 +3,7 @@ package controllers
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -155,6 +156,9 @@ func GetImageBuildLogs(c echo.Context) error {
 			log.Errorf("Failed to open log file: %s", err)
 			return c.JSON(http.StatusInternalServerError, "Internal Server Error")
 		}
+		defer logFile.Close()
+		logFile.Seek(0, io.SeekStart)
+
 		scanner := bufio.NewScanner(logFile)
 		scanner.Split(bufio.ScanLines)
 		for scanner.Scan() {
