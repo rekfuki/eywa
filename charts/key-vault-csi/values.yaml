@@ -20,6 +20,6 @@ loaders:
     vaultPath: v1/secret/docker-registry-auth
     fields:
     - vaultKey: docker-username
-      kubeKey: username
+      kubeKey: user
     - vaultKey: docker-password
       kubeKey: password
