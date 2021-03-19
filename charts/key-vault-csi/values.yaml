@@ -6,17 +6,11 @@ loaders:
   namespaces: ["faas", "faas-system", "envoy", "frontend"]
   secrets:
   - kubeName: image-pull-secret
-    kubeType: docker-registry
-    vaultPath: v1/secret/docker-registry-auth
+    kubeType: kubernetes.io/dockerconfigjson
+    vaultPath: v1/secret/docker-auth-json
     fields:
-    - vaultKey: docker-server
-      kubeKey: docker-server
-    - vaultKey: docker-username
-      kubeKey: docker-username
-    - vaultKey: docker-password
-      kubeKey: docker-password
-    - vaultKey: docker-email
-      kubeKey: docker-email
+    - vaultKey: .dockerconfigjson
+      kubeKey: .dockerconfigjson
 
 - name: registry-auth-loader
   namespaces: ["faas-system"]
