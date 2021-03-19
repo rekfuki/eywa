@@ -24,7 +24,7 @@ type Config struct {
 	StanClusterID       string        `envconfig:"stan_cluster_id" default:"stan"`
 	StanClientID        string        `envconfig:"stan_client_id" default:"gateway"`
 	PrometheusURL       string        `envconfig:"prometheus_url" default:"http://prometheus-operator-kube-p-prometheus.faas-system:9090"`
-	RegistryURL         string        `envconfig:"registry_url" default:"registry.faas-system:8080"`
+	RegistryURL         string        `envconfig:"registry_url" default:"http://registry.faas-system:8080"`
 	CacheExpiryDuration time.Duration `envconfig:"cache_expiry_duration" default:"5s"`
 	LimitCPUMin         string        `envconfig:"limit_cpu_min" default:"20m"`
 	LimitCPUMax         string        `envconfig:"limit_cpu_max" default:"500m"`
