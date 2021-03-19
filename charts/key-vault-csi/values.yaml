@@ -23,3 +23,17 @@ loaders:
       kubeKey: user
     - vaultKey: docker-password
       kubeKey: password
+
+- name: github-oauth-auth-loader
+  namespaces: ["faas-system"]
+  secrets:
+  - kubeName: github-oauth
+    kubeType: Opaque
+    vaultPath: v1/secret/github-oauth
+    fields:
+    - vaultKey: callback_url
+      kubeKey: callback_url
+    - vaultKey: client_id
+      kubeKey: client_id
+    - vaultKey: client_secret
+      kubeKey: client_secret
