@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/nxadm/tail"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
@@ -145,26 +145,16 @@ func GetImageBuildLogs(c echo.Context) error {
 	auth := c.Get("auth").(*auth.Auth)
 	imageID := c.Param("image_id")
 
-	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
-	c.Response().Header().Set(echo.HeaderXContentTypeOptions, "nosniff")
-	c.Response().WriteHeader(http.StatusOK)
-
 	existingBuild := bc.GetBuild(imageID, auth.UserID)
 	if existingBuild != nil {
 
-		t, err := tail.TailFile(existingBuild.LogFile, tail.Config{Follow: true, MustExist: true})
+		dat, err := os.ReadFile(existingBuild.LogFile)
 		if err != nil {
-			return err
+			log.Errorf("Failed to open log file: %s", err)
+			return c.JSON(http.StatusInternalServerError, "Internal Server Error")
 		}
-
-		for line := range t.Lines {
-			c.Response().Write([]byte(line.Text + "\n"))
-			c.Response().Flush()
-
-			if line.Text == builder.BuildSuccessMessage() || line.Text == builder.BuildFailedMessage() {
-				return nil
-			}
-		}
+		c.Response().Write(dat)
+		c.Response().Flush()
 	} else {
 		dbBuild, err := db.GetBuild(imageID, auth.UserID)
 		if err != nil {
