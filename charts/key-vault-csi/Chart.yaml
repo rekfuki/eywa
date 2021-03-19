@@ -1,0 +1,7 @@
+apiVersion: v2
+name: key-vault-csi
+description: Sync secrets from vault to kubernetes
+
+type: application
+
+version: 0.0.1
