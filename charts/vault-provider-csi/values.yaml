@@ -1,0 +1,42 @@
+namespace: csi
+
+serviceAccountName: vault-auth
+
+clusterRoleBinding:
+  name: role-tokenreview-binding
+  roleRefName: system:auth-delegator
+
+daemonset:
+  name: csi-secrets-store-provider-vault
+  containerName: provider-vault-installer
+  updateStrategy: RollingUpdate
+  serviceAccountName: secrets-store-csi-driver
+  image: 
+    repository: hashicorp/secrets-store-csi-driver-provider-vault
+    tag: 0.0.7
+    pullPolicy: Always
+  args:
+  - --endpoint=/provider/vault.sock
+  - --debug=true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 50m
+      memory: 100Mi
+  volumeMounts:
+    - name: providervol
+      mountPath: "/provider"
+    - name: mountpoint-dir
+      mountPath: /var/lib/kubelet/pods
+      mountPropagation: HostToContainer
+  volumes:
+  - name: providervol
+    hostPath:
+      path: "/etc/kubernetes/secrets-store-csi-providers"
+  - name: mountpoint-dir
+    hostPath:
+      path: /var/lib/kubelet/pods
+  nodeSelector:
+    beta.kubernetes.io/os: linux

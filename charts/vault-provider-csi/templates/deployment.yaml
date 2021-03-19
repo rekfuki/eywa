@@ -1,0 +1,30 @@
+{{- with .Values.daemonset -}}
+apiVersion: apps/v1
+kind: DaemonSet
+{{ template "common.metadata" . }}
+spec:
+  updateStrategy:
+    type: {{ .updateStrategy }}
+  selector:
+    matchLabels:
+      {{ template "common.labels.standard" . }}
+  template:
+    metadata:
+      labels:
+        {{ template "common.labels.standard" . }}
+    spec:
+      serviceAccountName: {{ .serviceAccountName }}
+      containers:
+      - {{ template "common.container" (list . "vault-provider-csi.container") }}
+      volumes:
+{{ toYaml .volumes | indent 6 }}
+      nodeSelector:
+{{ toYaml .nodeSelector | indent 8 }}
+{{- end -}}
+{{- define "vault-provider-csi.container" -}}
+name: {{ .containerName }}
+args:
+{{ toYaml .args }}
+volumeMounts:
+{{ toYaml .volumeMounts }}
+{{- end -}}
