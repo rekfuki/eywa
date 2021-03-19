@@ -22,6 +22,8 @@ metadata:
   namespace: flux-system
 spec:
   dependsOn:
+    - name: key-vault-csi
+      namespace: flux-system
     - name: envoy-config
       namespace: flux-system
     - name: gateway-api

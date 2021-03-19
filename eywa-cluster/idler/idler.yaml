@@ -6,6 +6,8 @@ metadata:
   namespace: flux-system
 spec:
   dependsOn:
+    - name: key-vault-csi
+      namespace: flux-system
     - name: gateway-api
       namespace: flux-system
     - name: prometheus-operator

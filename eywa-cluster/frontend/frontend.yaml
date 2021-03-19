@@ -5,6 +5,9 @@ metadata:
   name: app
   namespace: flux-system
 spec:
+  dependsOn:
+    - name: key-vault-csi
+      namespace: flux-system
   chart:
     spec:
       chart: ./charts/app
