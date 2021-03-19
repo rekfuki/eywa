@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -148,12 +149,18 @@ func GetImageBuildLogs(c echo.Context) error {
 	existingBuild := bc.GetBuild(imageID, auth.UserID)
 	if existingBuild != nil {
 
-		dat, err := os.ReadFile(existingBuild.LogFile)
+		logs := []string{}
+		logFile, err := os.OpenFile(existingBuild.LogFile, os.O_RDONLY, 0666)
 		if err != nil {
 			log.Errorf("Failed to open log file: %s", err)
 			return c.JSON(http.StatusInternalServerError, "Internal Server Error")
 		}
-		return c.Blob(http.StatusOK, echo.MIMETextPlainCharsetUTF8, dat)
+		scanner := bufio.NewScanner(logFile)
+		scanner.Split(bufio.ScanLines)
+		for scanner.Scan() {
+			logs = append(logs, scanner.Text())
+		}
+		return c.JSON(http.StatusOK, map[string]interface{}{"logs": logs})
 	} else {
 		dbBuild, err := db.GetBuild(imageID, auth.UserID)
 		if err != nil {
@@ -165,13 +172,8 @@ func GetImageBuildLogs(c echo.Context) error {
 			return c.JSON(http.StatusNotFound, "No build logs found")
 		}
 
-		for _, line := range dbBuild.Logs {
-			c.Response().Write([]byte(line + "\n"))
-			c.Response().Flush()
-		}
+		return c.JSON(http.StatusOK, map[string]interface{}{"logs": dbBuild.Logs})
 	}
-
-	return nil
 }
 
 // DeleteImage deletes the image from db and registry
