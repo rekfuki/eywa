@@ -1,16 +1,14 @@
 package controllers
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/nxadm/tail"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
@@ -147,24 +145,26 @@ func GetImageBuildLogs(c echo.Context) error {
 	auth := c.Get("auth").(*auth.Auth)
 	imageID := c.Param("image_id")
 
+	c.Response().Header().Set(echo.HeaderContentType, "text/event-stream")
+	c.Response().Header().Set(echo.HeaderXContentTypeOptions, "nosniff")
+	c.Response().WriteHeader(http.StatusOK)
+
 	existingBuild := bc.GetBuild(imageID, auth.UserID)
 	if existingBuild != nil {
 
-		logs := []string{}
-		logFile, err := os.OpenFile(existingBuild.LogFile, os.O_RDONLY, 0666)
+		t, err := tail.TailFile(existingBuild.LogFile, tail.Config{Follow: true, MustExist: true})
 		if err != nil {
-			log.Errorf("Failed to open log file: %s", err)
-			return c.JSON(http.StatusInternalServerError, "Internal Server Error")
+			return err
 		}
-		defer logFile.Close()
-		logFile.Seek(0, io.SeekStart)
 
-		scanner := bufio.NewScanner(logFile)
-		scanner.Split(bufio.ScanLines)
-		for scanner.Scan() {
-			logs = append(logs, scanner.Text())
+		for line := range t.Lines {
+			c.Response().Write([]byte(line.Text + "\n"))
+			c.Response().Flush()
+
+			if line.Text == builder.BuildSuccessMessage() || line.Text == builder.BuildFailedMessage() {
+				return nil
+			}
 		}
-		return c.JSON(http.StatusOK, map[string]interface{}{"logs": logs})
 	} else {
 		dbBuild, err := db.GetBuild(imageID, auth.UserID)
 		if err != nil {
@@ -176,8 +176,13 @@ func GetImageBuildLogs(c echo.Context) error {
 			return c.JSON(http.StatusNotFound, "No build logs found")
 		}
 
-		return c.JSON(http.StatusOK, map[string]interface{}{"logs": dbBuild.Logs})
+		for _, line := range dbBuild.Logs {
+			c.Response().Write([]byte(line + "\n"))
+			c.Response().Flush()
+		}
 	}
+
+	return nil
 }
 
 // DeleteImage deletes the image from db and registry
