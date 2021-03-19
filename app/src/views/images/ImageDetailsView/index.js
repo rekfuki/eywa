@@ -84,7 +84,7 @@ const ImageBuildView = () => {
     try {
       const url = `/eywa/api/images/${imageId}/buildlogs`
       const response = await axios.get(url);
-      const diff = response.data.split("\n").filter(x => !buildInfo.includes(x));
+      const diff = response.data.logs.filter(x => !buildInfo.includes(x));
       setBuildInfo([...buildInfo, ...diff]);
     } catch (err) {
       console.error(err);
