@@ -49,7 +49,6 @@ const ImageBuildView = () => {
   const [image, setImage] = useState(null)
   const [building, setBuilding] = useState(false);
   const [userScrolled, setUserScrolled] = useState(false);
-  const [time, setTime] = React.useState(0);
 
   const getImage = async () => {
     try {
@@ -68,28 +67,27 @@ const ImageBuildView = () => {
     }
   };
 
-  const getBuildInfo = () => {
-    return buildInfo;
-  }
-
-  let timer = null;
-  useEffect(() => {
-    if (image && (image.state === "building" || image.state === "queued")) {
-      timer = setInterval(() => { setTime(prevTime => prevTime + 1) }, 3000);
-    }
-    return () => { clearInterval(timer) };
-  }, [image]);
-
   const getImageBuildInfo = async () => {
     try {
       const url = `/eywa/api/images/${imageId}/buildlogs`
-      const response = await axios.get(url);
-      const diff = response.data.logs.filter(x => !buildInfo.includes(x));
-      setBuildInfo([...buildInfo, ...diff]);
+      const response = await fetch(url);
+      const reader = response.body
+        .pipeThrough(new TextDecoderStream())
+        .getReader();
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+          getImage()
+          break;
+        }
+
+        setBuildInfo(buildInfo => [...buildInfo, value]);
+      }
     } catch (err) {
       console.error(err);
       enqueueSnackbar('Failed to get images build logs', {
-        variant: 'error'
+        variant: 'error',
       });
     }
   };
@@ -106,7 +104,8 @@ const ImageBuildView = () => {
   useEffect(() => {
     getImage();
     getImageBuildInfo()
-  }, [time]);
+
+  }, []);
 
   useEffect(() => {
     if (fieldRef.current && !userScrolled) {
@@ -176,7 +175,7 @@ const ImageBuildView = () => {
             <CardContent>
               <PerfectScrollbar>
                 <Typography ref={fieldRef} style={{ whiteSpace: 'pre-line' }} variant="body1">
-                  {buildInfo.map((log) => log + '\n')}
+                  {buildInfo.map((log) => log)}
                 </Typography>
               </PerfectScrollbar>
             </CardContent>
