@@ -2,8 +2,8 @@ apiVersion: v2
 name: registry
 description: A Helm chart for deploying Registry
 type: application
-version: 0.0.7
-appVersion: 1.0.4
+version: 0.0.8
+appVersion: 1.0.5
 
 dependencies:
 - name: common
