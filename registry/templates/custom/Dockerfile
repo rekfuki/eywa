@@ -15,10 +15,12 @@ RUN chmod +x ./fwatchdog
 
 USER app
 
+RUN pwd
+RUN ls -la
+RUN env 
+
 RUN if [[ ! -e $FPROCESS ]]; then >&2 echo "Provided executable ${FPROCESS} does not exist..."; exit 1; fi
-RUN RESULT=$(ldd $FPROCESS 2>/dev/null) \
-    && {>&2 echo "Found DLLs:"; >&2 echo "${RESULT}"; >&2 echo "Custom runners must be compiled statically"; exit 1;} \
-    || echo "Static Binary"
+RUN if output=$(ldd "$FPROCESS" 2>&1); then true; elif echo "$output" | grep 'Not a valid dynamic program' >/dev/null; then true; else echo "$output"; echo "ERROR: Custom runtimes must be compilled statically"; false; fi
 
 RUN chmod +x $FPROCESS
 
