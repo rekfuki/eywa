@@ -154,20 +154,6 @@ func GetImageBuildLogs(c echo.Context) error {
 	existingBuild := bc.GetBuild(imageID, auth.UserID)
 	if existingBuild != nil {
 
-		// t, err := tail.TailFile(existingBuild.LogFile, tail.Config{Follow: true, MustExist: true})
-		// if err != nil {
-		// 	return err
-		// }
-
-		// for line := range t.Lines {
-		// 	c.Response().Write([]byte(line.Text + "\n"))
-		// 	c.Response().Flush()
-
-		// 	if line.Text == builder.BuildSuccessMessage() || line.Text == builder.BuildFailedMessage() {
-		// 		return nil
-		// 	}
-		// }
-
 		logs := []string{}
 		logFile, err := os.OpenFile(existingBuild.LogFile, os.O_RDONLY, 0666)
 		if err != nil {
