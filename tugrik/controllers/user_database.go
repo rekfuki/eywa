@@ -41,7 +41,7 @@ func CreateUserDatabase(c echo.Context) error {
 	}
 
 	secretRequest := gt.CreateSecretRequest{
-		Name: "mongodb-credentials",
+		Name: types.MongoDBCredentialsSecretName,
 		Data: map[string]string{
 			"username": userID,
 			"password": password.String(),

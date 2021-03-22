@@ -1,5 +1,7 @@
 package types
 
+const MongoDBCredentialsSecretName = "mongodb-credentials"
+
 // CreateUserDatabaseResponse ...
 type CreateUserDatabaseResponse struct {
 	Username string `json:"username"`
