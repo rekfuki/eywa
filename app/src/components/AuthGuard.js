@@ -12,6 +12,7 @@ const AuthGuard = ({ children }) => {
     return <div />
   }
 
+  console.log(children)
   return (<>{children}</>);
 };
 

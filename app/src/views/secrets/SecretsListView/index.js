@@ -276,10 +276,10 @@ const SecretsListView = () => {
                             </Typography>
                           </TableCell>
                           <TableCell>
-                            {moment(secret.created_at).format('YYYY/MM/DD | hh:mm:ss')}
+                            {moment(secret.created_at).format('YYYY/MM/DD | HH:mm:ss')}
                           </TableCell>
                           <TableCell>
-                            {moment(secret.updated_at).format('YYYY/MM/DD | hh:mm:ss')}
+                            {moment(secret.updated_at).format('YYYY/MM/DD | HH:mm:ss')}
                           </TableCell>
                         </TableRow>
 

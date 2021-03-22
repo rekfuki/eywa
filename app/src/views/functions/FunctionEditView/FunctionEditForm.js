@@ -531,6 +531,34 @@ const FunctionEditForm = ({
                     )}
                   />
                 </Grid>
+                <Grid
+                  item
+                  md={6}
+                  xs={12}
+                >
+                  <Typography component="div">
+                    <Typography
+                      variant="h5"
+                      color="textPrimary"
+                    >
+                      Write Debug
+                    </Typography>
+                    <Grid component="label" container alignItems="center" spacing={1}>
+                      <Grid item>Off</Grid>
+                      <Grid item>
+                        <Switch
+                          checked={values.writeDebug}
+                          color="secondary"
+                          edge="start"
+                          name="writeDebug"
+                          onChange={handleChange}
+                          value={values.writeDebug}
+                        />
+                      </Grid>
+                      <Grid item>On</Grid>
+                    </Grid>
+                  </Typography>
+                </Grid>
               </Grid>
               {/* <Box mb={3} mt={3}>
                 <Typography variant="h4" component="h4" gutterBottom>
@@ -605,35 +633,6 @@ const FunctionEditForm = ({
                     value={values.maxMemory}
                     variant="outlined"
                   />
-                </Grid>
-
-                <Grid
-                  item
-                  md={6}
-                  xs={12}
-                >
-                  <Typography component="div">
-                    <Typography
-                      variant="h5"
-                      color="textPrimary"
-                    >
-                      Write Debug
-                    </Typography>
-                    <Grid component="label" container alignItems="center" spacing={1}>
-                      <Grid item>Off</Grid>
-                      <Grid item>
-                        <Switch
-                          checked={values.writeDebug}
-                          color="secondary"
-                          edge="start"
-                          name="writeDebug"
-                          onChange={handleChange}
-                          value={values.writeDebug}
-                        />
-                      </Grid>
-                      <Grid item>On</Grid>
-                    </Grid>
-                  </Typography>
                 </Grid>
               </Grid> */}
               <Box mt={2} display="flex" flexDirection="row-reverse">

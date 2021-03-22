@@ -165,7 +165,22 @@ const Metrics = ({
         >
           <Grid item xs={12} sm={"auto"}>
             <Box>
-              <Tooltip title="Decrease range">
+              <FormControl style={{ minWidth: "110px" }}>
+                <InputLabel id="select-label">Update interval</InputLabel>
+                <Select
+                  labelId="select-label"
+                  value={refreshInterval}
+                  onChange={(event) => setRefreshInterval(event.target.value)}
+                >
+                  <MenuItem value={5000}>5s</MenuItem>
+                  <MenuItem value={10000}>10s</MenuItem>
+                  <MenuItem value={30000}>30s</MenuItem>
+                  <MenuItem value={60000}>1m</MenuItem>
+                  <MenuItem value={300000}>5m</MenuItem>
+                  <MenuItem value={600000}>10m</MenuItem>
+                </Select>
+              </FormControl>
+              {/* <Tooltip title="Decrease range">
                 <IconButton onClick={decreaseRange} aria-label="decrease">
                   <MinusIcon />
                 </IconButton>
@@ -188,7 +203,7 @@ const Metrics = ({
                 <IconButton onClick={increaseRange} aria-label="increase">
                   <PlusIcon />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
             </Box>
           </Grid>
           <Grid item style={{ display: "flex" }}>

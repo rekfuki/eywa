@@ -303,10 +303,10 @@ const TokenListView = () => {
                             <Typography>{token.name}</Typography>
                           </TableCell>
                           <TableCell align="center">
-                            {moment(token.created_at * 1000).format('YYYY/MM/DD | hh:mm:ss')}
+                            {moment(token.created_at * 1000).format('YYYY/MM/DD | HH:mm:ss')}
                           </TableCell>
                           <TableCell align="center">
-                            {!token.expires_at * 1000 ? 'NEVER' : moment(token.expires_at).format('YYYY/MM/DD | hh:mm:ss')}
+                            {!token.expires_at * 1000 ? 'NEVER' : moment(token.expires_at).format('YYYY/MM/DD | HH:mm:ss')}
                           </TableCell>
                           <TableCell align="right">
                             <IconButton onClick={() => handleDeleteModalOpen(token)}>

@@ -11,60 +11,169 @@ import {
   makeStyles
 } from '@material-ui/core';
 import Logo from 'src/components/Logo';
-import NavItem from './NavItem';
+import NavItem from './NavItem.bak';
+import NavSection from './NavSection';
 
-const items = [
+const sections = [
   {
-    title: 'Welcome',
-    href: '/docs/welcome'
+    title: 'Overview',
+    items: [
+      {
+        title: 'Welcome',
+        path: '/docs/overview/welcome'
+      },
+      {
+        title: 'Getting Started',
+        path: '/docs/overview/getting-started'
+      },
+      {
+        title: 'Dependencies',
+        path: '/docs/overview/dependencies'
+      },
+      {
+        title: 'Environment Variables',
+        path: '/docs/overview/environment-variables'
+      },
+      {
+        title: 'Theming',
+        path: '/docs/overview/theming'
+      },
+      {
+        title: 'Redux',
+        path: '/docs/overview/redux'
+      },
+      {
+        title: 'Server Calls',
+        path: '/docs/overview/server-calls'
+      },
+      {
+        title: 'Settings',
+        path: '/docs/overview/settings'
+      },
+      {
+        title: 'RTL',
+        path: '/docs/overview/rtl'
+      },
+      {
+        title: 'Internationalization',
+        path: '/docs/overview/internationalization'
+      },
+      {
+        title: 'Deployment',
+        path: '/docs/overview/deployment'
+      },
+      {
+        title: 'Migrating to Next.js',
+        path: '/docs/overview/migrating-to-nextjs'
+      }
+    ]
   },
   {
-    title: 'Getting Started',
-    href: '/docs/getting-started'
+    title: 'Functions',
+    items: [
+      {
+        title: 'Overview',
+        path: '/docs/functions/overview'
+      },
+      {
+        title: 'Code Splitting',
+        path: '/docs/routing/code-splitting'
+      }
+    ]
   },
   {
-    title: 'Environment Variables',
-    href: '/docs/environment-variables'
+    title: 'Images',
+    items: [
+      {
+        title: 'Create Image',
+        path: '/docs/images/create'
+      }
+    ]
   },
   {
-    title: 'Deployment',
-    href: '/docs/deployment'
-  },
-  {
-    title: 'Analytics',
-    href: '/docs/analytics'
-  },
-  {
-    title: 'API Calls',
-    href: '/docs/api-calls'
+    title: 'Secrets',
+    items: [
+      {
+        title: 'Create Secrets',
+        path: '/docs/secrets/create'
+      },
+      {
+        title: 'Managing Secrets',
+        path: '/docs/routing/code-splitting'
+      }
+    ]
   },
   {
     title: 'Authentication',
-    href: '/docs/authentication'
+    items: [
+      {
+        title: 'Amplify',
+        path: '/docs/authentication/amplify'
+      },
+      {
+        title: 'Auth0',
+        path: '/docs/authentication/auth0'
+      },
+      {
+        title: 'Firebase',
+        path: '/docs/authentication/firebase'
+      },
+      {
+        title: 'JWT',
+        path: '/docs/authentication/jwt'
+      }
+    ]
   },
   {
-    title: 'Routing',
-    href: '/docs/routing'
+    title: 'Guards',
+    items: [
+      {
+        title: 'Guest Guard',
+        path: '/docs/guards/guest-guard'
+      },
+      {
+        title: 'Auth Guard',
+        path: '/docs/guards/auth-guard'
+      },
+      {
+        title: 'Role Based Guard',
+        path: '/docs/guards/role-based-guard'
+      }
+    ]
   },
   {
-    title: 'Settings',
-    href: '/docs/settings'
-  },
-  {
-    title: 'State Management',
-    href: '/docs/state-management'
-  },
-  {
-    title: 'Theming',
-    href: '/docs/theming'
+    title: 'Analytics',
+    items: [
+      {
+        title: 'Introduction',
+        path: '/docs/analytics/introduction'
+      },
+      {
+        title: 'Configuration',
+        path: '/docs/analytics/configuration'
+      },
+      {
+        title: 'Event Tracking',
+        path: '/docs/analytics/event-tracking'
+      }
+    ]
   },
   {
     title: 'Support',
-    href: '/docs/support'
-  },
-  {
-    title: 'Changelog',
-    href: '/docs/changelog'
+    items: [
+      {
+        title: 'Changelog',
+        path: '/docs/support/changelog'
+      },
+      {
+        title: 'Contact',
+        path: '/docs/support/contact'
+      },
+      {
+        title: 'Further Support',
+        path: '/docs/support/further-support'
+      }
+    ]
   }
 ];
 
@@ -147,7 +256,15 @@ const NavBar = ({ onMobileClose, openMobile }) => {
         </Box>
       </Hidden>
       <Box p={2}>
-        {renderNavItems({ items })}
+        {sections.map((section) => (
+          <NavSection
+            key={section.title}
+            pathname={location.pathname}
+            {...section}
+          />
+
+        ))}
+        {/* {renderNavItems({ items })} */}
       </Box>
     </Box>
   );

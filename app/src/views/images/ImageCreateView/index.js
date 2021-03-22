@@ -190,8 +190,8 @@ const ImageCreateView = () => {
           <Formik
             initialValues={{
               name: "",
-              language: "go",
-              version: "1.0.0",
+              runtime: "go",
+              version: "0.1.0",
               executablePath: "",
               files: [],
               submit: null
@@ -202,13 +202,14 @@ const ImageCreateView = () => {
                 .typeError("Must be a string")
                 .required("Required")
                 .min(5, "Must be greater than or equal to 5 characters")
-                .max(63, "Must be less than or equal to 63 characters"),
+                .max(63, "Must be less than or equal to 63 characters")
+                .matches(/[a-z0-9]([-a-z0-9]*[a-z0-9])?/, "Must match [a-z0-9]([-a-z0-9]*[a-z0-9])?"),
               version: Yup
                 .string()
                 .typeError("Must be a string")
                 .required("Required")
                 .matches(/^(\d{1,3}\.?){3}$/, "Must match normal SemVer 2.0"),
-              language: Yup
+              runtime: Yup
                 .string()
                 .typeError("Must be a string")
                 .required("Required"),
@@ -230,9 +231,9 @@ const ImageCreateView = () => {
                 formData.append("source", values.files[0])
                 formData.append("version", values.version)
                 formData.append("name", values.name)
-                formData.append("language", values.language)
+                formData.append("runtime", values.runtime)
 
-                if (values.language === "custom") {
+                if (values.runtime === "custom") {
                   formData.append("executable_path", values.executablePath)
                 }
 
@@ -246,8 +247,8 @@ const ImageCreateView = () => {
 
                 setStatus({ success: true });
                 setSubmitting(false);
-                enqueueSnackbar('Image created', {
-                  variant: 'success'
+                enqueueSnackbar('Image queued for build', {
+                  variant: 'info'
                 });
 
                 history.push(`/app/images/${buildID}/buildlogs`)
@@ -335,12 +336,12 @@ const ImageCreateView = () => {
                         xs={12}
                       >
                         <FormControl style={{ display: "flex" }} className={classes.formControl}>
-                          <InputLabel id="language-select">Language</InputLabel>
+                          <InputLabel id="runtime-select">Runtime</InputLabel>
                           <Select
-                            defaultValue={values.language}
-                            labelId="language-select"
-                            name="language"
-                            value={values.language}
+                            defaultValue={values.runtime}
+                            labelId="runtime-select"
+                            name="runtime"
+                            value={values.runtime}
                             onChange={handleChange}
                             onBlur={handleBlur}
                             variant="outlined"
@@ -354,7 +355,7 @@ const ImageCreateView = () => {
                           </Select>
                         </FormControl>
                       </Grid>
-                      {values.language === "custom" &&
+                      {values.runtime === "custom" &&
                         <Grid
                           item
                           xs={12}

@@ -77,7 +77,7 @@ function Row(props) {
         <TableCell>{row.request_id}</TableCell>
         <TableCell>{row.message}</TableCell>
         <TableCell>
-          {moment(row.created_at).format('YYYY/MM/DD | hh:mm:ss')}
+          {moment(row.created_at).format('YYYY/MM/DD | HH:mm:ss')}
         </TableCell>
       </TableRow>
       <TableRow>

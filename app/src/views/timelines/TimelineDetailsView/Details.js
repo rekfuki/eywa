@@ -7,7 +7,7 @@ import {
   Card,
   Container,
   Divider,
-  Grid, 
+  Grid,
   Typography,
   Paper,
   makeStyles
@@ -40,170 +40,170 @@ const Details = ({
   const classes = useStyles();
 
   return (
-      <Card>
+    <Card>
+      <Grid
+        className={clsx(classes.root, className)}
+        container
+        spacing={0}
+        {...rest}
+      >
         <Grid
-          className={clsx(classes.root, className)}
-          container
-          spacing={0}
-          {...rest}
+          item
+          xs={12}
+          sm
         >
-          <Grid
-            item
-            xs={12}
-            sm
-          >
-            <Box p={2}>
-              <Typography
-                variant="h5"
-                color="textPrimary"
-              >
-                Method
+          <Box p={2}>
+            <Typography
+              variant="h5"
+              color="textPrimary"
+            >
+              Method
               </Typography>
-              <Typography
-                variant="h5"
-                color="textSecondary"
-              >
-                {timeline.method}
+            <Typography
+              variant="h5"
+              color="textSecondary"
+            >
+              {timeline.method}
+            </Typography>
+          </Box>
+        </Grid>
+        <Grid
+          item
+          xs={12}
+          sm
+        >
+          <Box p={2}>
+            <Typography
+              variant="h5"
+              color="textPrimary"
+            >
+              Response
               </Typography>
-            </Box>   
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            sm
-          >
-            <Box p={2}>
-              <Typography
-                variant="h5"
-                color="textPrimary"
-              >
-                Response
+            <Typography
+              variant="h5"
+              color="textSecondary"
+            >
+              {timeline.response}
+            </Typography>
+          </Box>
+        </Grid>
+        <Grid
+          item
+          xs={12}
+          sm
+        >
+          <Box p={2}>
+            <Typography
+              variant="h5"
+              color="textPrimary"
+            >
+              Duration
               </Typography>
-              <Typography
-                variant="h5"
-                color="textSecondary"
-              >
-                {timeline.response}
-              </Typography>
-            </Box>   
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            sm
-          >
-            <Box p={2}>
-              <Typography
-                variant="h5"
-                color="textPrimary"
-              >
-                Duration
-              </Typography>
-              <Typography
-                variant="h5"
-                color="textSecondary"
-              >
-                {
+            <Typography
+              variant="h5"
+              color="textSecondary"
+            >
+              {
                 moment.duration(timeline.duration).minutes() > 0
-                ?
-                `${moment.duration(timeline.duration).minutes()} min`
-                :
-                moment.duration(timeline.duration).seconds() > 0
-                ?
-                `${moment.duration(timeline.duration).seconds()} s`
-                :
-                `${moment.duration(timeline.duration).milliseconds()} ms`
-                        
+                  ?
+                  `${moment.duration(timeline.duration).minutes()} min`
+                  :
+                  moment.duration(timeline.duration).seconds() > 0
+                    ?
+                    `${moment.duration(timeline.duration).seconds()} s`
+                    :
+                    `${moment.duration(timeline.duration).milliseconds()} ms`
+
               }
+            </Typography>
+          </Box>
+        </Grid>
+        <Grid
+          item
+          xs={12}
+          sm
+        >
+          <Box p={2}>
+            <Typography
+              variant="h5"
+              color="textPrimary"
+            >
+              Created at
               </Typography>
-            </Box>   
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            sm
-          >
-            <Box p={2}>
-              <Typography
-                variant="h5"
-                color="textPrimary"
-              >
-                Created at
+            <Typography
+              variant="h5"
+              color="textSecondary"
+            >
+              {moment(timeline.age).format('YYYY/MM/DD | HH:mm:ss')}
+            </Typography>
+          </Box>
+        </Grid>
+        <Grid
+          item
+          xs={12}
+          sm
+        >
+          <Box p={2}>
+            <Typography
+              variant="h5"
+              color="textPrimary"
+            >
+              Request ID
               </Typography>
-              <Typography
-                variant="h5"
-                color="textSecondary"
-              >
-                {moment(timeline.age).format('YYYY/MM/DD | hh:mm:ss')}
-              </Typography>
-            </Box>   
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            sm
-          >
-            <Box p={2}>
-              <Typography
-                variant="h5"
-                color="textPrimary"
-              >
-                Request ID
-              </Typography>
-              <Typography
-                variant="h5"
-                color="textSecondary"
-              >
-                {timeline.request_id}
-              </Typography>
-            </Box>   
-          </Grid>
-          <Grid item xs={12}>
-            <Divider/>
-          </Grid>
-          <Grid item xs={12}>
-            <Container maxWidth="md">
-              <Timeline align="alternate">
-                {timeline.events.map((event) => (
-                  <TimelineItem key={event.name}>
-                    <TimelineOppositeContent>
-                      <Typography variant="body2" color="textSecondary">
-                        {
-                          moment.duration(event.duration).minutes() > 0
+            <Typography
+              variant="h5"
+              color="textSecondary"
+            >
+              {timeline.request_id}
+            </Typography>
+          </Box>
+        </Grid>
+        <Grid item xs={12}>
+          <Divider />
+        </Grid>
+        <Grid item xs={12}>
+          <Container maxWidth="md">
+            <Timeline align="alternate">
+              {timeline.events.map((event) => (
+                <TimelineItem key={event.name}>
+                  <TimelineOppositeContent>
+                    <Typography variant="body2" color="textSecondary">
+                      {
+                        moment.duration(event.duration).minutes() > 0
                           ?
                           `${moment.duration(event.duration).minutes()} min`
                           :
                           moment.duration(event.duration).seconds() > 0
-                          ?
-                          `${moment.duration(event.duration).seconds()} s`
-                          :
-                          `${moment.duration(event.duration).milliseconds()} ms`
-                        }
-                      </Typography>
-                    </TimelineOppositeContent>
-                    <TimelineSeparator>
-                      <TimelineDot className={(event.is_error? classes.error : classes.ok)} style={{borderRadius: "0px"}}>
-                        <Typography>
-                          {event.response}
-                        </Typography>
-                      </TimelineDot>
-                      <TimelineConnector />
-                    </TimelineSeparator>
-                    <TimelineContent>
-                      <Typography variant="h6" component="h1">
-                        {event.name}
-                      </Typography>
+                            ?
+                            `${moment.duration(event.duration).seconds()} s`
+                            :
+                            `${moment.duration(event.duration).milliseconds()} ms`
+                      }
+                    </Typography>
+                  </TimelineOppositeContent>
+                  <TimelineSeparator>
+                    <TimelineDot className={(event.is_error ? classes.error : classes.ok)} style={{ borderRadius: "0px" }}>
                       <Typography>
-                          {moment(event.timestamp).format('YYYY/MM/DD | hh:mm:ss')}
+                        {event.response}
                       </Typography>
-                    </TimelineContent>
-                  </TimelineItem>
-                ))}
-              </Timeline>
-            </Container>
-          </Grid>
+                    </TimelineDot>
+                    <TimelineConnector />
+                  </TimelineSeparator>
+                  <TimelineContent>
+                    <Typography variant="h6" component="h1">
+                      {event.name}
+                    </Typography>
+                    <Typography>
+                      {moment(event.timestamp).format('YYYY/MM/DD | HH:mm:ss')}
+                    </Typography>
+                  </TimelineContent>
+                </TimelineItem>
+              ))}
+            </Timeline>
+          </Container>
         </Grid>
-      </Card>
+      </Grid>
+    </Card>
   );
 };
 

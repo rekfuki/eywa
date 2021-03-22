@@ -1,109 +1,124 @@
-import React from 'react';
+import { useState } from 'react';
 import { NavLink as RouterLink } from 'react-router-dom';
-import clsx from 'clsx';
 import PropTypes from 'prop-types';
-import {
-  Button,
-  ListItem,
-  makeStyles
-} from '@material-ui/core';
+import { Box, Button, Collapse, ListItem, useTheme } from '@material-ui/core';
+// import ChevronDownIcon from '../icons/ChevronDown';
+// import ChevronRightIcon from '../icons/ChevronRight';
+import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 
-const useStyles = makeStyles((theme) => ({
-  item: {
-    display: 'block',
-    paddingTop: 0,
-    paddingBottom: 0
-  },
-  itemLeaf: {
-    display: 'flex',
-    paddingTop: 0,
-    paddingBottom: 0
-  },
-  button: {
-    padding: '10px 8px',
-    justifyContent: 'flex-start',
-    textTransform: 'none',
-    letterSpacing: 0,
-    width: '100%'
-  },
-  buttonLeaf: {
-    padding: '10px 8px',
-    justifyContent: 'flex-start',
-    textTransform: 'none',
-    letterSpacing: 0,
-    width: '100%',
-    fontWeight: theme.typography.fontWeightRegular,
-    '&.depth-0': {
-      fontWeight: theme.typography.fontWeightMedium
-    }
-  },
-  active: {
-    color: theme.palette.secondary.main,
-    fontWeight: theme.typography.fontWeightMedium,
-  }
-}));
+const NavItem = (props) => {
+  const theme = useTheme();
+  const { active, children, depth, icon, info, open: openProp, path, title, ...other } = props;
+  const [open, setOpen] = useState(openProp);
 
-const NavItem = ({
-  children,
-  className,
-  depth,
-  href,
-  title,
-  ...rest
-}) => {
-  const classes = useStyles();
-  let paddingLeft = 8;
+  const handleToggle = () => {
+    setOpen((prevOpen) => !prevOpen);
+  };
+
+  let paddingLeft = 16;
 
   if (depth > 0) {
     paddingLeft = 32 + 8 * depth;
   }
 
-  const style = { paddingLeft };
-
+  // Branch
   if (children) {
     return (
       <ListItem
-        className={clsx(classes.item, className)}
         disableGutters
-        {...rest}
+        style={{
+          display: 'block',
+          py: 0
+        }}
+        {...other}
       >
         <Button
-          className={classes.button}
-          style={style}
+          endIcon={!open ? <KeyboardArrowUpIcon fontSize="small" />
+            : <KeyboardArrowDownIcon fontSize="small" />}
+          onClick={handleToggle}
+          startIcon={icon}
+          style={{
+            color: 'text.secondary',
+            fontWeight: 'medium',
+            justifyContent: 'flex-start',
+            paddingLeft: `${paddingLeft}px`,
+            paddingRight: '8px',
+            py: '12px',
+            textAlign: 'left',
+            textTransform: 'none',
+            width: '100%'
+          }}
+          variant="text"
         >
-          {title}
+          <Box styles={{ flexGrow: 1 }}>
+            {title}
+          </Box>
+          {info}
         </Button>
-        {children}
+        <Collapse in={open}>
+          {children}
+        </Collapse>
       </ListItem>
     );
   }
 
+  // Leaf
   return (
     <ListItem
-      className={clsx(classes.itemLeaf, className)}
       disableGutters
-      {...rest}
+      style={{
+        display: 'flex',
+        py: 0
+      }}
     >
       <Button
-        activeClassName={classes.active}
-        className={clsx(classes.buttonLeaf, `depth-${depth}`)}
-        component={RouterLink}
-        exact
-        style={style}
-        to={href}
+        component={path && RouterLink}
+        startIcon={icon}
+        style={{
+          color: theme.palette.text.primary,
+          fontWeight: 'fontWeightMedium',
+          justifyContent: 'flex-start',
+          textAlign: 'left',
+          paddingLeft: `${paddingLeft}px`,
+          paddingRight: '8px',
+          py: '12px',
+          textTransform: 'none',
+          width: '100%',
+          ...(active && {
+            color: theme.palette.secondary.main,
+            fontWeight: 'bold',
+            '& svg': {
+              color: theme.palette.primary.main
+            }
+          })
+        }}
+        variant="text"
+        to={path}
       >
-        {title}
+        <Box style={{ flexGrow: 1 }}>
+          {title}
+        </Box>
+        {info}
       </Button>
     </ListItem>
   );
 };
 
 NavItem.propTypes = {
+  active: PropTypes.bool,
   children: PropTypes.node,
-  className: PropTypes.string,
   depth: PropTypes.number.isRequired,
-  href: PropTypes.string,
+  icon: PropTypes.node,
+  info: PropTypes.node,
+  open: PropTypes.bool,
+  path: PropTypes.string,
   title: PropTypes.string.isRequired
+};
+
+NavItem.defaultProps = {
+  active: false,
+  open: false
 };
 
 export default NavItem;

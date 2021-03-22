@@ -294,7 +294,7 @@ const TimelinesListView = () => {
                             }
                           </TableCell>
                           <TableCell>
-                            {moment(timeline.age).format('YYYY/MM/DD | hh:mm:ss')}
+                            {moment(timeline.age).format('YYYY/MM/DD | HH:mm:ss')}
                           </TableCell>
                         </TableRow>
 

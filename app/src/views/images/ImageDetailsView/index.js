@@ -12,6 +12,7 @@ import {
   CardContent,
   Container,
   Divider,
+  Fab,
   Typography,
   Paper,
   makeStyles
@@ -49,6 +50,8 @@ const ImageBuildView = () => {
   const [image, setImage] = useState(null)
   const [building, setBuilding] = useState(false);
   const [userScrolled, setUserScrolled] = useState(false);
+  const [time, setTime] = useState(0);
+  const [timer, setTimer] = useState(null);
 
   const getImage = async () => {
     try {
@@ -58,11 +61,19 @@ const ImageBuildView = () => {
       const data = response.data
 
       setImage(data)
+      if (building == true && data.state !== "building") {
+        let msg = data.state === "success" ? "Image built successfully" : "Image build failed"
+        let variant = data.state === "success" ? "success" : "error"
+        enqueueSnackbar(msg, {
+          variant: variant
+        });
+      }
       setBuilding(data.state === 'building')
+
     } catch (err) {
       console.error(err);
       enqueueSnackbar('Failed to get image', {
-        variant: 'error',
+        variant: 'error'
       });
     }
   };
@@ -70,24 +81,15 @@ const ImageBuildView = () => {
   const getImageBuildInfo = async () => {
     try {
       const url = `/eywa/api/images/${imageId}/buildlogs`
-      const response = await fetch(url);
-      const reader = response.body
-        .pipeThrough(new TextDecoderStream())
-        .getReader();
+      const response = await axios.get(url);
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-          getImage()
-          break;
-        }
+      const diff = response.data.logs.filter(x => !buildInfo.includes(x));
 
-        setBuildInfo(buildInfo => [...buildInfo, value]);
-      }
+      setBuildInfo(buildInfo => [...buildInfo, ...diff]);
     } catch (err) {
       console.error(err);
       enqueueSnackbar('Failed to get images build logs', {
-        variant: 'error',
+        variant: 'error'
       });
     }
   };
@@ -102,10 +104,22 @@ const ImageBuildView = () => {
   }, [])
 
   useEffect(() => {
+    setTimer(setInterval(() => { setTime(time => time + 1) }, 1000));
+    return () => { clearInterval(timer) };
+  }, []);
+
+  useEffect(() => {
+    if (image && image.state !== "building") {
+      clearInterval(timer);
+      console.log("done building");
+      console.log("time: ", time);
+    }
+  }, [image])
+
+  useEffect(() => {
     getImage();
     getImageBuildInfo()
-
-  }, []);
+  }, [time]);
 
   useEffect(() => {
     if (fieldRef.current && !userScrolled) {
@@ -175,13 +189,24 @@ const ImageBuildView = () => {
             <CardContent>
               <PerfectScrollbar>
                 <Typography ref={fieldRef} style={{ whiteSpace: 'pre-line' }} variant="body1">
-                  {buildInfo.map((log) => log)}
+                  {buildInfo.map((log) => log + "\n")}
                 </Typography>
               </PerfectScrollbar>
             </CardContent>
           </Paper>
         </Box>
       </Container>
+      {!building &&
+        <Fab
+          variant="extended"
+          size="small"
+          color="primary"
+          aria-label="add"
+          style={{ position: "absolute", right: "20px", bottom: "20px" }}
+        >
+          Back to images
+        </Fab>
+      }
     </Page>
   );
 };

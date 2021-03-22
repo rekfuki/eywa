@@ -179,7 +179,7 @@ const ImagesListView = () => {
     } catch (err) {
       console.error(err);
       enqueueSnackbar('Failed to get images', {
-        variant: 'error',
+        variant: 'error'
       });
     }
   }, [isMountedRef]);
@@ -289,7 +289,7 @@ const ImagesListView = () => {
                           IMAGE NAME
                     </TableCell>
                         <TableCell align="center">
-                          LANGUAGE
+                          RUNTIME
                     </TableCell>
                         <TableCell align="center">
                           VERSION
@@ -327,14 +327,14 @@ const ImagesListView = () => {
                                     : 'error'
                               }
                             >
-                              {image.state}
+                              {"BUILD " + image.state}
                             </Label>
                           </TableCell>
                           <TableCell align="center">
                             <Typography>{image.name}</Typography>
                           </TableCell>
                           <TableCell align="center">
-                            <Typography>{image.language}</Typography>
+                            <Typography>{image.runtime}</Typography>
                           </TableCell>
                           <TableCell align="center">
                             <Typography>{image.version}</Typography>
@@ -343,7 +343,7 @@ const ImagesListView = () => {
                             <Typography>{formatBytes(image.size, 3)}</Typography>
                           </TableCell>
                           <TableCell align="center">
-                            {moment(image.created_at).format('YYYY/MM/DD | hh:mm:ss')}
+                            {moment(image.created_at).format('YYYY/MM/DD | HH:mm:ss')}
                           </TableCell>
                           <TableCell align="right">
                             <IconButton
