@@ -324,7 +324,7 @@ const FunctionEditForm = ({
                     error={Boolean(touched.maxConcurrency && errors.maxConcurrency)}
                     fullWidth
                     helperText={touched.maxConcurrency && errors.maxConcurrency}
-                    label="Maximum Concurrency"
+                    label="Per Instance Concurrency"
                     name="maxConcurrency"
                     onBlur={handleBlur}
                     onChange={handleChange}

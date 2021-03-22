@@ -163,7 +163,7 @@ const FunctionInfo = ({
           </TableRow>
           <TableRow>
             <TableCell className={classes.fontWeightMedium}>
-              Max Concurrency
+              Per Instance Concurrency
             </TableCell>
             <TableCell>
               <Typography
