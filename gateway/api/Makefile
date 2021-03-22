@@ -2,7 +2,7 @@ IMAGE = gateway-api
 DEBUG ?= false
 BUILD_CONTEXT := .
 DOCKER_REGISTRY = registry.eywa.rekfuki.dev
-VERSION = $(shell git describe --abbrev=0 --tags | grep $(IMAGE) | rev | cut -d '-' -f1 | rev)
+VERSION = $(shell git tag --sort version:refname | grep $(IMAGE) | tail -n1 | rev | cut -d '-' -f1 | rev)
 #VERSION=0.0.1
 
 ifeq ("$(VERSION)","")

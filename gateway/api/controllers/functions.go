@@ -417,6 +417,8 @@ func makeFunctionStatusResponse(fs *k8s.FunctionStatus, secrets []k8s.Secret) (r
 		case "write_timeout":
 			r.WriteTimeout = v
 		}
+		// Do not return env variables that cannot be edited anyways
+		delete(fs.Env, k)
 	}
 
 	return

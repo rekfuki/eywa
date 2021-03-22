@@ -10,6 +10,7 @@ import (
 	"eywa/gateway/clients/k8s"
 	"eywa/gateway/types"
 	"eywa/go-libs/auth"
+	tt "eywa/tugrik/types"
 )
 
 // GetSecrets returns secrets
@@ -168,6 +169,12 @@ func UpdateSecret(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, "Secret Not Found")
 	}
 
+	if val, exists := secret.Labels[types.UserDefinedNameLabel]; exists {
+		if val == tt.MongoDBCredentialsSecretName {
+			return c.JSON(http.StatusBadRequest, "Not allowed to modify system secrets")
+		}
+	}
+
 	for _, toDelete := range csr.Deletes {
 		delete(secret.Data, toDelete)
 	}
@@ -202,6 +209,12 @@ func DeleteSecret(c echo.Context) error {
 
 	if secret == nil {
 		return c.JSON(http.StatusNotFound, "Secret Not Found")
+	}
+
+	if val, exists := secret.Labels[types.UserDefinedNameLabel]; exists {
+		if val == tt.MongoDBCredentialsSecretName {
+			return c.JSON(http.StatusBadRequest, "Not allowed to delete system secrets")
+		}
 	}
 
 	if err := k8sClient.DeleteSecret(secret.Name); err != nil {
