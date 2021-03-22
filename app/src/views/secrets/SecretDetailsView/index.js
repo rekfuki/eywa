@@ -95,14 +95,14 @@ const OrderDetailsView = () => {
   }
 
   console.log("updating: ", secret)
-
+  const disabledEditing = secret.name.includes("mongodb")
   return (
     <Page
       className={classes.root}
       title="Secret Details"
     >
       <Container maxWidth={false}>
-        <Header secret={secret} onDeleteSecret={onDeleteSecret} />
+        <Header secret={secret} disabledEditing={disabledEditing} onDeleteSecret={onDeleteSecret} />
         <Box mt={2}>
           <Grid
             container
@@ -133,7 +133,7 @@ const OrderDetailsView = () => {
               xl={6}
               xs={12}
             >
-              <Fields secret={secret} updateSecret={updateSecret} />
+              <Fields secret={secret} disabledEditing={disabledEditing} updateSecret={updateSecret} />
             </Grid>
           </Grid>
         </Box>

@@ -11,6 +11,7 @@ import {
   Grid,
   IconButton,
   TextField,
+  Tooltip,
   Typography,
   useTheme,
   makeStyles
@@ -31,6 +32,7 @@ const useStyles = makeStyles((theme) => ({
 
 const Fields = ({
   secret,
+  disabledEditing,
   updateSecret,
   className,
   ...rest
@@ -197,15 +199,19 @@ const Fields = ({
                         md={1}
                         xs={12}
                       >
-                        <IconButton color="primary" component="span" onClick={() => {
-                          touched?.updates?.splice(index, 1);
-                          values.updates.splice(index, 1);
-                          setFieldValue("updates", values.updates);
-                          if (obj.key !== "") {
-                            values.deletes.push(obj.key);
-                          }
-                          setFieldValue(`deletes`, values.deletes)
-                        }}>
+                        <IconButton
+                          color="primary"
+                          component="span"
+                          disabled={disabledEditing}
+                          onClick={() => {
+                            touched?.updates?.splice(index, 1);
+                            values.updates.splice(index, 1);
+                            setFieldValue("updates", values.updates);
+                            if (obj.key !== "") {
+                              values.deletes.push(obj.key);
+                            }
+                            setFieldValue(`deletes`, values.deletes)
+                          }}>
                           <XIcon />
                         </IconButton>
                       </Grid>
@@ -213,10 +219,14 @@ const Fields = ({
                   </Box>
                 ))}
                 <Grid item md={1}>
-                  <Button variant="contained" color="secondary" onClick={() => {
-                    values.updates.push({ "key": "", "value": "" })
-                    setFieldValue("updates", values.updates)
-                  }}>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    disabled={disabledEditing}
+                    onClick={() => {
+                      values.updates.push({ "key": "", "value": "" })
+                      setFieldValue("updates", values.updates)
+                    }}>
                     Add
                   </Button>
                 </Grid>

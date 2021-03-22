@@ -169,15 +169,20 @@ const Metrics = ({
                 <InputLabel id="select-label">Update interval</InputLabel>
                 <Select
                   labelId="select-label"
-                  value={refreshInterval}
-                  onChange={(event) => setRefreshInterval(event.target.value)}
+                  value={range}
+                  onChange={(event) => setRange(event.target.value)}
                 >
-                  <MenuItem value={5000}>5s</MenuItem>
-                  <MenuItem value={10000}>10s</MenuItem>
-                  <MenuItem value={30000}>30s</MenuItem>
-                  <MenuItem value={60000}>1m</MenuItem>
-                  <MenuItem value={300000}>5m</MenuItem>
-                  <MenuItem value={600000}>10m</MenuItem>
+                  <MenuItem value={1 * 60 * 1000}>1m</MenuItem>
+                  <MenuItem value={5 * 60 * 1000}>5m</MenuItem>
+                  <MenuItem value={15 * 60 * 1000}>15m</MenuItem>
+                  <MenuItem value={30 * 60 * 1000}>30m</MenuItem>
+                  <MenuItem value={60 * 60 * 1000}>1h</MenuItem>
+                  <MenuItem value={2 * 60 * 60 * 1000}>2h</MenuItem>
+                  <MenuItem value={6 * 60 * 60 * 1000}>6h</MenuItem>
+                  <MenuItem value={12 * 60 * 60 * 1000}>12h</MenuItem>
+                  <MenuItem value={24 * 60 * 60 * 1000}>24h</MenuItem>
+                  <MenuItem value={48 * 60 * 60 * 1000}>48h</MenuItem>
+                  <MenuItem value={7 * 24 * 60 * 60 * 1000}>7d</MenuItem>
                 </Select>
               </FormControl>
               {/* <Tooltip title="Decrease range">

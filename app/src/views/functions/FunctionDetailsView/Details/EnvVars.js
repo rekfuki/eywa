@@ -28,7 +28,7 @@ const EnvVars = ({
 }) => {
   const classes = useStyles();
 
-  const envEmpty = envVars === null || envVars.length === 0;
+  const envEmpty = envVars === null || Object.keys(envVars).length == 0;
   return (
     <Card
       className={clsx(classes.root, className)}
@@ -37,19 +37,19 @@ const EnvVars = ({
       <CardHeader title="Environment Variables" />
       <Divider />
       <Table>
-        {(envEmpty &&
-          <TableRow>
-            <TableCell>
-              <Typography
-                variant="body2"
-              >
-                No environment variables set
+        <TableBody>
+          {envEmpty &&
+            <TableRow>
+              <TableCell>
+                <Typography
+                  variant="body2"
+                >
+                  No environment variables set
               </Typography>
-            </TableCell>
-          </TableRow>
-        ) ||
-          <TableBody>
-            {Object.entries(envVars).map(([k, v]) => (
+              </TableCell>
+            </TableRow>
+            ||
+            Object.entries(envVars).map(([k, v]) => (
               <TableRow key={k}>
                 <TableCell>
                   {k}
@@ -63,9 +63,9 @@ const EnvVars = ({
                   </Typography>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        }
+            ))
+          }
+        </TableBody>
       </Table>
     </Card>
   );

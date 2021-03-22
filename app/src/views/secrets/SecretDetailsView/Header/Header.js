@@ -32,6 +32,7 @@ const useStyles = makeStyles((theme) => ({
 const Header = ({
   className,
   secret,
+  disabledEditing,
   onDeleteSecret,
   ...rest }) => {
   const classes = useStyles();
@@ -90,7 +91,7 @@ const Header = ({
           variant="h3"
           color="textPrimary"
         >
-          {secret.name}
+          {secret.name + (disabledEditing && " (Read Only)")}
         </Typography>
       </Grid>
       <Grid item>
@@ -100,6 +101,7 @@ const Header = ({
               className={classes.deleteAction}
               variant="contained"
               onClick={handleDeleteModalOpen}
+              disabled={disabledEditing}
               startIcon={
                 <SvgIcon fontSize="small">
                   <DeleteIcon />
