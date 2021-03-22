@@ -14,6 +14,7 @@ import {
   CardContent,
   Container,
   Grid,
+  IconButton,
   Link,
   List,
   ListItem,
@@ -21,12 +22,17 @@ import {
   ListItemText,
   Typography,
   TextField,
+  Tooltip,
   FormControl,
   InputLabel,
   Select,
+  SvgIcon,
   MenuItem,
   makeStyles
 } from '@material-ui/core';
+import {
+  X as XIcon
+} from "react-feather"
 import { useSnackbar } from 'notistack';
 import axios from 'src/utils/axios';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
@@ -110,18 +116,18 @@ const FilesDropzone = ({ setFieldValue, ...rest }) => {
                   primary={file.name}
                   primaryTypographyProps={{ variant: 'h5' }}
                   secondary={bytesToSize(file.size)}
+                  style={{ flexShrink: 1, flexBasis: "auto", flexGrow: 0, marginRight: "20px" }}
                 />
+                <Tooltip title="Remove Zip File" aria-label="remove">
+                  <IconButton onClick={handleRemoveAll}>
+                    <SvgIcon fontSize="default">
+                      <XIcon />
+                    </SvgIcon>
+                  </IconButton>
+                </Tooltip>
               </ListItem>
             ))}
           </List>
-          <div className={classes.actions}>
-            <Button
-              onClick={handleRemoveAll}
-              size="small"
-            >
-              Remove
-            </Button>
-          </div>
         </>
       )}
     </div>
@@ -377,6 +383,7 @@ const ImageCreateView = () => {
                     </Grid>
                     <Grid item xs={12} md={12}>
                       <FilesDropzone
+                        style={{ backgroundColor: "white" }}
                         setFieldValue={setFieldValue}
                       />
                     </Grid>
