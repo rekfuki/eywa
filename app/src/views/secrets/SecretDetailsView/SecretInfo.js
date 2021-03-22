@@ -32,6 +32,14 @@ const SecretInfo = ({ className, secret, ...rest }) => {
         <TableBody>
           <TableRow>
             <TableCell>
+              ID
+            </TableCell>
+            <TableCell>
+              {secret.id}
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell>
               Name
             </TableCell>
             <TableCell>
@@ -40,10 +48,10 @@ const SecretInfo = ({ className, secret, ...rest }) => {
           </TableRow>
           <TableRow>
             <TableCell>
-              ID
+              Mount Path
             </TableCell>
             <TableCell>
-              {secret.id}
+              <div>{"/var/faas/secrets/" + secret.name}</div>
             </TableCell>
           </TableRow>
           <TableRow>
