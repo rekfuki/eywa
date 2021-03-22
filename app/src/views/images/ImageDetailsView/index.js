@@ -202,6 +202,7 @@ const ImageBuildView = () => {
           size="small"
           color="primary"
           aria-label="add"
+          href="/app/images"
           style={{ position: "absolute", right: "20px", bottom: "20px" }}
         >
           Back to images

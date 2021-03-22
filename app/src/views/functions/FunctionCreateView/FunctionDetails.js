@@ -180,7 +180,7 @@ const FunctionDetails = ({
               <Autocomplete
                 name="image"
                 options={images}
-                getOptionLabel={(option) => `${option.name} (${option.language}) (${option.version})`}
+                getOptionLabel={(option) => `${option.name} (${option.runtime}) (${option.version})`}
                 defaultValue={setImage}
                 filterSelectedOptions
                 required

@@ -238,11 +238,18 @@ const FunctionEditForm = ({
                   <Autocomplete
                     name="image"
                     options={images}
-                    getOptionLabel={(option) => `${option.name} (${option.language}) (${option.version})`}
+                    getOptionLabel={(option) => {
+                      let label = `${option.name} (${option.runtime}) (${option.version})`;
+                      if (option.state !== "success") {
+                        label += ` ${option.state}`
+                      }
+                      return label;
+                    }}
                     defaultValue={setImage}
                     filterSelectedOptions
                     required
                     getOptionSelected={(option, value) => option.id === value.id}
+                    getOptionDisabled={(option) => option.state !== "success"}
                     onChange={(_, value) => setFieldValue("image", value)}
                     renderInput={(params) => (
                       <TextField
