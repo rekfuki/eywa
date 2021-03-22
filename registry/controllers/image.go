@@ -1,14 +1,16 @@
 package controllers
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/nxadm/tail"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
@@ -75,12 +77,12 @@ func RequestImageBuild(c echo.Context) error {
 		return err
 	}
 
-	language := strings.ToLower(c.FormValue("language"))
+	runtime := strings.ToLower(c.FormValue("runtime"))
 	version := c.FormValue("version")
 	name := c.FormValue("name")
 
 	var executablePath *string
-	if language == "custom" {
+	if runtime == "custom" {
 		executableString := c.FormValue("executable_path")
 		if executableString == "" {
 			return c.JSON(http.StatusBadRequest, "Executable is required when using custom mode")
@@ -88,7 +90,7 @@ func RequestImageBuild(c echo.Context) error {
 		executablePath = &executableString
 	}
 
-	fullName := fmt.Sprintf("%s##%s##%s", language, name, version)
+	fullName := fmt.Sprintf("%s##%s##%s", runtime, name, version)
 	id := uuid.NewV5(uuid.FromStringOrNil(auth.UserID), fullName).String()
 
 	existingImage, err := db.GetImageWithoutSource(id, auth.UserID)
@@ -118,7 +120,7 @@ func RequestImageBuild(c echo.Context) error {
 		ImageID:        id,
 		UserID:         auth.UserID,
 		Name:           name,
-		Language:       language,
+		Runtime:        runtime,
 		Version:        version,
 		ZippedSource:   body,
 		ExecutablePath: executablePath,
@@ -152,19 +154,35 @@ func GetImageBuildLogs(c echo.Context) error {
 	existingBuild := bc.GetBuild(imageID, auth.UserID)
 	if existingBuild != nil {
 
-		t, err := tail.TailFile(existingBuild.LogFile, tail.Config{Follow: true, MustExist: true})
+		// t, err := tail.TailFile(existingBuild.LogFile, tail.Config{Follow: true, MustExist: true})
+		// if err != nil {
+		// 	return err
+		// }
+
+		// for line := range t.Lines {
+		// 	c.Response().Write([]byte(line.Text + "\n"))
+		// 	c.Response().Flush()
+
+		// 	if line.Text == builder.BuildSuccessMessage() || line.Text == builder.BuildFailedMessage() {
+		// 		return nil
+		// 	}
+		// }
+
+		logs := []string{}
+		logFile, err := os.OpenFile(existingBuild.LogFile, os.O_RDONLY, 0666)
 		if err != nil {
-			return err
+			log.Errorf("Failed to read logs file: %s", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
+		}
+		logFile.Seek(0, io.SeekStart)
+
+		scanner := bufio.NewScanner(logFile)
+		scanner.Split(bufio.ScanLines)
+		for scanner.Scan() {
+			logs = append(logs, scanner.Text())
 		}
 
-		for line := range t.Lines {
-			c.Response().Write([]byte(line.Text + "\n"))
-			c.Response().Flush()
-
-			if line.Text == builder.BuildSuccessMessage() || line.Text == builder.BuildFailedMessage() {
-				return nil
-			}
-		}
+		return c.JSON(http.StatusOK, types.ImageLogs{Logs: logs})
 	} else {
 		dbBuild, err := db.GetBuild(imageID, auth.UserID)
 		if err != nil {
@@ -175,14 +193,8 @@ func GetImageBuildLogs(c echo.Context) error {
 		if dbBuild == nil {
 			return c.JSON(http.StatusNotFound, "No build logs found")
 		}
-
-		for _, line := range dbBuild.Logs {
-			c.Response().Write([]byte(line + "\n"))
-			c.Response().Flush()
-		}
+		return c.JSON(http.StatusOK, types.ImageLogs{Logs: dbBuild.Logs})
 	}
-
-	return nil
 }
 
 // DeleteImage deletes the image from db and registry

@@ -57,7 +57,7 @@ func (c *Client) CreateImage(image *types.Image) error {
 		"id":         image.ID,
 		"user_id":    image.UserID,
 		"registry":   image.TaggedRegistry,
-		"language":   image.Language,
+		"language":   image.Runtime,
 		"name":       image.Name,
 		"version":    image.Version,
 		"created_at": image.CreatedAt,

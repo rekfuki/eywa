@@ -58,11 +58,11 @@ func imagesAPI() []*swagger.Endpoint {
 				Description: "Source code semantic version",
 				Required:    true,
 			},
-			"language": {
+			"runtime": {
 				Type:        "string",
 				Format:      "string",
 				Enum:        []string{"go", "node14", "python3", "ruby", "csharp", "custom"},
-				Description: "Language the source is written in",
+				Description: "Runtime to be used with your deployment",
 				Required:    true,
 			},
 			"executable_path": {
@@ -86,7 +86,7 @@ func imagesAPI() []*swagger.Endpoint {
 		endpoint.Description("Get image build logs"),
 		endpoint.Handler(controllers.GetImageBuildLogs),
 		endpoint.Path("image_id", "string", "uuid", "UUID of an image"),
-		endpoint.Response(http.StatusOK, "", "Success"),
+		endpoint.Response(http.StatusOK, types.ImageLogs{}, "Success"),
 		endpoint.Tags("Images"),
 	)
 

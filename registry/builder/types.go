@@ -13,7 +13,7 @@ type BuildRequest struct {
 	ImageID        string
 	UserID         string
 	Name           string
-	Language       string
+	Runtime        string
 	Version        string
 	ZippedSource   []byte
 	tmpDir         string

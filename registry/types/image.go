@@ -21,11 +21,16 @@ type Image struct {
 	ID             string    `db:"id" json:"id"`
 	UserID         string    `db:"user_id" json:"-"`
 	TaggedRegistry string    `db:"registry" json:"tagged_registry,omitempty"`
-	Language       string    `db:"language" json:"language"`
+	Runtime        string    `db:"language" json:"runtime"`
 	Name           string    `db:"name" json:"name"`
 	Version        string    `db:"version" json:"version"`
 	CreatedAt      time.Time `db:"created_at" json:"created_at"`
 	State          string    `db:"state" json:"state"`
 	Size           int       `db:"size" json:"size"`
 	Source         string    `db:"-" json:"-"`
+}
+
+// ImageLogs represents image build logs responsej
+type ImageLogs struct {
+	Logs []string `json:"logs"`
 }

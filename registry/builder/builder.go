@@ -94,7 +94,7 @@ func (c *Client) Start() {
 						if buildErr != nil {
 							log.WithFields(log.Fields{
 								"Image ID": br.ImageID,
-								"Language": br.Language,
+								"Runtime":  br.Runtime,
 								"Version":  br.Version,
 							}).Errorf("Failed to build container image", buildErr)
 
@@ -163,7 +163,7 @@ func (c *Client) Enqueue(br BuildRequest) *Error {
 	}
 	defer logFile.Close()
 
-	_, err = logFile.WriteString(BuildQueuedMessage(br.ImageID, br.Language, br.Version))
+	_, err = logFile.WriteString(BuildQueuedMessage(br.ImageID, br.Runtime, br.Version))
 	if err != nil {
 		return SystemError(err.Error())
 	}
@@ -171,13 +171,13 @@ func (c *Client) Enqueue(br BuildRequest) *Error {
 	br.tmpDir = tmpDir
 	br.LogFile = logFilePath
 
-	if br.Language == "custom" {
+	if br.Runtime == "custom" {
 		if br.ExecutablePath == nil {
 			return UserError("Executable path is required when using custom runner")
 		}
 		br.requiredFiles = []string{*br.ExecutablePath}
 	} else {
-		br.requiredFiles = requiredFiles[br.Language]
+		br.requiredFiles = requiredFiles[br.Runtime]
 	}
 
 	c.inProgressBuilds[br.ImageID+br.UserID] = br
@@ -199,7 +199,7 @@ func (c *Client) Enqueue(br BuildRequest) *Error {
 	image := &types.Image{
 		ID:             br.ImageID,
 		UserID:         br.UserID,
-		Language:       br.Language,
+		Runtime:        br.Runtime,
 		Name:           br.Name,
 		Version:        br.Version,
 		State:          StateQueued,
@@ -232,7 +232,7 @@ func (c *Client) build(br BuildRequest) *Error {
 		return SystemError(err.Error())
 	}
 
-	if _, ok := templateLocations[br.Language]; !ok {
+	if _, ok := templateLocations[br.Runtime]; !ok {
 		return ErrUnsupportedLanguage
 	}
 
@@ -240,14 +240,14 @@ func (c *Client) build(br BuildRequest) *Error {
 		return err
 	}
 
-	buildErr := prepareLanguage(br.tmpDir, br.Language, br.requiredFiles...)
+	buildErr := prepareLanguage(br.tmpDir, br.Runtime, br.requiredFiles...)
 	if buildErr != nil {
 		return buildErr
 	}
 
 	image := fmt.Sprintf("%s/%s:%s", c.registry, br.ImageID, br.Version)
 
-	if br.Language == "custom" {
+	if br.Runtime == "custom" {
 		err = buildImage(br.tmpDir, image, logFile, "FPROCESS="+*br.ExecutablePath)
 	} else {
 		err = buildImage(br.tmpDir, image, logFile)

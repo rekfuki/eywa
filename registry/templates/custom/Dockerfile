@@ -24,10 +24,8 @@ RUN if output=$(ldd "$FPROCESS" 2>&1); then true; elif echo "$output" | grep 'No
 
 RUN chmod +x $FPROCESS
 
-RUN ls -la
 ENV fprocess="./${FPROCESS}"
 ENV mode="http"
 ENV upstream_url="http://127.0.0.1:8082"
-RUN env
 
 CMD ["./fwatchdog"]
