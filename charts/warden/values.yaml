@@ -18,7 +18,7 @@ deployment:
   - name: WARDEN_GITHUB_CLIENT_ID
     secretName: github-oauth
     secretField: client_id
-  - name: WARDEN_GITHUB_CLIENT_CALLBACK_URL
+  - name: WARDEN_CALLBACK_URL
     secretName: github-oauth
     secretField: callback_url
   image:

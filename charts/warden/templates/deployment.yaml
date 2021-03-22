@@ -1,3 +1,4 @@
+{{- $_ := set .Values.deployment "AppVersion" .Chart.AppVersion -}}
 {{- template "common.deployment" (list .Values.deployment "warden.deployment") -}}
 {{- define "warden.deployment" -}}
 spec:
