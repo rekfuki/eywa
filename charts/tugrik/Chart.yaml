@@ -2,8 +2,8 @@ apiVersion: v2
 name: tugrik
 description: A Helm chart for deploying Tugrik
 type: application
-version: 0.0.2
-appVersion: 1.0.0
+version: 0.0.3
+appVersion: 1.0.1
 
 dependencies:
 - name: common
