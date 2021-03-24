@@ -25,46 +25,6 @@ const sections = [
       {
         title: 'Getting Started',
         path: '/docs/overview/getting-started'
-      },
-      {
-        title: 'Dependencies',
-        path: '/docs/overview/dependencies'
-      },
-      {
-        title: 'Environment Variables',
-        path: '/docs/overview/environment-variables'
-      },
-      {
-        title: 'Theming',
-        path: '/docs/overview/theming'
-      },
-      {
-        title: 'Redux',
-        path: '/docs/overview/redux'
-      },
-      {
-        title: 'Server Calls',
-        path: '/docs/overview/server-calls'
-      },
-      {
-        title: 'Settings',
-        path: '/docs/overview/settings'
-      },
-      {
-        title: 'RTL',
-        path: '/docs/overview/rtl'
-      },
-      {
-        title: 'Internationalization',
-        path: '/docs/overview/internationalization'
-      },
-      {
-        title: 'Deployment',
-        path: '/docs/overview/deployment'
-      },
-      {
-        title: 'Migrating to Next.js',
-        path: '/docs/overview/migrating-to-nextjs'
       }
     ]
   },
@@ -74,10 +34,6 @@ const sections = [
       {
         title: 'Overview',
         path: '/docs/functions/overview'
-      },
-      {
-        title: 'Code Splitting',
-        path: '/docs/routing/code-splitting'
       }
     ]
   },
@@ -87,6 +43,26 @@ const sections = [
       {
         title: 'Create Image',
         path: '/docs/images/create'
+      },
+      {
+        title: 'Go runtime',
+        path: '/docs/images/go'
+      },
+      {
+        title: 'NodeJS 14 runtime',
+        path: '/docs/images/node14'
+      },
+      {
+        title: 'Python3 runtime',
+        path: '/docs/images/python3'
+      },
+      {
+        title: 'Ruby runtime',
+        path: '/docs/images/ruby'
+      },
+      {
+        title: 'Custom runtime',
+        path: '/docs/images/custom'
       }
     ]
   },
@@ -96,82 +72,6 @@ const sections = [
       {
         title: 'Create Secrets',
         path: '/docs/secrets/create'
-      },
-      {
-        title: 'Managing Secrets',
-        path: '/docs/routing/code-splitting'
-      }
-    ]
-  },
-  {
-    title: 'Authentication',
-    items: [
-      {
-        title: 'Amplify',
-        path: '/docs/authentication/amplify'
-      },
-      {
-        title: 'Auth0',
-        path: '/docs/authentication/auth0'
-      },
-      {
-        title: 'Firebase',
-        path: '/docs/authentication/firebase'
-      },
-      {
-        title: 'JWT',
-        path: '/docs/authentication/jwt'
-      }
-    ]
-  },
-  {
-    title: 'Guards',
-    items: [
-      {
-        title: 'Guest Guard',
-        path: '/docs/guards/guest-guard'
-      },
-      {
-        title: 'Auth Guard',
-        path: '/docs/guards/auth-guard'
-      },
-      {
-        title: 'Role Based Guard',
-        path: '/docs/guards/role-based-guard'
-      }
-    ]
-  },
-  {
-    title: 'Analytics',
-    items: [
-      {
-        title: 'Introduction',
-        path: '/docs/analytics/introduction'
-      },
-      {
-        title: 'Configuration',
-        path: '/docs/analytics/configuration'
-      },
-      {
-        title: 'Event Tracking',
-        path: '/docs/analytics/event-tracking'
-      }
-    ]
-  },
-  {
-    title: 'Support',
-    items: [
-      {
-        title: 'Changelog',
-        path: '/docs/support/changelog'
-      },
-      {
-        title: 'Contact',
-        path: '/docs/support/contact'
-      },
-      {
-        title: 'Further Support',
-        path: '/docs/support/further-support'
       }
     ]
   }

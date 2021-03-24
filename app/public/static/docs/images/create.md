@@ -1,30 +1,6 @@
 ## Creating Images
 > This page focuses on creating an image using the website. Documentation for the REST API can be found [here](/api-docs/?urls.primaryName=registry#/Images/postImages)
 
-Eywa images are simple container images that are built from your uploaded source code which is combined with one of the available runtimes. Currently, the platfrom supports the following runtimes:
-
-- `Go` 
-- `NodeJS 14` 
-- `Python 3`
-- `Ruby`
-- `C#` 
-- `Custom`
-
-In order for Eywa to successfully bootstrap a runtime to your provided function code, each of the runtimes have certain layout and naming requirements which can be found here:
-
-[Go](/docs/images/go),
-[NodeJS](/docs/images/nodejs),
-[Python](/docs/images/python),
-[Ruby](/docs/images/ruby),
-[C#](/docs/images/csharp),
-[Custom](/docs/images/custom)
-
-**IMPORTANT**: Make sure to match the exact file layout and naming conventions of your chosen runtime
-
-> NOTE: Eywa currently allows to upload source code that is no more than 50MB (Megabytes) in size.
-
-### Using the website
-
 Image creation page can be accessed by navigating to [images](/app/images) and clicking `CREATE IMAGE` button at the top of the page ([a direct link](/app/images/create)).
 
 ![](/static/docs/images/image_create_form.png "Create image form")
@@ -42,9 +18,46 @@ Once the page is loaded you should see a form with the following fields:
     - x is the major version, Y is the minor version, and Z is the patch version.
     - each element must increase numerically. For instance: 1.9.0 -> 1.10.0 -> 1.11.0.
 
-- `Runtime` - select one of runtimes based on your requirements.
+- `Runtime` - select one of runtimes based on your requirements. In order for Eywa to successfully bootstrap a runtime to your provided function code, each of the runtimes have certain layout and naming requirements.
+
+    **IMPORTANT**: Make sure to match the exact file layout and naming conventions of your chosen runtime.
+
+    Currently supported layouts are the following:
+    - `Go` - [documentation](/docs/images/go),
+    - `NodeJS 14` - [documentation](/docs/images/nodejs14),
+    - `Python 3` - [documentation](/docs/images/python3),
+    - `Ruby` - [documentation](/docs/images/ruby),
+    - `Custom` - [documentation](/docs/images/custom),
 
 
+- `Executable path` (only applicable to `custom` runtimes) - path to the executable (relative to your zip file).    
+
+  Imagine the following zip structure:
+   ```
+      my-code.zip
+      │   my-executable
+      │
+      └───templates
+      │   │   index.html
+    ```
+  The `Executable path` would be `my-executable`
+  
+  Or your executable could be somewhere in another folder instead of being at the root of the zip file:
+   ```
+      my-code.zip
+      │
+      └───templates
+      │   │   index.html
+      └───runner
+      │   │   my-executable
+    ```
+  In this case the `Executable path` would be `runner/my-executable`
+- `Zip File` - either click or drag to upload the zip file that contains your code (runtime in case of `custom`). Only one zip file is accepted which means the last uploaded one will be uploaded for image creation. 
+
+  Currently, the source code **cannot exeed 50MB (Megabytes)** in size
 
 
-### Using the API
+**IMPORTANT**: Combination of `name of the image`, `version` and `runtime` must be unique. For example if you already have an image named `my-awesome-image` version `0.1.0` runtime `go` and you tried to create another exact one, you would get an error.
+
+
+Upon a successful creation you will be redirected to an image build progress page which displays the state of of the image and any logs produced during the building process.

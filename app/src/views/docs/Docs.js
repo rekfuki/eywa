@@ -24,8 +24,8 @@ const MarkdownWrapper = styled('div')`
     }
   }
   & code {
-    color: #01ab56;
-    font-family: Inconsolata; Monaco; Consolas; \'Courier New\'; Courier; monospace;
+    color: #f50057;
+    font-family: Inconsolata, Monaco, Consolas, \'Courier New\', Courier monospace;
     font-size: 14px;
     padding-left: 2px;
     padding-right: 2px;
