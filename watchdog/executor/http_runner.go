@@ -187,6 +187,9 @@ func (f *HTTPFunctionRunner) Run(req FunctionRequest, contentLength int64, r *ht
 	if f.WriteDebug {
 		resp.Stdout = *f.Stdout
 		resp.Stderr = *f.Stderr
+
+		log.Printf("STDOUT: %v\n", resp.Stdout)
+		log.Printf("STDERR: %v\n", resp.Stderr)
 	}
 
 	if res.Body != nil {
