@@ -95,6 +95,7 @@ const renderers = {
       return (
         <a
           href={href}
+          target="_blank"
           {...other}
         >
           {children}
@@ -125,7 +126,18 @@ const renderers = {
         {value}
       </SyntaxHighlighter>
     );
-  }
+  },
+  image: ({
+    alt,
+    src,
+    title
+  }) => (
+    <img
+      alt={alt}
+      src={src}
+      title={title}
+      style={{ maxWidth: "75vw" }} />
+  )
 };
 
 const Docs = () => {

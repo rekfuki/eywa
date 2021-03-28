@@ -40,6 +40,9 @@ const FunctionEditForm = ({
 
   var envVarsArr = [];
   for (var key in fn.env_vars) {
+    if (key === "mongodb_host") {
+      continue;
+    }
     envVarsArr.push({ "key": key, "value": fn.env_vars[key] })
   }
 
@@ -81,7 +84,11 @@ const FunctionEditForm = ({
           .integer("Must be an integer")
           .required("Required")
           .min(1, "Must be greater than or equal to 1")
-          .min(Yup.ref("minReplicas"), "Must be greater than or equal to Minimum Replicas")
+          .test('test-name', 'Must be greater than or equal to Mininum Replicas',
+            function (value) {
+              const mr = this.options.parent.minReplicas;
+              return value >= mr;
+            })
           .max(100, "Must be less than or equal to 100"),
         scalingFactor: Yup
           .number()

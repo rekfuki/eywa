@@ -29,11 +29,24 @@ const sections = [
     ]
   },
   {
-    title: 'Functions',
+    title: 'Executions',
     items: [
       {
         title: 'Overview',
-        path: '/docs/functions/overview'
+        path: '/docs/executions/overview'
+      }
+    ]
+  },
+  {
+    title: 'Functions',
+    items: [
+      {
+        title: 'Manage',
+        path: '/docs/functions/manage'
+      },
+      {
+        title: 'Create',
+        path: '/docs/functions/create'
       }
     ]
   },

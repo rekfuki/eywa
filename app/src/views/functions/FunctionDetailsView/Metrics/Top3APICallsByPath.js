@@ -33,7 +33,7 @@ const Top3APICallsByPath = ({ functionId, endTime, range, width }) => {
         "series": ["gateway_function_invocation_total"],
         "group_by": "path",
         "label_matchers": `function_id="${functionId}"`,
-        "query": `topk(3, sum(irate(<<index .Series 0>>{<<.LabelMatchers>>}[${step}ms])) by(<<.GroupBy>>))`,
+        "query": `topk(3, sum(rate(<<index .Series 0>>{<<.LabelMatchers>>}[${step}ms])) by(<<.GroupBy>>))`,
         "start": startTime / 1000,
         "end": endTime / 1000,
         "step": step / 1000

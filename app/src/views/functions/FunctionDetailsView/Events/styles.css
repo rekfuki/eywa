@@ -1,0 +1,155 @@
+.p-l-0 {
+  padding-left: 0;
+}
+.p-r-0 {
+  padding-right: 0;
+}
+.p-0 {
+  padding-left: 0;
+  padding-right: 0;
+}
+.form-details .btn-primary,
+.btn-default {
+  margin-top: 0;
+  margin-right: 2px;
+  padding: 12px 20px;
+}
+.form-details .form-control {
+  height: 40px;
+  border-radius: 0;
+  border: 1px solid transparent;
+  border-bottom: 1px solid #ccc;
+  box-shadow: none;
+  background: transparent;
+}
+.form-details .tab-pane {
+  cursor: pointer;
+}
+.navbar-nav .nav-list {
+  padding: 5px 10px;
+  width: 197px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  border-top: 0;
+}
+#dataTable .table > thead > tr > th {
+  padding: 2px;
+}
+#dataTable .form-control {
+  height: 30px;
+}
+
+.form-details .nav > li > a {
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-bottom-color: transparent;
+}
+.form-details .nav-tabs > li.active > a,
+.form-details .nav-tabs > li.active > a:focus,
+.form-details .nav-tabs > li.active > a:hover {
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-bottom-color: transparent;
+}
+.tab-content .title {
+  text-align: right;
+  margin-top: -30px;
+  position: absolute;
+  right: 50px;
+}
+.key-block {
+  min-height: 250px;
+  background: #fff;
+  border-radius: 0.1rem;
+  outline: initial !important;
+  box-shadow: none !important;
+  padding: 0.75rem 0.75rem 0.5rem;
+  line-height: 1.5;
+  border: 1px solid #d7d7d7;
+  overflow: hidden;
+}
+.header-text .title {
+  margin: 0 auto;
+  font-size: 16px;
+}
+.subTitle p {
+  font-size: 14px;
+  color: #a8a8a8;
+}
+.form-details {
+  background: #fff;
+  padding: 15px;
+  box-shadow: 0 1px 15px rgba(0, 0, 0, 0.04), 0 1px 6px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: calc(0.15rem - 1px);
+}
+.tokenlabel,
+.testlabel {
+  border-bottom: 1px solid #cccc;
+  padding: 5px 10px;
+  margin-bottom: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+.form-details .form-group {
+  margin-bottom: 0;
+}
+
+.testonnectionsection .nav-tabs {
+  padding: 8px 0 0 0;
+}
+.btn-sm {
+  background: none;
+}
+#tab_logic th:last-child {
+  width: 25px;
+}
+.tokenkeysection {
+  margin-top: 15px;
+}
+.testonnectionsection .nav-tabs > li.active > a,
+.nav-tabs > li.active > a:focus,
+.nav-tabs > li.active > a:hover,
+.tokenkeysection .nav-tabs > li.active > a,
+.nav-tabs > li.active > a:focus,
+.nav-tabs > li.active > a:hover {
+  color: #9a32d6;
+}
+a {
+  color: #343434;
+}
+.testconnectionsection,
+.tokenkeysection {
+  padding: 10px;
+  box-shadow: 0 1px 15px rgba(0, 0, 0, 0.04), 0 1px 6px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  margin-bottom: 20px;
+}
+span.cl-placeholder {
+  color: #aaa;
+}
+
+.header-text .form-control {
+  border-bottom: none;
+}
+.form-details .form-group:hover {
+  background-color: #f9f9f9;
+}
+#title {
+  font-size: 18px;
+  color: #000;
+  vertical-align: middle;
+  height: auto;
+}
+#code {
+  font-size: 13px;
+  padding-top: 0;
+  padding-bottom: 0;
+  height: auto;
+}
+.topsection {
+  margin-bottom: 20px;
+}
+.form-details textarea.form-control {
+  height: auto;
+}

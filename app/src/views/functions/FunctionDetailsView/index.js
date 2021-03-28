@@ -21,6 +21,7 @@ import Details from './Details';
 import Logs from './Logs';
 import Timelines from './Timelines';
 import Metrics from './Metrics'
+import SystemsBuilder from './Events'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -45,7 +46,8 @@ const FunctionDetailsView = () => {
     { value: 'details', label: 'Details' },
     { value: 'timelines', label: 'Timelines' },
     { value: 'logs', label: 'Logs' },
-    { value: 'metrics', label: 'Metrics' }
+    { value: 'metrics', label: 'Metrics' },
+    // { value: 'events', label: 'Events' }
   ];
 
   const onDeleteFn = async () => {
@@ -145,6 +147,7 @@ const FunctionDetailsView = () => {
           {currentTab === 'timelines' && <Timelines timelines={timelines} functionId={functionId} />}
           {currentTab === 'logs' && <Logs functionId={functionId} />}
           {currentTab === 'metrics' && <Metrics functionId={functionId} />}
+          {/* {currentTab === 'events' && <SystemsBuilder />} */}
         </Box>
       </Container>
     </Page>

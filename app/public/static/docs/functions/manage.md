@@ -82,3 +82,7 @@ The execution timelines are the same as the ones globally available except they 
 [![](/static/docs/functions/function_manage_view_logs.png)](/static/docs/functions/function_manage_view_logs.png)
 
 The logs are the same as the ones globally available except they are scoped to the function. Documentation on logs can be found [here](/docs/logs/overview)
+
+
+#### Metrics
+

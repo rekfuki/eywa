@@ -356,7 +356,6 @@ const ImageCreateView = () => {
                             <MenuItem value={"node14"}>Node 14</MenuItem>
                             <MenuItem value={"python3"}>Python 3</MenuItem>
                             <MenuItem value={"ruby"}>Ruby</MenuItem>
-                            <MenuItem value={"csharp"}>C#</MenuItem>
                             <MenuItem value={"custom"}>Custom</MenuItem>
                           </Select>
                         </FormControl>

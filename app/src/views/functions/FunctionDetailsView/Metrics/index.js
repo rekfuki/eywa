@@ -166,7 +166,7 @@ const Metrics = ({
           <Grid item xs={12} sm={"auto"}>
             <Box>
               <FormControl style={{ minWidth: "110px" }}>
-                <InputLabel id="select-label">Update interval</InputLabel>
+                <InputLabel id="select-label">Time Range</InputLabel>
                 <Select
                   labelId="select-label"
                   value={range}

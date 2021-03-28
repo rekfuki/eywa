@@ -77,7 +77,7 @@ const RequestDurationPercentage = ({ functionId, endTime, range, width }) => {
       "type": "range",
       "series": ["gateway_function_duration_milliseconds_bucket", "gateway_function_duration_milliseconds_count"],
       "label_matchers": `function_id="${functionId}",le="${le}"`,
-      "query": `(sum(irate(<<index .Series 0>>{<<.LabelMatchers>>}[${step}ms])) / sum(irate(<<index .Series 1>>{function_id="${functionId}"}[${step}ms]))) * 100`,
+      "query": `(sum(rate(<<index .Series 0>>{<<.LabelMatchers>>}[${step}ms])) / sum(rate(<<index .Series 1>>{function_id="${functionId}"}[${step}ms]))) * 100`,
       "start": startTime / 1000,
       "end": endTime / 1000,
       "step": step / 1000
