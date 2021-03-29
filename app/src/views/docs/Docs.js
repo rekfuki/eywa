@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useHistory } from 'react-router-dom';
 import Markdown from 'react-markdown';
 import matter from 'gray-matter';
@@ -126,6 +126,17 @@ const renderers = {
         {value}
       </SyntaxHighlighter>
     );
+  },
+  heading: (props) => {
+    function flatten(text, child) {
+      return typeof child === 'string'
+        ? text + child
+        : React.Children.toArray(child.props.children).reduce(flatten, text)
+    }
+    var children = React.Children.toArray(props.children)
+    var text = children.reduce(flatten, '')
+    var slug = text.toLowerCase().replace(/\W/g, '-')
+    return React.createElement('h' + props.level, { id: slug }, props.children)
   },
   image: ({
     alt,

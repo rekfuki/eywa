@@ -1,5 +1,5 @@
 ## Creating Functions
-> This page focuses on creating a function using the website. Documentation for the REST API can be found [here](/api-docs/#/Functions/postFunctions)
+> This page focuses on creating a function using the website. Documentation for the REST API can be found [here](/api-docs/?urls.primaryName=gateway-api#/Functions/postFunctions)
 
 Function creation page can be accessed by navigating to [functions](/app/functions) and clicking `CREATE FUNCTION` button at the top of the page ([a direct link](/app/functions/create)).
 

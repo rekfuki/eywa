@@ -46,7 +46,7 @@ const FunctionDetailsView = () => {
     { value: 'details', label: 'Details' },
     { value: 'timelines', label: 'Timelines' },
     { value: 'logs', label: 'Logs' },
-    { value: 'metrics', label: 'Metrics' },
+    { value: 'metrics', label: 'Metrics' }
     // { value: 'events', label: 'Events' }
   ];
 
@@ -57,6 +57,7 @@ const FunctionDetailsView = () => {
         variant: 'success'
       });
 
+      await new Promise(r => setTimeout(r, 1000));
       history.push("/app/functions")
     } catch (err) {
       console.error(err);

@@ -203,14 +203,12 @@ const ImagesListView = () => {
     setLimit(parseInt(event.target.value));
   };
 
-  useEffect(() => {
-    getImages(query, page, limit);
-  }, [getImages])
+  // useEffect(() => {
+  //   getImages(query, page, limit);
+  // }, [getImages])
 
   useEffect(() => {
-    if (!isMountedRef.current) {
-      getImages(query, page, limit);
-    }
+    getImages(query, page, limit);
   }, [page, limit]);
 
   let sortedImages = []

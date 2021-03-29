@@ -1,4 +1,5 @@
 #### Executions
+> This page focuses on looking at executions using the website. Documentation for the REST API can be found [here](/api-docs/?urls.primaryName=execution-tracker#/Timeline/getTimeline)
 
 Executions are like timelines of each function invocation. Whenever you make a request to your function either synchronously or asynchronously, the entire journey of your request is tracked throughout the system until the result is returned.
 
@@ -7,7 +8,7 @@ The execution page can be access by clicking on the `Executions` in the side nav
 [![](/static/docs/executions/executions_navbar.png)](/static/docs/executions/executions_navbar.png)
 
 &nbsp;  
-Once the page is loaded you should see a form with the following
+Once the page is loaded you should see a page with the following content
 
 &nbsp;  
 [![](/static/docs/executions/executions_list.png)](/static/docs/executions/executions_list.png)

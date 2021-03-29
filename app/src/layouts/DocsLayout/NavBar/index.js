@@ -38,15 +38,11 @@ const sections = [
     ]
   },
   {
-    title: 'Functions',
+    title: 'Logs',
     items: [
       {
-        title: 'Manage',
-        path: '/docs/functions/manage'
-      },
-      {
-        title: 'Create',
-        path: '/docs/functions/create'
+        title: 'Overview',
+        path: '/docs/logs/overview'
       }
     ]
   },
@@ -80,11 +76,49 @@ const sections = [
     ]
   },
   {
+    title: 'Functions',
+    items: [
+      {
+        title: 'Manage',
+        path: '/docs/functions/manage'
+      },
+      {
+        title: 'Create',
+        path: '/docs/functions/create'
+      },
+      {
+        title: 'Update',
+        path: '/docs/functions/update'
+      },
+      {
+        title: 'Delete',
+        path: '/docs/functions/delete'
+      },
+      {
+        title: 'Metrics',
+        path: '/docs/functions/metrics'
+      }
+    ]
+  },
+  {
     title: 'Secrets',
     items: [
       {
         title: 'Create Secrets',
         path: '/docs/secrets/create'
+      }
+    ]
+  },
+  {
+    title: 'Tokens',
+    items: [
+      {
+        title: 'Create Token',
+        path: '/docs/access_tokens/create'
+      },
+      {
+        title: 'Delete Token',
+        path: '/docs/access_tokens/delete'
       }
     ]
   }

@@ -3,21 +3,25 @@
 Function management page can be accessed by navigating to [functions](/app/functions) and selecting one of your functions from the list by pressing on the function ID
 
 [![](/static/docs/functions/function_create_navbar_location.png)](/static/docs/functions/function_create_navbar_location.png)
-&nbsp;
+&nbsp;  
 [![](/static/docs/functions/function_manage_list_select.png)](/static/docs/functions/function_manage_list_select.png)
-&nbsp;
+&nbsp;  
 
+
+#### Invocation URLs
 Once the page is loaded you will see a lot of different information. At the top of the page you will see a couple of links labeled `Sync URL` and `Async URL`.
 
 [![](/static/docs/functions/function_manage_view_urls.png)](/static/docs/functions/function_manage_view_urls.png)
 
 `Sync URL` is used for synchronous invocations and `Async URL` is used for asynchronous invocations.
 
+#### Update and Delete
 On the right hand side you will see two buttons: `DELETE` and `UPDATE FUNCTION`. When delete button is pressed a modal will appear to confirm the deletion, once you confirm the function will be scheduler for deletion and you will be redirected to function list view.
-The documentation for updating the function can be found [here](/docs/functions/update)
+The documentation for updating the function can be found [here](/docs/functions/update) and the documentation for deleting a function can be found [here](/docs/functions/delete)
 
+
+#### Overview
 Right below that you will see different tabs: `DETAILS`, `TIMELINES`, `LOGS`, `METRICS`. On page load the default is always `DETAILS`
-
 
 [![](/static/docs/functions/function_manage_view_tabs.png)](/static/docs/functions/function_manage_view_tabs.png)
 
@@ -73,16 +77,17 @@ The rest of the secrets will depend on how you have configured your function dep
 
 #### Timelines
 
-[![](/static/docs/functions/function_manage_view_timelines.png)](/static/docs/functions/function_manage_view_timelines.png)
-
 The execution timelines are the same as the ones globally available except they are scoped to the function. Documentation on executions can be found [here](/docs/executions/overview)
+[![](/static/docs/functions/function_manage_view_timelines.png)](/static/docs/functions/function_manage_view_timelines.png)
 
 #### Logs
 
+The logs are the same as the ones globally available except they are scoped to the function. Documentation on logs can be found [here](/docs/logs/overview)
 [![](/static/docs/functions/function_manage_view_logs.png)](/static/docs/functions/function_manage_view_logs.png)
 
-The logs are the same as the ones globally available except they are scoped to the function. Documentation on logs can be found [here](/docs/logs/overview)
-
-
 #### Metrics
+
+More details on the function metrics can be found [here](/docs/functions/metrics)
+
+[![](/static/docs/functions/function_manage_view_metrics.png)](/static/docs/functions/function_manage_view_metrics.png)
 
