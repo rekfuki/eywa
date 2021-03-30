@@ -15,14 +15,16 @@ import Logo from 'src/components/Logo';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    backgroundColor: theme.palette.background.default,
+    backgroundColor: theme.palette.primary.main,
     color: theme.palette.text.primary,
     boxShadow: 'none',
     borderBottom: `1px solid ${theme.palette.divider}`,
     zIndex: theme.zIndex.drawer + 100
   },
   toolbar: {
-    height: 64
+    height: 52,
+    minHeight: 52,
+    color: theme.palette.primary.main
   },
   link: {
     fontWeight: theme.typography.fontWeightMedium
@@ -54,11 +56,11 @@ const TopBar = ({ onMobileNavOpen }) => {
         />
         <Link
           className={classes.link}
-          color="textSecondary"
           component={RouterLink}
           to="/app"
           underline="none"
           variant="body2"
+          style={{ color: "white" }}
         >
           Dashboard
         </Link>
@@ -72,7 +74,7 @@ TopBar.propTypes = {
 };
 
 TopBar.defaultProps = {
-  onMobileNavOpen: () => {}
+  onMobileNavOpen: () => { }
 };
 
 export default TopBar;

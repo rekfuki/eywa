@@ -1,4 +1,8 @@
-#### Update Function
+---
+title: Update Function
+---
+
+### Update Function
 > This page focuses on updating a function using the website. Documentation for the REST API can be found [here](/api-docs/?urls.primaryName=gateway-api#/Functions/putFunctionsFunctionid)
 
 In order to update the function you will need to access the function update page. The page can be accessed from the function management page. Documentation on how to access function management page can be found [here](/docs/functions/manage)

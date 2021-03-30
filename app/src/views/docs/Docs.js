@@ -6,6 +6,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import dracula from 'react-syntax-highlighter/dist/cjs/styles/prism/dracula';
 import { Container, useTheme, makeStyles } from '@material-ui/core';
 import styled from 'styled-components';
+import Page from 'src/components/Page';
 
 // const MarkdownWrapper = styled('div')((theme) => ({
 const MarkdownWrapper = styled('div')`
@@ -66,19 +67,19 @@ const MarkdownWrapper = styled('div')`
     margin-top: ${theme.spacing(2)}px;
   }
   & h6 {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     letter-spacing: -0.05px;
     margin-bottom: ${theme.spacing(2)}px;
     margin-top: ${theme.spacing(2)}px;
   }
   & li {
-    font-size: 14px;
+    font-size: 16px;
     margin-bottom: ${theme.spacing(2)}px;
     margin-left: ${theme.spacing(4)}px;
   }
   & p {
-    font-size: 14px;
+    font-size: 16px;
     margin-bottom: ${theme.spacing(2)}px;
     & > a {
       color: ${theme.palette.secondary.main};
@@ -88,6 +89,32 @@ const MarkdownWrapper = styled('div')`
 `;
 
 const renderers = {
+  // root: ({ children }) => {
+  //   const TOCLines = children.reduce((acc, { key, props }) => {
+  //     // Skip non-headings
+  //     if (key.indexOf('heading') !== 0) {
+  //       return acc;
+  //     }
+
+  //     // Indent by two spaces per heading level after h1
+  //     let indent = '';
+  //     for (let idx = 1; idx < props.level; idx++) {
+  //       indent = `${indent}  `;
+  //     }
+
+  //     // Append line to TOC
+  //     // This is where you'd add a link using Markdown syntax if you wanted
+  //     return acc.concat([`${indent}* ${props.node.children[0].value}`]);
+  //   }, []);
+
+  //   console.log(TOCLines)
+  //   return (
+  //     <div>
+  //       <Markdown source={TOCLines.join("\n")} />
+  //       {children}
+  //     </div>
+  //   );
+  // },
   link: (props) => {
     const { href, children, ...other } = props;
 
@@ -147,7 +174,7 @@ const renderers = {
       alt={alt}
       src={src}
       title={title}
-      style={{ maxWidth: "75vw" }} />
+      style={{ maxWidth: "100%" }} />
   )
 };
 
@@ -198,18 +225,20 @@ const Docs = () => {
 
   return (
     <div>
-      <Container
-        maxWidth={false}
-        style={{ paddingBottom: '120px' }}
-      >
-        <MarkdownWrapper theme={theme}>
-          <Markdown
-            escapeHtml
-            renderers={renderers}
-            source={file.content}
-          />
-        </MarkdownWrapper>
-      </Container>
+      <Page title={`${file.data.title}`}>
+        <Container
+          maxWidth={"lg"}
+          style={{ paddingBottom: '120px' }}
+        >
+          <MarkdownWrapper theme={theme}>
+            <Markdown
+              escapeHtml
+              renderers={renderers}
+              source={file.content}
+            />
+          </MarkdownWrapper>
+        </Container>
+      </Page>
     </div>
   );
 };

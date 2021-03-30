@@ -4,16 +4,13 @@ title: Welcome
 
 # About the documentation
 
-Welcome to the documentation for Material Kit Pro! This documentation will take you
-from [getting started](getting-started)
-with our kit to customizing it and making it work for your use case.
+Welcome to the documentation for Eywa!
 
-## Something Missing?
+&nbsp;  
+If an images is difficult to see due to the size, click on it to open it in its original size in a new tab.
 
-If you have ideas for more "How To" recipes that should be on this page, please, let us know or
-contribute some!
+&nbsp;  
+In order to get started head over to the [getting started](/docs/welcome/getting-started) page. There you will go through all the steps necessary in oder to deploy a basic function that you can invoke. 
 
-## Feedback
-
-We are always happy for you to send your feedback
-at [support@deviasio.zendesk.com](mailto:support@deviasio.zendesk.com).
+&nbsp;  
+Good luck!

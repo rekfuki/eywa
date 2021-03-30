@@ -1,7 +1,11 @@
+---
+title: Create Token
+---
+
 ### Create Access Tokens
 > This page focuses on creating an access token using the website. Documentation for the REST API can be found [here](/api-docs/?urls.primaryName=warden#/Access%20Tokens/postTokens); **however**, you will need to create your initial access token using the website which can then be used to access the REST API.
 
-Access token management page can be accessed by navigating clicking on the [Tokens](/app/tokens) directive in the navigation bar. Alternatively you can access it via a direct [link](/app/tokens)
+Access token management page can be accessed by clicking on the [Tokens](/app/tokens) directive on the navigation bar. Alternatively you can access it via a direct [link](/app/tokens)
 
 [![](/static/docs/access_tokens/tokens_navbar_location.png)](/static/docs/access_tokens/tokens_navbar_location.png)
 
@@ -16,8 +20,8 @@ Once you press the button the following modal will pop up:
 
 &nbsp;  
 [![](/static/docs/access_tokens/tokens_create_modal.png)](/static/docs/access_tokens/tokens_create_modal.png)
-&nbsp;  
 
+&nbsp;  
 It will have a couple of fields:
 - `Name of the Token` - this is simply a name of your access token. It must follow these requirements:
     - must be at least 5 characters long

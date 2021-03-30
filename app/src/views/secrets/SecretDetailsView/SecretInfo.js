@@ -26,7 +26,7 @@ const SecretInfo = ({ className, secret, ...rest }) => {
       className={clsx(classes.root, className)}
       {...rest}
     >
-      <CardHeader title="Secret info" />
+      <CardHeader title="Secret Info" />
       <Divider />
       <Table>
         <TableBody>

@@ -1,3 +1,7 @@
+---
+title: Function Metrics
+---
+
 ### Function Metrics
 
 Function metrics can be accessed by navigating to your specific function page and clicking on the `Metrics` tab. More details on how to access your specific function page can be found [here](/docs/functions/manage)
@@ -53,7 +57,7 @@ sum(rate(gateway_function_invocation_started{function_id="{{your_function_id}}",
 // Above 500ms
 ((gateway_function_duration_milliseconds_bucket{function_id="{{your_function_id}}",le="500",user_id="{{your_user_id}}"}) / ignoring (le) gateway_function_duration_milliseconds_count{function_id="{{your_function_id}}"}) * 100
 ```
-- `Top 3 API calls (by path)` - shows the top three paths url paths that were used to call your function. The equivalent `Prometheus` queries would look like:
+- `Top 3 API calls (by path)` - shows the top url paths that were used to call your function. The equivalent `Prometheus` query would look like:
 ```rust
-topk(3, sum(rate(gateway_function_invocation_total{function_id="{{your_function_id}}",user_id="{{your_user_id}}"}[5000ms]by(path))
+topk(3, sum(rate(gateway_function_invocation_total{function_id="{{your_function_id}}",user_id="{{your_user_id}}"}[5000ms] by(path))
 ```

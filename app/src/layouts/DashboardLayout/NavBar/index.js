@@ -21,7 +21,8 @@ import {
   Command as CommandIcon,
   Disc as DiscIcon,
   Key as KeyIcon,
-  Database as DatabaseIcon
+  Database as DatabaseIcon,
+  BookOpen as OpenBookIcon
 } from 'react-feather';
 import TimelineIcon from '@material-ui/icons/Timeline';
 import ViewHeadlineIcon from '@material-ui/icons/ViewHeadline';
@@ -275,6 +276,22 @@ const NavBar = ({ onMobileClose, openMobile }) => {
           ))}
         </Box>
         <Divider />
+        <Box p={2}>
+          {renderNavItems({
+            items: [{
+              title: 'User Guide',
+              href: '/docs'
+            }],
+            pathname: location.pathname
+          })}
+          {renderNavItems({
+            items: [{
+              title: 'REST API docs',
+              href: '/api-docs'
+            }],
+            pathname: location.pathname
+          })}
+        </Box>
       </PerfectScrollbar>
     </Box>
   );

@@ -40,7 +40,7 @@ const Header = ({ className, ...rest }) => {
           to={`/app/secrets`}
           component={RouterLink}
         >
-          Functions
+          Secrets
         </Link>
         <Typography
           variant="body1"

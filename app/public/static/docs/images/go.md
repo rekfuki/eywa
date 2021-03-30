@@ -1,4 +1,8 @@
-## Go Runtime Image
+---
+title: Go Runtime
+---
+
+### Go Runtime Image
 
 This page describes the layout and naming requirements of `Go` runtime which you need to follow in order to deploy your source code written in `Go`.
 
@@ -11,7 +15,7 @@ my-code.zip
 ```
 
 That's correct, only one file is mandatory for the `Go` runtime and that is `handler.go` which has to placed at the root of the zip directory.
-No `go.mod` or `go.sum` files are neccessary (and are infact ignored) during the build process. All the dependecies are automatically downloaded.
+No `go.mod` or `go.sum` files are necessary (and are in fact ignored) during the build process. All the dependencies are automatically downloaded.
 
 
 #### Handler.go Requirements

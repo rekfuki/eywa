@@ -1,10 +1,28 @@
-## Creating Images
+---
+title: Create Image
+---
+
+### Creating Image
 > This page focuses on creating an image using the website. Documentation for the REST API can be found [here](/api-docs/?urls.primaryName=registry#/Images/postImages)
 
-Image creation page can be accessed by navigating to [images](/app/images) and clicking `CREATE IMAGE` button at the top of the page ([a direct link](/app/images/create)).
+Image creation page can be accessed by clicking on [Images](/app/images) directive on the navigation bar. Alternatively you can access it via a direct [link](/app/images/create)
 
-![](/static/docs/images/image_create_form.png "Create image form")
+&nbsp;  
+[![](/static/docs/images/images_navbar_location.png)](/static/docs/images/images_navbar_location.png)
 
+&nbsp;  
+Once you are on the page, at the top right of the page you should see a `CREATE IMAGE` button:
+
+&nbsp;  
+[![](/static/docs/images/images_create_location.png)](/static/docs/images/images_create_location.png)
+
+&nbsp;  
+Click the button and a page with the following form will appear:
+
+&nbsp;  
+[![](/static/docs/images/images_create_form.png)](/static/docs/images/create_form.png)
+
+&nbsp;  
 Once the page is loaded you should see a form with the following fields:
 
 - `Name of the image` - is required and must match a [DNS Standard](https://tools.ietf.org/html/rfc1123). This means that the name must:
@@ -54,7 +72,7 @@ Once the page is loaded you should see a form with the following fields:
   In this case the `Executable path` would be `runner/my-executable`
 - `Zip File` - either click or drag to upload the zip file that contains your code (runtime in case of `custom`). Only one zip file is accepted which means the last uploaded one will be uploaded for image creation. 
 
-  Currently, the source code **cannot exeed 50MB (Megabytes)** in size
+  Currently, the source code **cannot exceed 50MB (Megabytes)** in size
 
 
 **IMPORTANT**: Combination of `name of the image`, `version` and `runtime` must be unique. For example if you already have an image named `my-awesome-image` version `0.1.0` runtime `go` and you tried to create another exact one, you would get an error.

@@ -1,4 +1,9 @@
-## Python3 Runtime Image
+---
+title: Python Runtime
+---
+
+### Python3 Runtime Image
+
 
 This page describes the layout and naming requirements of `Python3` runtime which you need to follow in order to deploy your source code written in `python`.
 
@@ -11,7 +16,7 @@ my-code.zip
 ```
 > Note: You may also bundle together a `requirements.txt` file (at the same level as `handler.py`) if your code requires additional dependencies
 
-Your entroypoint point logic should go to `handler.py` and any other dependencies required should be described in the `requirements.txt` file.
+Your entrypoint point logic should go to `handler.py` and any other dependencies required should be described in the `requirements.txt` file.
 
 
 #### Handler.py Requirements

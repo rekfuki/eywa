@@ -1,4 +1,8 @@
-## Ruby Runtime Image
+---
+title: Ruby Runtime
+---
+
+### Ruby Runtime Image
 
 This page describes the layout and naming requirements of `Ruby` runtime which you need to follow in order to deploy your source code written in `ruby`.
 
@@ -12,7 +16,7 @@ my-code.zip
 
 > Note: You may also bundle together a `Gemfile` (at the same level as `handler.rb`) if your code requires additional dependencies
 
-Your entroypoint point logic should go to `handler.rb` and any other dependencies required should be described in the `Gemfile` file.
+Your entrypoint point logic should go to `handler.rb` and any other dependencies required should be described in the `Gemfile` file.
 
 
 #### Handler.rb Requirements

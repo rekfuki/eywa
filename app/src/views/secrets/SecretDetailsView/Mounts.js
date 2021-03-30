@@ -35,7 +35,7 @@ const Mounts = ({
       className={clsx(classes.root, className)}
       {...rest}
     >
-      <CardHeader title="Mounted function" />
+      <CardHeader title="Mounted Functions" />
       <Divider />
       <Table>
         {(mounts.length == 0 &&

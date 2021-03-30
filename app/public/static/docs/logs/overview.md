@@ -1,4 +1,8 @@
-#### Logs
+---
+title: Logs Overview
+---
+
+### Logs
 
 This page describes how logs are generated and how they can be accessed.
 
@@ -36,7 +40,7 @@ Since there are two types of invocations: `Synchronous` and `Asynchronous` and s
 > **NOTE**: logs will appear in chronological order with latest log entry at the top
 
 
-##### Synchronous execution logs
+#### Synchronous execution logs
 
 `Synchronous` invocation generates two logs:
 1. The start of the execution. This log entry holds the request information such as `body`, `query`, `path` and `headers`
@@ -59,7 +63,7 @@ And here is how the log entry for `ENDED` looks like once expanded:
 &nbsp;  
 [![](/static/docs/logs/logs_sync_ended_expanded.png)](/static/docs/logs/logs_sync_ended_expanded.png)
 
-##### Asynchronous execution logs
+#### Asynchronous execution logs
 
 `Asynchronous` invocation generates at least three logs:
 1. Execution queued up. This log entry holds basic information informing that the async execution request has been accepted and has been successfully queued up

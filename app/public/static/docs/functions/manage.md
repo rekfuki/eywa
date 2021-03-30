@@ -1,12 +1,19 @@
-## Manage Function
+---
+title: Manage Function
+---
 
-Function management page can be accessed by navigating to [functions](/app/functions) and selecting one of your functions from the list by pressing on the function ID
+### Manage Function
+> This page focuses on managing the function using the website. Documentation for the REST API can be found [here](/api-docs/?urls.primaryName=gateway-api)
+
+Function management page can be accessed by navigating to [Functions](/app/functions) and selecting one of your functions from the list by pressing on the function ID
 
 [![](/static/docs/functions/function_create_navbar_location.png)](/static/docs/functions/function_create_navbar_location.png)
+
 &nbsp;  
+When the page loads, select the function from the list you would like to manage.
+
 [![](/static/docs/functions/function_manage_list_select.png)](/static/docs/functions/function_manage_list_select.png)
 &nbsp;  
-
 
 #### Invocation URLs
 Once the page is loaded you will see a lot of different information. At the top of the page you will see a couple of links labeled `Sync URL` and `Async URL`.
@@ -44,18 +51,18 @@ The function info card contains configuration fields as well as the status of th
 
 The rest of the fields are:
 
-- `ID` - The id (UUID) of the function
-- `Name` - The name of the function given during deployment
-- `Image ID` - The id (UUID) of the image which is deployed. Clicking on it will take you to the image details page.
-- `Image Name` - The name of the image
-- `Available Replicas` - Available replicas at the current time. This number will vary depending on configuration and load
-- `Min Replicas` - Minimum replicas the function is allowed to scale down to
-- `Max Replicas` - Maximum replicas the function is allowed to scale up to
-- `Scaling Factor` - The percentage step of `Max Replicas` by which the function will be scaled down after load
-- `Per Instance Concurrency` - Maximum allowed concurrent requests that can be handled by each function replica
-- `Debug Mode` - Enables `stderr` and `stdout` logging. Can only be updated during [function update process](/docs/function/update)
-- `Write Timeout` - Write timeout is the amount of time in seconds the function will attempt to write the response for before cancelling it
-- `Read Timeout` - Read timeout is the amount of time in seconds the function will attempt to read the request for before cancelling it
+- `ID` - the id (UUID) of the function
+- `Name` - the name of the function given during deployment
+- `Image ID` - the id (UUID) of the image which is deployed. Clicking on it will take you to the image details page.
+- `Image Name` - the name of the image
+- `Available Replicas` - available replicas at the current time. This number will vary depending on configuration and load
+- `Min Replicas` - minimum replicas the function is allowed to scale down to
+- `Max Replicas` - maximum replicas the function is allowed to scale up to
+- `Scaling Factor` - the percentage step of `Max Replicas` by which the function will be scaled down after load
+- `Per Instance Concurrency` - maximum allowed concurrent requests that can be handled by each function replica
+- `Debug Mode` - enables `stderr` and `stdout` logging. Can only be updated during [function update process](/docs/function/update)
+- `Write Timeout` - write timeout is the amount of time in seconds the function will attempt to write the response for before cancelling it
+- `Read Timeout` - read timeout is the amount of time in seconds the function will attempt to read the request for before cancelling it
 
 
 ##### Environment Variables
@@ -73,7 +80,7 @@ The rest of the environment variables will depend on how you have configured you
 
 The mounted secrets card card contains all the secrets which have been made available as files to your deployed functions. At the very minimum there will be at least one mounted secret called `{prefix}-mongodb-credentials` which is used to access `MongoDB` database. More details on the database access can be found [here](/docs/database/connect)
 
-The rest of the secrets will depend on how you have configured your function deployment
+The rest of the secrets will depend on how you have configured your function deployment. Documentation on accessing mounted secrets can be found [here](/docs/secrets/access)
 
 #### Timelines
 

@@ -1,4 +1,8 @@
-## Creating Functions
+---
+title: Create Function
+---
+
+### Creating Functions
 > This page focuses on creating a function using the website. Documentation for the REST API can be found [here](/api-docs/?urls.primaryName=gateway-api#/Functions/postFunctions)
 
 Function creation page can be accessed by navigating to [functions](/app/functions) and clicking `CREATE FUNCTION` button at the top of the page ([a direct link](/app/functions/create)).
@@ -17,7 +21,7 @@ Once the page is loaded you should see a form with the following fields:
 
 - `Image` - select one of the available images. Images that are building or their build resulted in an error will be grayed out.
 
-- `Minimum Replicas` - the minimum instances of your code running. Setting it to zero will despawn all function instaces when idle. The field must follow these rules:
+- `Minimum Replicas` - the minimum instances of your code running. Setting it to zero will despawn all function instances when idle. The field must follow these rules:
     - minimum allowed value is 0
     - maximum allowed value is 100
     - value must bet lesser than or equal to `Maximum Replicas`
@@ -31,7 +35,7 @@ Once the page is loaded you should see a form with the following fields:
     - minimum allowed value is 0. Setting the value to zero will disable gradual downscaling and all replicas will be despawned at once
     - maximum allowed value is 100
 
-- `Per Instance Concurrency` - limit the maximum number of requests in flight. Setting the value to zero means that each instance of your function can handle at most one request at the time. The field must follw these rules:
+- `Per Instance Concurrency` - limit the maximum number of requests in flight. Setting the value to zero means that each instance of your function can handle at most one request at the time. The field must follow these rules:
     - minimum allowed value is 0 (disabled concurrency)
 
 - `Read Timeout` - the amount of seconds the function instance will wait while reading the request. After the timeout is reached it will terminate reading the request body and return an error. The field must follow these rules:
@@ -40,7 +44,7 @@ Once the page is loaded you should see a form with the following fields:
 - `Write Timeout` - the amount of seconds the function instance will try to write the response for. After the timeout is reached it will terminate writing the response and return an error. The field must follow these rules:
     - minimum allowed value is 0
 
-- `Mounted Secrets` - select from the dropdown which secrets you would like to attach to your function. Documention on how to create secrets can be found [here](/docs/secrets/create)
+- `Mounted Secrets` - select from the dropdown which secrets you would like to attach to your function. Documentation on how to create secrets can be found [here](/docs/secrets/create)
 
 
 Once you have filled out the necessary fields, click `NEXT` to see environment variables configuration

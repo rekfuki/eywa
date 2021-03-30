@@ -91,7 +91,7 @@ const Header = ({
           variant="h3"
           color="textPrimary"
         >
-          {secret.name + (disabledEditing && " (Read Only)")}
+          {secret.name + (disabledEditing == true ? " (Read Only)" : "")}
         </Typography>
       </Grid>
       <Grid item>

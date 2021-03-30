@@ -84,7 +84,7 @@ const CollectionInfo = ({
                   variant="body2"
                   color="textSecondary"
                 >
-                  {collection.total_size}
+                  {formatBytes(collection.total_size)}
                 </Typography>
               </TableCell>
             </TableRow>
@@ -97,7 +97,7 @@ const CollectionInfo = ({
                   variant="body2"
                   color="textSecondary"
                 >
-                  {collection.storage_size}
+                  {formatBytes(collection.storage_size)}
                 </Typography>
               </TableCell>
             </TableRow>
@@ -110,7 +110,7 @@ const CollectionInfo = ({
                   variant="body2"
                   color="textSecondary"
                 >
-                  {collection.total_index_size}
+                  {formatBytes(collection.total_index_size)}
                 </Typography>
               </TableCell>
             </TableRow>
@@ -123,7 +123,7 @@ const CollectionInfo = ({
                   variant="body2"
                   color="textSecondary"
                 >
-                  {collection.average_object_size}
+                  {formatBytes(collection.average_object_size)}
                 </Typography>
               </TableCell>
             </TableRow>

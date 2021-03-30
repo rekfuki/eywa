@@ -21,10 +21,15 @@ const sections = [
       {
         title: 'Welcome',
         path: '/docs/overview/welcome'
-      },
+      }
+    ]
+  },
+  {
+    title: 'Dashboard',
+    items: [
       {
-        title: 'Getting Started',
-        path: '/docs/overview/getting-started'
+        title: 'Overview',
+        path: '/docs/dashboard/overview'
       }
     ]
   },
@@ -97,6 +102,10 @@ const sections = [
       {
         title: 'Metrics',
         path: '/docs/functions/metrics'
+      },
+      {
+        title: 'Invoke',
+        path: '/docs/functions/invoke'
       }
     ]
   },
@@ -104,8 +113,20 @@ const sections = [
     title: 'Secrets',
     items: [
       {
-        title: 'Create Secrets',
+        title: 'Details',
+        path: '/docs/secrets/details'
+      },
+      {
+        title: 'Create Secret',
         path: '/docs/secrets/create'
+      },
+      {
+        title: 'Delete Secret',
+        path: '/docs/secrets/delete'
+      },
+      {
+        title: 'Access From Function',
+        path: '/docs/secrets/access'
       }
     ]
   },
@@ -119,6 +140,19 @@ const sections = [
       {
         title: 'Delete Token',
         path: '/docs/access_tokens/delete'
+      }
+    ]
+  },
+  {
+    title: 'Database',
+    items: [
+      {
+        title: 'Manage',
+        path: '/docs/database/manage'
+      },
+      {
+        title: 'Access',
+        path: '/docs/database/access'
       }
     ]
   }
@@ -173,8 +207,8 @@ const useStyles = makeStyles(() => ({
   },
   desktopDrawer: {
     width: 256,
-    top: 64,
-    height: 'calc(100% - 64px)'
+    top: 52,
+    height: 'calc(100% - 52px)'
   }
 }));
 

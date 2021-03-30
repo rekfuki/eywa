@@ -40,7 +40,7 @@ const NavItem = (props) => {
           startIcon={icon}
           style={{
             color: 'text.secondary',
-            fontWeight: 'medium',
+            fontWeight: 'normal',
             justifyContent: 'flex-start',
             paddingLeft: `${paddingLeft}px`,
             paddingRight: '8px',
@@ -77,7 +77,7 @@ const NavItem = (props) => {
         startIcon={icon}
         style={{
           color: theme.palette.text.primary,
-          fontWeight: 'fontWeightMedium',
+          fontWeight: 'normal',
           justifyContent: 'flex-start',
           textAlign: 'left',
           paddingLeft: `${paddingLeft}px`,

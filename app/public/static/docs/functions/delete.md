@@ -1,4 +1,8 @@
-#### Delete Function
+---
+title: Delete Function
+---
+
+### Delete Function
 > This page focuses on deleting a function using the website. Documentation for the REST API can be found [here](/api-docs/?urls.primaryName=gateway-api#/Functions/deleteFunctionsFunctionid)
 
 In order to delete the function you will need to access the function management page. Documentation on how to access function management page can be found [here](/docs/functions/manage)

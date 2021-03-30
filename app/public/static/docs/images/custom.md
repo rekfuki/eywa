@@ -1,4 +1,8 @@
-## Custom Runtime Image
+---
+title: Custom Runtime
+---
+
+### Custom Runtime Image
 
 This page describes the layout and naming requirements of a `Custom` runtime which you need to follow in order to deploy your source code written in language of your choice.
 
@@ -7,8 +11,8 @@ This page describes the layout and naming requirements of a `Custom` runtime whi
 Unlike the other runtimes, `custom` does not adhere to any strict file requirements. Since `custom` runtime gives the most freedom to the user, we do not want to restrict you to specific layout or naming conventions and therefore allow you to provide the path to your executable (see more at [image create documentation](/docs/images/create)).
 
 
-That being said, there are stil a couple of rules you **must follow**:
-- the executable must be **statically compilled** (or alternatively entirely self-contained). This means that it should not have any dynamic dependencies loaded during execution. There are checks in place which will get tripped if the condition is not satisfied.
+That being said, there are still a couple of rules you **must follow**:
+- the executable must be **statically compiled** (or alternatively entirely self-contained). This means that it should not have any dynamic dependencies loaded during execution. There are checks in place which will get tripped if the condition is not satisfied.
 - the executable must implement a **web server** that listens either on `0.0.0.0:8082` or `127.0.0.2:8082`.
 
 
