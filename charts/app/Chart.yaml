@@ -3,7 +3,7 @@ name: app
 description: A Helm chart for deploying front-end App
 type: application
 version: 0.0.10
-appVersion: 1.0.9
+appVersion: 1.1.0
 
 dependencies:
 - name: common
