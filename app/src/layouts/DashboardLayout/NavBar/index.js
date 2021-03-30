@@ -144,6 +144,7 @@ function reduceChildRoutes({
 
     acc.push(
       <NavItem
+        raw={item.items}
         depth={depth}
         icon={item.icon}
         info={item.info}
@@ -161,6 +162,7 @@ function reduceChildRoutes({
   } else {
     acc.push(
       <NavItem
+        raw={item.raw}
         depth={depth}
         href={item.href}
         icon={item.icon}
@@ -287,9 +289,9 @@ const NavBar = ({ onMobileClose, openMobile }) => {
           {renderNavItems({
             items: [{
               title: 'REST API docs',
-              href: '/api-docs'
-            }],
-            pathname: location.pathname
+              href: '/api-docs',
+              raw: true
+            }]
           })}
         </Box>
       </PerfectScrollbar>

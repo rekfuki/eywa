@@ -64,6 +64,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const NavItem = ({
+  raw,
   children,
   className,
   depth,
@@ -120,6 +121,7 @@ const NavItem = ({
     );
   }
 
+  console.log(raw)
   return (
     <ListItem
       className={clsx(classes.itemLeaf, className)}
@@ -128,12 +130,12 @@ const NavItem = ({
       {...rest}
     >
       <Button
-        activeClassName={classes.active}
+        {...(!raw ? { activeClassName: classes.active } : {})}
         className={clsx(classes.buttonLeaf, `depth-${depth}`)}
-        component={RouterLink}
-        exact
+        component={raw ? "button" : RouterLink}
+        {...(!raw ? { exact: true } : {})}
         style={style}
-        to={href}
+        {...(!raw ? { to: href } : { href: href, target: '_blank' })}
       >
         {Icon && (
           <Icon
@@ -146,7 +148,7 @@ const NavItem = ({
         </span>
         {Info && <Info />}
       </Button>
-    </ListItem>
+    </ListItem >
   );
 };
 
