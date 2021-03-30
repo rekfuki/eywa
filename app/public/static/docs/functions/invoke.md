@@ -62,6 +62,6 @@ curl https://eywa.rekfuki.dev/eywa/api/functions/sync/a72edb6d-ee2b-5b91-9fa2-bd
 ```bash
 curl https://eywa.rekfuki.dev/eywa/api/functions/sync/a72edb6d-ee2b-5b91-9fa2-bd173c1eb269/ \
 -H 'X-Eywa-Token: {your_token_here}' \
--d '{"key1": "value1, "key2": "value2"}' \
+-d '{"key1": "value1", "key2": "value2"}' \
 -X POST
 ```

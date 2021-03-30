@@ -69,7 +69,7 @@ The rest of the fields are:
 
 [![](/static/docs/functions/function_manage_view_details_env.png)](/static/docs/functions/function_manage_view_details_env.png)
 
-The environment variables card contains all the environment variables which are associated to your deployed functions. At the very minimum there will be at least one environment variable called `mongodb_host` which is used to access `MongoDB` database. More details on the database access can be found [here](/docs/database/connect)
+The environment variables card contains all the environment variables which are associated to your deployed functions. At the very minimum there will be at least one environment variable called `mongodb_host` which is used to access `MongoDB` database. More details on the database access can be found [here](/docs/database/access)
 
 The rest of the environment variables will depend on how you have configured your function deployment
 
@@ -78,7 +78,7 @@ The rest of the environment variables will depend on how you have configured you
 
 [![](/static/docs/functions/function_manage_view_details_secrets.png)](/static/docs/functions/function_manage_view_details_secrets.png)
 
-The mounted secrets card card contains all the secrets which have been made available as files to your deployed functions. At the very minimum there will be at least one mounted secret called `{prefix}-mongodb-credentials` which is used to access `MongoDB` database. More details on the database access can be found [here](/docs/database/connect)
+The mounted secrets card card contains all the secrets which have been made available as files to your deployed functions. At the very minimum there will be at least one mounted secret called `{prefix}-mongodb-credentials` which is used to access `MongoDB` database. More details on the database access can be found [here](/docs/database/access)
 
 The rest of the secrets will depend on how you have configured your function deployment. Documentation on accessing mounted secrets can be found [here](/docs/secrets/access)
 

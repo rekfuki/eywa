@@ -5,15 +5,24 @@ title: Create Function
 ### Creating Functions
 > This page focuses on creating a function using the website. Documentation for the REST API can be found [here](/api-docs/?urls.primaryName=gateway-api#/Functions/postFunctions)
 
-Function creation page can be accessed by navigating to [functions](/app/functions) and clicking `CREATE FUNCTION` button at the top of the page ([a direct link](/app/functions/create)).
+Function creation page can be accessed by clicking on [Functions](/app/functions) directive on the navigation bar. Alternatively you can access it via a direct [link](/app/functions/create)
 
+&nbsp;
 [![](/static/docs/functions/function_create_navbar_location.png)](/static/docs/functions/function_create_navbar_location.png)
+
+&nbsp;
+When the page with a list of function loads. You will see a `CREATE FUNCTION` button at the top right of the page
+
 &nbsp;
 [![](/static/docs/functions/function_create_button_location.png)](/static/docs/functions/function_create_button_location.png)
+
+&nbsp;
+Press the button and a page with the following form will appear
+
 &nbsp;
 [![](/static/docs/functions/function_create_form_details.png)](/static/docs/functions/function_create_form_details.png)
 
-Once the page is loaded you should see a form with the following fields:
+The form will have the following fields:
 
 - `Function Name` - is required and must follow these rules: 
     - match `^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$` regular expression.

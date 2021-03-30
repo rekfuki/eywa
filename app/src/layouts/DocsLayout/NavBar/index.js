@@ -23,6 +23,10 @@ const sections = [
         path: '/docs/overview/welcome'
       },
       {
+        title: 'Getting Started',
+        path: '/docs/overview/getting-started'
+      },
+      {
         title: 'REST API Docs',
         path: '/docs/overview/api-docs'
       }

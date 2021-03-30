@@ -24,4 +24,8 @@ At the top right of the page you will see a dropdown which lets you to choose co
 
 &nbsp;  
 The dropdown contains the following API definitions:
-- `gateway-api`. Gateway API contains all CRUD operations for `Secrets` and `Functions`
+- `gateway-api` - gateway API contains all CRUD operations for secrets and functions
+- `warden` - warden API deals with access token CRUD operations
+- `execution-tracker` - execution-tracker API deals with log and timeline access
+- `tugrik` - tugrik API deals with database operations
+- `registry` - registry API deals with images CRUD operations

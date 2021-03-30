@@ -23,7 +23,7 @@ Click the button and a page with the following form will appear:
 [![](/static/docs/images/images_create_form.png)](/static/docs/images/create_form.png)
 
 &nbsp;  
-Once the page is loaded you should see a form with the following fields:
+The form has the following fields:
 
 - `Name of the image` - is required and must match a [DNS Standard](https://tools.ietf.org/html/rfc1123). This means that the name must:
     - contain at most 63 characters
