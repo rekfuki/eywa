@@ -2,8 +2,8 @@ apiVersion: v2
 name: execution-tracker-api
 description: A Helm chart deploying execution tracker api
 type: application
-version: 1.0.0
-appVersion: 1.0.0
+version: 1.0.1
+appVersion: 1.0.1
 
 dependencies:
 - name: common
