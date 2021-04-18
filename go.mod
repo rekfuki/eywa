@@ -35,7 +35,6 @@ require (
 	github.com/nats-io/nats-streaming-server v0.20.0 // indirect
 	github.com/nats-io/nats.go v1.10.0
 	github.com/nats-io/stan.go v0.8.2
-	github.com/nxadm/tail v1.4.8
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible

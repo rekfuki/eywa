@@ -163,9 +163,10 @@ func GetInvocation(c echo.Context) error {
 				})
 			}
 		}
+		tld.Duration = tld.Events[len(tld.Events)-1].Timestamp.Sub(tld.Age).Milliseconds()
+	} else {
+		tld.Duration = tld.Events[0].Duration
 	}
-
-	tld.Duration = time.Since(tld.Events[len(tld.Events)-1].Timestamp).Milliseconds()
 
 	return c.JSON(http.StatusOK, tld)
 }
