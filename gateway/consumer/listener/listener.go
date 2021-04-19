@@ -129,11 +129,13 @@ func (l *Listener) process(msg *stan.Msg) {
 	}
 
 	trigger.WithFields(defaultTimelineFields).WithFields(trigger.Fields{
-		"event_name": fmt.Sprintf("Dwell Time"),
+		"event_name": "Dwell Time",
 		"event_type": ett.TimelineEventTypeDequeued,
 		"response":   http.StatusOK,
 		"duration":   time.Since(req.QueuedAt).Milliseconds(),
 	}).Fire(types.TimelineHookType)
+
+	l.metrics.ObserveDwellTime(req.FunctionID, req.FunctionName, req.UserID, time.Since(req.QueuedAt))
 
 	sleepDuration := time.Minute * 0
 	for attempt := 1; attempt <= 3; attempt++ {
@@ -141,7 +143,6 @@ func (l *Listener) process(msg *stan.Msg) {
 		sleepDuration = sleepDuration + time.Minute*3
 
 		started := time.Now()
-		l.metrics.ObserveDwellTime(req.FunctionID, req.FunctionName, req.UserID, started.Sub(req.QueuedAt))
 
 		trigger.WithFields(defaultEventFields).WithFields(trigger.Fields{
 			"path":         req.Path,
@@ -343,19 +344,19 @@ func (l *Listener) process(msg *stan.Msg) {
 
 func validateMessage(req broker.QueueRequest) error {
 	if req.UserID == "" {
-		return fmt.Errorf("Message is missing User ID")
+		return fmt.Errorf("message is missing User ID")
 	}
 
 	if req.RequestID == "" {
-		return fmt.Errorf("Message is missing Request ID")
+		return fmt.Errorf("message is missing Request ID")
 	}
 
 	if req.FunctionID == "" {
-		return fmt.Errorf("Message is missing Function ID")
+		return fmt.Errorf("message is missing Function ID")
 	}
 
 	if req.FunctionName == "" {
-		return fmt.Errorf("Message is missing Function Name")
+		return fmt.Errorf("message is missing Function Name")
 	}
 
 	return nil

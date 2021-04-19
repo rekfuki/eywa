@@ -2,7 +2,9 @@ package hooks
 
 import (
 	"fmt"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"eywa/go-libs/broker"
 	"eywa/go-libs/trigger"
@@ -41,10 +43,16 @@ func EventHook(entry *trigger.Entry) broker.MessageInterface {
 		case "message":
 			elm.EventLog.Message = v.(string)
 		case "body", "stdout", "stderr":
-			val, ok := v.([]uint8)
-			if ok {
-				if len(val) > maxFieldSize {
-					v = fmt.Sprintf("Value too large to display (%d bytes), max allowed %d", len(val), maxFieldSize)
+			switch t := v.(type) {
+			case []uint8:
+				if len(t) > maxFieldSize {
+					v = fmt.Sprintf("Value too large to display (%d bytes), max allowed %d", len(t), maxFieldSize)
+				}
+				elm.EventLog.Payload[k] = v
+
+			case []string:
+				if utf8.RuneCountInString(strings.Join(t, "")) > maxFieldSize {
+					v = fmt.Sprintf("Value too large to display (%d bytes), max allowed %d", len(t), maxFieldSize)
 				}
 				elm.EventLog.Payload[k] = v
 			}

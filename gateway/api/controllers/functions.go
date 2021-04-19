@@ -147,7 +147,7 @@ func DeployFunction(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, "Image Not Found")
 	}
 
-	dr.EnvVars = parseEnvVars(dr.FunctionRequest)
+	parseEnvVars(&dr.FunctionRequest)
 
 	fr := &k8s.DeployFunctionRequest{
 		Image:         image.TaggedRegistry,
@@ -238,7 +238,7 @@ func UpdateFunction(c echo.Context) error {
 	}
 	fs.Labels["image_id"] = image.ID
 
-	ur.EnvVars = parseEnvVars(ur.FunctionRequest)
+	parseEnvVars(&ur.FunctionRequest)
 
 	fr := &k8s.DeployFunctionRequest{
 		Image:         image.TaggedRegistry,
@@ -295,31 +295,28 @@ func buildK8sName(name, userID string) string {
 	return uuid.NewV5(userUUID, functionID).String()
 }
 
-func parseEnvVars(fr types.FunctionRequest) map[string]string {
+func parseEnvVars(fr *types.FunctionRequest) {
 	if fr.EnvVars == nil {
 		fr.EnvVars = map[string]string{}
 	}
 
-	envVars := map[string]string{}
 	fr.EnvVars["write_debug"] = "false"
 	if fr.WriteDebug {
-		envVars["write_debug"] = "true"
+		fr.EnvVars["write_debug"] = "true"
 	}
 
 	// Correct values should be validated by swagger
 	rt, _ := time.ParseDuration(fr.ReadTimeout)
 	if rt != time.Duration(0) {
-		envVars["read_timeout"] = fr.ReadTimeout
+		fr.EnvVars["read_timeout"] = fr.ReadTimeout
 	}
 
 	wt, _ := time.ParseDuration(fr.WriteTimeout)
 	if wt != time.Duration(0) {
-		envVars["write_timeout"] = fr.WriteTimeout
+		fr.EnvVars["write_timeout"] = fr.WriteTimeout
 	}
 
-	envVars["max_inflight"] = fmt.Sprint(fr.MaxInflight)
-
-	return envVars
+	fr.EnvVars["max_inflight"] = fmt.Sprint(fr.MaxInflight)
 }
 
 func validateSecrets(uSecrets []string, k8sSecrets []k8s.Secret) []string {
@@ -416,8 +413,10 @@ func makeFunctionStatusResponse(fs *k8s.FunctionStatus, secrets []k8s.Secret) (r
 			r.ReadTimeout = v
 		case "write_timeout":
 			r.WriteTimeout = v
+		default:
+			continue
 		}
-		// Do not return env variables that cannot be edited anyways
+
 		delete(fs.Env, k)
 	}
 
