@@ -36,7 +36,7 @@ const DocsLayout = ({ children }) => {
         openMobile={isMobileNavOpen}
       />
       <div className={classes.wrapper}>
-        <div className={classes.contentContainer}>
+        <div className={classes.contentContainer} id="content-container">
           <div className={classes.content}>
             {children}
           </div>

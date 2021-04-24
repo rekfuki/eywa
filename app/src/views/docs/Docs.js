@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useHistory } from 'react-router-dom';
 import Markdown from 'react-markdown';
 import matter from 'gray-matter';
+import PerfectScrollbar from 'react-perfect-scrollbar';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import dracula from 'react-syntax-highlighter/dist/cjs/styles/prism/dracula';
 import { Container, useTheme, makeStyles } from '@material-ui/core';
@@ -184,7 +185,10 @@ const Docs = () => {
   const { pathname } = useLocation();
   const [file, setFile] = useState(null);
 
+
   useEffect(() => {
+    document.getElementById("content-container").scrollTo(0, 0);
+
     const getFile = async () => {
       try {
         // Allow only paths starting with /docs.
@@ -226,6 +230,7 @@ const Docs = () => {
   return (
     <div>
       <Page title={`${file.data.title}`}>
+
         <Container
           maxWidth={"lg"}
           style={{ paddingBottom: '120px' }}

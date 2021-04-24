@@ -14,7 +14,7 @@ Once on the function management page, on the `Environment Variables` card look f
 
 #### Getting the secret
 
-The secret will have a name of `mongodb-credentials` prefixed with a random string `{prefix}-mongodb-credentials`. You can find the secret by heading to the secrets page which you can access either by clicking on the [Secrets](/app/secrets) directive on the navigation bar. Alternatively you can access it via a direct [link](/app/secrets.
+The secret will have a name of `mongodb-credentials` prefixed with a random string `{prefix}-mongodb-credentials`. You can find the secret by heading to the secrets page which you can access either by clicking on the [Secrets](/app/secrets) directive on the navigation bar. Alternatively you can access it via a direct [link](/app/secrets).
 
 &nbsp;  
 [![](/static/docs/secrets/secrets_navbar_location.png)](/static/docs/secrets/secrets_navbar_location.png)
