@@ -2,8 +2,8 @@ apiVersion: v2
 name: app
 description: A Helm chart for deploying front-end App
 type: application
-version: 0.0.11
-appVersion: 1.1.1
+version: 0.0.12
+appVersion: 1.1.2
 
 dependencies:
 - name: common
