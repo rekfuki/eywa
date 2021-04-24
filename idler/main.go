@@ -92,15 +92,14 @@ func (i *Idler) buildMetricsMap(functions []gwt.FunctionStatusResponse) map[stri
 			for _, v := range res.Data.Result {
 				if v.Metric.FunctionName == function.ID {
 					metricValue := v.Value[1]
-					switch metricValue.(type) {
+					switch t := metricValue.(type) {
 					case string:
-						f, strconvErr := strconv.ParseFloat(metricValue.(string), 64)
+						f, strconvErr := strconv.ParseFloat(t, 64)
 						if strconvErr != nil {
 							log.Printf("Unable to convert value for metric: %s\n", strconvErr)
 							continue
 						}
 						metrics[function.ID] = f
-						break
 					}
 				}
 			}
