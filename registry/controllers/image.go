@@ -153,7 +153,6 @@ func GetImageBuildLogs(c echo.Context) error {
 
 	existingBuild := bc.GetBuild(imageID, auth.UserID)
 	if existingBuild != nil {
-
 		logs := []string{}
 		logFile, err := os.OpenFile(existingBuild.LogFile, os.O_RDONLY, 0666)
 		if err != nil {

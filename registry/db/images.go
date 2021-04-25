@@ -40,7 +40,7 @@ func (c *Client) GetImagesWithoutSource(userID, filter string, pageNumber, perPa
 		Where(builder.Eq{"i.user_id": userID})
 
 	query = applyImageFilter(query, "i", filter)
-	query = query.OrderBy("i.created_at")
+	query = query.OrderBy("i.created_at desc")
 
 	images := []types.Image{}
 	total, err := c.SelectWithCount(&images, query, pageNumber, perPage)
