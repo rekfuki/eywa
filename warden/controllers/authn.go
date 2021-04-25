@@ -37,31 +37,24 @@ func CheckAuth(c echo.Context) error {
 		now := time.Now().UTC().Unix()
 		if now-token.IssuedAt > (token.ExpiresAt-now)*2 {
 			token.IssuedAt = now
-			token.ExpiresAt = now + int64(sessionTimeoutduration.Seconds())*60
+			token.ExpiresAt = now + int64(sessionTimeoutduration.Seconds())
+
+			tokenStr, err := types.SignToken(signingKey, token)
+			if err != nil {
+				log.Errorf("Failed to sign token: %s", err)
+				return echo.NewHTTPError(http.StatusInternalServerError)
+			}
+
+			c.SetCookie(&http.Cookie{
+				Name:     "eywa-session",
+				Value:    tokenStr,
+				Domain:   c.Request().Host,
+				Path:     "/",
+				HttpOnly: true,
+				Secure:   true,
+			})
 		}
 	}
-
-	tokenStr, err := types.SignToken(signingKey, token)
-	if err != nil {
-		log.Errorf("Failed to sign token: %s", err)
-		echo.NewHTTPError(http.StatusInternalServerError)
-	}
-
-	if authType == authn.AuthTypeSession {
-		c.SetCookie(&http.Cookie{
-			Name:     "eywa-session",
-			Value:    tokenStr,
-			Domain:   c.Request().Host,
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   true,
-		})
-	} else if authType == authn.AuthTypeToken {
-		c.Response().Header().Add("X-Eywa-Token", tokenStr)
-	}
-
-	go func() {
-	}()
 
 	c.Response().After(func() {
 		if err := db.SetUserLastSeenAt(token.UserID, time.Now()); err != nil {
