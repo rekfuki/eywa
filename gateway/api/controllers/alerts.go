@@ -50,6 +50,9 @@ func InvocationAlert(c echo.Context) error {
 			}
 		} else {
 			newReplicas = fs.MinReplicas
+			if newReplicas == 0 {
+				newReplicas += 1
+			}
 		}
 
 		err = k8sClient.ScaleFunction(filter, newReplicas)
