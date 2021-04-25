@@ -534,13 +534,6 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 		Memory: c.Resources.Requests.Memory().String(),
 	}
 
-	for _, condition := range deployment.Status.Conditions {
-		if condition.Type == appsv1.DeploymentAvailable {
-			function.Available = condition.Status == corev1.ConditionTrue
-			break
-		}
-	}
-
 	for k, v := range deployment.Spec.Template.Labels {
 		switch k {
 		case faasMinReplicasIDLabel, faasMaxReplicasIDLabel, faasScaleFactorIDLabel:
@@ -564,6 +557,13 @@ func deploymentToFunction(deployment *appsv1.Deployment) (*FunctionStatus, error
 				return nil, err
 			}
 			function.UpdatedAt = time.Unix(t, 0)
+		}
+	}
+
+	function.Available = true
+	if deployment.Status.ReadyReplicas == 0 {
+		if function.MinReplicas > 0 || deployment.Status.UnavailableReplicas > 0 {
+			function.Available = false
 		}
 	}
 
