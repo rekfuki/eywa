@@ -93,7 +93,8 @@ const DashboardAlternativeView = () => {
       "type": "range",
       "series": ["gateway_function_invocation_total"],
       "group_by": "path",
-      "query": `topk(3, sum(rate(<<index .Series 0>>[${step}ms])) by(<<.GroupBy>>))`,
+      "label_matchers": `function_id!=""`,
+        "query": `topk(3, sum(rate(<<index .Series 0>>{<<.LabelMatchers>>}[${step}ms])) by(<<.GroupBy>>))`,
       "start": startTime / 1000,
       "end": endTime / 1000,
       "step": step / 1000
@@ -114,7 +115,8 @@ const DashboardAlternativeView = () => {
       "type": "range",
       "series": ["gateway_function_invocation_total"],
       "group_by": "user_id",
-      "query": `sum(rate(<<index .Series 0>>[${step}ms])) by(<<.GroupBy>>)`,
+      "label_matchers": `function_id!=""`,
+      "query": `sum(rate(<<index .Series 0>>{<<.LabelMatchers>>}[${step}ms])) by(<<.GroupBy>>)`,
       "start": startTime / 1000,
       "end": endTime / 1000,
       "step": step / 1000
@@ -156,7 +158,8 @@ const DashboardAlternativeView = () => {
       "type": "instant",
       "series": ["gateway_function_invocation_total"],
       "group_by": "user_id",
-      "query": `sum by (<<.GroupBy>>) (round(increase(<<index .Series 0>>[15m])))`
+      "label_matchers": `function_id!=""`,
+      "query": `sum by (<<.GroupBy>>) (round(increase(<<index .Series 0>>{<<.LabelMatchers>>}[15m])))`
     }
     const response = await axios.post(`/eywa/api/metrics/query`, payload);
     const data = response.data.Data;
@@ -168,7 +171,8 @@ const DashboardAlternativeView = () => {
       "type": "instant",
       "series": ["gateway_function_invocation_total"],
       "group_by": "user_id",
-      "query": `sum by (<<.GroupBy>>) (<<index .Series 0>>)`
+      "label_matchers": `function_id!=""`,
+      "query": `sum by (<<.GroupBy>>) (<<index .Series 0>>{<<.LabelMatchers>>})`
     }
     const response = await axios.post(`/eywa/api/metrics/query`, payload);
     const data = response.data.Data;

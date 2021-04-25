@@ -495,8 +495,8 @@ const FunctionEditForm = ({
                         xs={12}
                       >
                         <IconButton color="primary" component="span" onClick={() => {
-                          touched.envVars.splice(index, 1)
-                          values.envVars.splice(index, 1)
+                          touched?.envVars?.splice(index, 1)
+                          values?.envVars?.splice(index, 1)
                           setFieldValue(`envVars`, values.envVars)
                         }}>
                           <XIcon />

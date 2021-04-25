@@ -166,7 +166,7 @@ const Overview = ({
                 underline={"always"}
                 style={{ margin: "auto" }}
                 component={RouterLink}
-                to={`/app/images`}
+                to={`/app/functions`}
               >
                 <Typography
                   component="h2"
