@@ -25,14 +25,31 @@ build: go-build
 	docker build --tag $(IMAGE):$(VERSION) $(BUILD_CONTEXT)
 	docker tag $(IMAGE):$(VERSION) $(IMAGE):latest
 
+.PHONY: build-dev
+build-dev: go-build
+	@echo "Build dev docker image..."
+	docker build --tag $(IMAGE):$(VERSION)  $(BUILD_CONTEXT)
+	docker tag $(IMAGE):$(VERSION) $(IMAGE):dev
+
 .PHONY: tag
 tag:
 	@echo "Tagging docker image (latest)"
 	docker tag $(IMAGE):latest $(DOCKER_REGISTRY)/$(IMAGE):latest
 	docker tag $(IMAGE):$(VERSION) $(DOCKER_REGISTRY)/$(IMAGE):$(VERSION)
 
+.PHONY: tag-dev
+tag-dev:
+	@echo "Tagging docker image (dev)"
+	docker tag $(IMAGE):$(VERSION) $(DOCKER_REGISTRY)/$(IMAGE):dev
+	docker tag $(IMAGE):dev $(DOCKER_REGISTRY)/$(IMAGE):dev
+
 .PHONY: push
 push:
 	@echo "Push docker image..."
 	docker push $(DOCKER_REGISTRY)/$(IMAGE):latest
 	docker push $(DOCKER_REGISTRY)/$(IMAGE):$(VERSION)
+
+.PHONY: push-dev
+push-dev:
+	@echo "Push docker dev image..."
+	docker push $(DOCKER_REGISTRY)/$(IMAGE):dev

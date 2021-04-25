@@ -19,6 +19,7 @@ require (
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/google/go-cmp v0.5.3 // indirect
+	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
