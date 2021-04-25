@@ -15,19 +15,21 @@ spec:
   targetNamespace: faas-system
   values:
     namespaceOverride: faas-system
-    alertmanagerSpec:
-      alertManagerConfigSelector:
-        matchLabels:
-          alertmanagerConfig: custom-alerting-rules
+    alertmanager:
+      alertmanagerSpec:
+        alertManagerConfigSelector:
+          matchLabels:
+            alertmanagerConfig: custom-alerting-rules
     prometheus:
-      evaluationInterval: 1s
-      ruleSelector:
-        matchLabels:
-          app: kube-prometheus-stack
-          release: prometheus-operator
-      serviceMonitorSelector:
-        matchLabels:
-          release: prometheus-operator
+      prometheusSpec:
+        evaluationInterval: 1s
+        ruleSelector:
+          matchLabels:
+            app: kube-prometheus-stack
+            release: prometheus-operator
+        serviceMonitorSelector:
+          matchLabels:
+            release: prometheus-operator
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
