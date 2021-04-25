@@ -38,7 +38,7 @@ func (c *Client) QueryMetrics(query string) (*VectorQueryResponse, error) {
 
 	if resp.IsError() {
 		log.Errorf(string(resp.Body()))
-		return nil, fmt.Errorf("Prometheus responded with unexpected status: %s", resp.Status())
+		return nil, fmt.Errorf("prometheus responded with unexpected status: %s", resp.Status())
 	}
 
 	return &result, nil

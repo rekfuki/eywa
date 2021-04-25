@@ -42,7 +42,7 @@ func (c *Client) GetFunctions() ([]gwt.FunctionStatusResponse, error) {
 
 	if resp.IsError() {
 		log.Errorf(string(resp.Body()))
-		return nil, fmt.Errorf("Gateway responded with unexpected status: %s", resp.Status())
+		return nil, fmt.Errorf("gateway responded with unexpected status: %s", resp.Status())
 	}
 
 	return result.Objects, nil
@@ -51,8 +51,8 @@ func (c *Client) GetFunctions() ([]gwt.FunctionStatusResponse, error) {
 // ScaleFunction sends scale request to gateway
 func (c *Client) ScaleFunction(functionID string, replicas int) error {
 	resp, err := c.rc.R().
-		SetHeader("X-User-Id", auth.OperatorUserID).
-		SetHeader("X-Real-User-Id", auth.OperatorUserID).
+		SetHeader("X-Eywa-User-Id", auth.OperatorUserID).
+		SetHeader("X-Eywa-Real-User-Id", auth.OperatorUserID).
 		SetPathParams(map[string]string{
 			"function_id": functionID,
 			"replicas":    fmt.Sprint(replicas),
@@ -64,7 +64,7 @@ func (c *Client) ScaleFunction(functionID string, replicas int) error {
 
 	if resp.IsError() {
 		log.Errorf(string(resp.Body()))
-		return fmt.Errorf("Gateway responded with unexpected status: %s", resp.Status())
+		return fmt.Errorf("gateway responded with unexpected status: %s", resp.Status())
 	}
 
 	return nil

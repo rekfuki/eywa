@@ -55,7 +55,6 @@ func (i *Idler) Reconcile() {
 		}
 
 		metrics := i.buildMetricsMap(functions)
-
 		for _, fn := range functions {
 			if v, found := metrics[fn.ID]; found {
 				if v == float64(0) {
@@ -90,7 +89,7 @@ func (i *Idler) buildMetricsMap(functions []gwt.FunctionStatusResponse) map[stri
 
 		if len(res.Data.Result) > 0 {
 			for _, v := range res.Data.Result {
-				if v.Metric.FunctionName == function.ID {
+				if v.Metric.FunctionID == function.ID {
 					metricValue := v.Value[1]
 					switch t := metricValue.(type) {
 					case string:
