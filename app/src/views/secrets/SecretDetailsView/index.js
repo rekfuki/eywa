@@ -52,27 +52,26 @@ const OrderDetailsView = () => {
     }
   }
 
-  const getSecret = useCallback(async () => {
+  const getSecret = async () => {
     try {
       const response = await axios.get('/eywa/api/secrets/' + secretId);
-
-      if (isMountedRef.current) {
-        setSecret(response.data);
-      }
+      console.log("Retreived secret data: ", response.data);
+      setSecret(response.data);
     } catch (err) {
       console.error(err);
       enqueueSnackbar('Failed to get secret', {
         variant: 'error'
       });
     }
-  }, [isMountedRef]);
+  };
 
   const updateSecret = async (payload) => {
     try {
       const response = await axios.put("/eywa/api/secrets/" + secret.id, payload);
 
       if (isMountedRef.current) {
-        setSecret({ ...secret, ...response.data });
+        // setSecret({ ...secret, ...response.data });
+        await getSecret();
         enqueueSnackbar('Secret updated', {
           variant: 'success'
         });
@@ -87,14 +86,13 @@ const OrderDetailsView = () => {
 
   useEffect(() => {
     getSecret();
-  }, [getSecret]);
+  }, []);
 
 
   if (!secret) {
     return null;
   }
 
-  console.log("updating: ", secret)
   const disabledEditing = secret.name.includes("mongodb")
   return (
     <Page

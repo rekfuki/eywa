@@ -30,6 +30,10 @@ const Mounts = ({
 }) => {
   const classes = useStyles();
 
+  if (!mounts){
+    return null;
+  }
+
   return (
     <Card
       className={clsx(classes.root, className)}
