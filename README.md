@@ -1,5 +1,5 @@
 # eywa
-FaaS 
+Open source FaaS platform
 
 ### Dissertation: https://drive.google.com/file/d/1DEb2UZUNqcSHW7OGN9pZ1QDMBoU6JH9f/view?usp=sharing
 
