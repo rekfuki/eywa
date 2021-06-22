@@ -1,13 +1,56 @@
 # eywa
 FaaS 
 
-Dissertation: https://drive.google.com/file/d/1DEb2UZUNqcSHW7OGN9pZ1QDMBoU6JH9f/view?usp=sharing
+### Dissertation: https://drive.google.com/file/d/1DEb2UZUNqcSHW7OGN9pZ1QDMBoU6JH9f/view?usp=sharing
 
-Demo: https://youtu.be/QFQ6kmHnY74
+### Demo: https://youtu.be/QFQ6kmHnY74
 
-### Eywa Deployment Guide
+## Eywa Layout Guide
 
+The repository contains the following folder structure:
 
+```bash
+$tree -d -L 1
+    .
+    ├── app
+    ├── charts
+    ├── envoy
+    ├── execution-tracker
+    ├── eywa-cluster
+    ├── gateway
+    ├── go-libs
+    ├── idler
+    ├── registry
+    ├── tugrik
+    ├── warden
+    └── watchdog
+```
+
+`./app` folder contains the front-end app.
+
+`./charts` folder contains all the Helm charts that are used to manage Kubernetes objects (custom and third party).
+
+`./envoy` folder contains envoy source code.
+
+`./execution-tracker` folder contains both the API (`./execution-tracker/api`) and the Consumer (`./execution-tracker/consumer`) source code.
+
+`./eywa-cluster` folder contains all the declarative Kubernetes objects that are being observed by the Flux toolkit. Reflects the state of the cluster.
+
+`./gateway` folder contains both the API (`./gateway/api`) and the Consumer (`./gateway/consumer`) source code.
+
+`./go-libs` folder contains any common libraries that are being shared between different components.
+
+`./idler` folder contains the idler source code.
+
+`./registry` folder contains the registry source code.
+
+`./tugrik` folder contains the tugrik source code.
+
+`./warden` folder contains the warden source code.
+
+`./watchdog` folder contains the watchdog source code.
+
+## Eywa Deployment Guide
 
 #### Warning: Requires advanced knowledge of:
 
