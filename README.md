@@ -1,12 +1,12 @@
 # Description
-Eywa is an end-to-end open source FaaS platform that was developed as an Honours project at the University of Dundee.
+Eywa is an end-to-end open source FaaS platform that was developed as an Honours project at the University of Dundee. 
 
-### Dissertation: https://drive.google.com/file/d/1DEb2UZUNqcSHW7OGN9pZ1QDMBoU6JH9f/view?usp=sharing
+### In Depth Report: https://drive.google.com/file/d/1DEb2UZUNqcSHW7OGN9pZ1QDMBoU6JH9f/view?usp=sharing
 
 ### Demo: https://youtu.be/QFQ6kmHnY74
 
 ## Eywa Layout Guide
-
+9
 The repository contains the following folder structure:
 
 ```bash
